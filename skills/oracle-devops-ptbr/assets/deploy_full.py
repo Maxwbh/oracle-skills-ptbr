@@ -92,6 +92,8 @@ def main() -> None:
     parser.add_argument("--env", default=os.environ.get("ENVIRONMENT", "dev"),
                         choices=["dev", "hom", "prod"])
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--confirmar-prod", action="store_true",
+                        help="Confirma deploy em produção sem prompt (obrigatório fora de TTY/CI)")
     parser.add_argument("--skip-db",   action="store_true", help="Pula changelog do banco")
     parser.add_argument("--skip-apex", action="store_true", help="Pula import APEX")
     parser.add_argument("--skip-ords", action="store_true", help="Pula deploy ORDS")
@@ -107,12 +109,15 @@ def main() -> None:
     banner("deploy_full.py — Deploy completo Oracle/APEX/ORDS", args.env, args.dry_run)
 
     if args.env == "prod":
-        confirmar_producao(args.dry_run)
+        confirmar_producao(args.dry_run, confirmado=args.confirmar_prod)
 
     args_comuns = [
         "--env", args.env,
         "--project-root", str(root),
     ] + (["--dry-run"] if args.dry_run else [])
+    if args.env == "prod" and not args.dry_run:
+        # Já confirmado acima: repassa aos scripts filhos para não perguntar de novo.
+        args_comuns.append("--confirmar-prod")
 
     inicio_total = time.monotonic()
     etapas_ok: list[tuple[str, bool]] = []

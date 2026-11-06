@@ -139,6 +139,8 @@ def main() -> None:
     parser.add_argument("--project-root", type=Path,
                         default=Path(__file__).parent.parent)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--confirmar-prod", action="store_true",
+                        help="Confirma deploy em produção sem prompt (obrigatório fora de TTY/CI)")
     args = parser.parse_args()
 
     root = args.project_root.resolve()
@@ -148,7 +150,7 @@ def main() -> None:
     banner("deploy_ords.py — Deploy de módulos ORDS", args.env, args.dry_run)
 
     if args.env == "prod":
-        confirmar_producao(args.dry_run)
+        confirmar_producao(args.dry_run, confirmado=args.confirmar_prod)
 
     plano = montar_plano(ords_dir, args.modulo)
     if args.modulo and not any(r == f"módulo {args.modulo}" for r, _ in plano):

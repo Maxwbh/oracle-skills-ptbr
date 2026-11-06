@@ -623,15 +623,38 @@ def checksum_sha256(arquivo: Path) -> str:
     return sha.hexdigest()
 
 
-def confirmar_producao(dry_run: bool = False) -> None:
-    """Exige confirmação explícita antes de deploy em produção."""
+def _em_ci() -> bool:
+    return os.environ.get("CI", "").strip().lower() in ("1", "true", "yes")
+
+
+def confirmar_producao(dry_run: bool = False, *, confirmado: bool = False) -> None:
+    """
+    Exige confirmação explícita antes de deploy em produção.
+
+    - Com --confirmar-prod (confirmado=True) ou CONFIRMO_PROD=1: segue.
+    - Fora de TTY ou com CI=true: NUNCA chama input() — sem confirmação
+      explícita, aborta com código 2. No pipeline, a aprovação humana vem do
+      GitHub Environment 'prod' (required reviewers), e o job passa
+      --confirmar-prod.
+    - Em terminal interativo: pede 'CONFIRMO PROD'.
+    """
     if dry_run:
         return
     log.info(f"\n{RED}{BOLD}⚠  DEPLOY EM PRODUÇÃO{RESET}")
+    if confirmado or os.environ.get("CONFIRMO_PROD") == "1":
+        origem = "--confirmar-prod" if confirmado else "CONFIRMO_PROD=1"
+        log.info(f"  Confirmado por {origem}.\n")
+        return
+    if _em_ci() or not sys.stdin.isatty():
+        log.error(f"{RED}Deploy em produção sem confirmação explícita em modo "
+                  f"não interativo (CI ou sem TTY).{RESET}")
+        log.error("Use --confirmar-prod ou CONFIRMO_PROD=1 (no pipeline, após a "
+                  "aprovação do Environment 'prod').")
+        sys.exit(2)
     confirmacao = input("  Digite 'CONFIRMO PROD' para continuar: ").strip()
     if confirmacao != "CONFIRMO PROD":
         log.info("Deploy cancelado.")
-        sys.exit(0)
+        sys.exit(1)
     log.info("")
 
 
