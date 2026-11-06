@@ -158,9 +158,10 @@ def empacotar_skill(skill_dir: Path) -> Path:
     # Limpar e recriar diretório de build
     if build_dir.exists():
         shutil.rmtree(build_dir)
-    # manifest.yml é metadado de build, não recurso da skill: fica fora do pacote
+    # manifest.yml é metadado de build, não recurso da skill; caches do Python
+    # (gerados ao rodar os testes) também ficam fora do pacote.
     shutil.copytree(skill_dir, build_dir,
-                    ignore=shutil.ignore_patterns("manifest.yml"))
+                    ignore=shutil.ignore_patterns("manifest.yml", "__pycache__", "*.pyc"))
 
     # Propagar shared/
     propagados = propagar_shared(skill_dir, build_dir)
