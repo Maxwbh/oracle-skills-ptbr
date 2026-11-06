@@ -172,6 +172,7 @@ Implementado em `assets/deploy_db.py` (subdiretórios `db/constraints/`, `db/fk/
 | `github-deploy.yml` | CI/CD | GitHub Actions (fluxo Python) — Environments `dev`/`hom`/`prod`, `DB_PASS` por ambiente, aprovação obrigatória em prod, validação offline, deploy pelo SQLcl |
 | **Liquibase e CI-agnóstico (recomendado)** | | |
 | `setup_devops.py` | Python | Assistente interativo (ou `--ci git|azure|manual --liquibase sim|não`) que gera o esqueleto do combo escolhido, sem conectar no banco |
+| `codescan_gate.py` | Python | Gate de CI com SQLcl CodeScan (SQL, PL/SQL e APEXlang `.apx`); falha se houver achado, exceções em `codescan.json` |
 | `gmud_liquibase.py` | Python | Gera `changelog-master.xml` a partir das releases e invoca liquibase/SQLcl/script |
 | `changelog-master.xml` | Liquibase | `databaseChangeLog` mestre — inclui os changelogs de release |
 | `changelog-release-exemplo.xml` | Liquibase | Exemplo de release com `changeSet`, `sqlFile`, `runOnChange`, `context`, `rollback`, `tagDatabase` |
