@@ -21,13 +21,13 @@ Uso:
     python gmud_liquibase.py validar --root db
 
     # Prever o SQL (dry-run) para um ambiente — não aplica
-    python gmud_liquibase.py prever --root db --env hml
+    python gmud_liquibase.py prever --root db --env hom
 
-    # Aplicar no ambiente (context = env). Pede confirmação se env=prd
-    python gmud_liquibase.py aplicar --root db --env hml
+    # Aplicar no ambiente (context = env). Pede confirmação se env=prod
+    python gmud_liquibase.py aplicar --root db --env hom
 
     # Rollback até uma tag de release
-    python gmud_liquibase.py rollback --root db --env hml --tag 2026.01-gmud-001
+    python gmud_liquibase.py rollback --root db --env hom --tag 2026.01-gmud-001
 
 Estratégia de entrega ao banco (defina por projeto):
     --runner liquibase   usa o binário 'liquibase' (default)
@@ -179,21 +179,21 @@ def _conexao_env() -> dict[str, str]:
             "LIQUIBASE_COMMAND_PASSWORD": pwd}
 
 
-def confirmar_prd(confirmado: bool) -> bool:
+def confirmar_prod(confirmado: bool) -> bool:
     """
     Confirmação de produção. Com --yes ou CONFIRMO_PROD=1: segue. Em CI
     (CI=true) ou sem TTY: nunca chama input() — sem confirmação explícita,
-    recusa. No pipeline, a aprovação vem do Environment 'prd'.
+    recusa. No pipeline, a aprovação vem do Environment 'prod'.
     """
     if confirmado or os.environ.get("CONFIRMO_PROD") == "1":
         return True
     em_ci = os.environ.get("CI", "").strip().lower() in ("1", "true", "yes")
     if em_ci or not sys.stdin.isatty():
-        log("Aplicar em prd sem confirmação em modo não interativo: use --yes "
+        log("Aplicar em prod sem confirmação em modo não interativo: use --yes "
             "(após a aprovação do Environment) ou CONFIRMO_PROD=1.", RED)
         return False
-    resp = input(f"{BOLD}{RED}Aplicar em PRODUÇÃO. Digite 'prd' para confirmar: {RESET}")
-    return resp.strip() == "prd"
+    resp = input(f"{BOLD}{RED}Aplicar em PRODUÇÃO. Digite 'prod' para confirmar: {RESET}")
+    return resp.strip() == "prod"
 
 
 def run_liquibase(master: Path, comando: str, env: str | None,
@@ -274,13 +274,13 @@ def main() -> int:
                     choices=["gerar", "verificar", "validar", "prever", "aplicar", "rollback"])
     ap.add_argument("--root", default="db",
                     help="Pasta raiz do changelog (contém releases/)")
-    ap.add_argument("--env", choices=["dev", "hml", "prd"],
+    ap.add_argument("--env", choices=["dev", "hom", "prod"],
                     help="Ambiente alvo (vira o context do Liquibase)")
     ap.add_argument("--runner", choices=["liquibase", "sqlcl", "script"],
                     default="liquibase")
     ap.add_argument("--tag", help="Tag de release para rollback")
     ap.add_argument("--yes", action="store_true",
-                    help="Não pedir confirmação em prd")
+                    help="Não pedir confirmação em prod")
     args = ap.parse_args()
 
     root = Path(args.root).resolve()
@@ -313,7 +313,7 @@ def main() -> int:
         return run_liquibase(master, "updateSQL", args.env, args.runner)
 
     if args.acao == "aplicar":
-        if args.env == "prd" and not confirmar_prd(args.yes):
+        if args.env == "prod" and not confirmar_prod(args.yes):
             log("Cancelado.", YELLOW)
             return 1
         return run_liquibase(master, "update", args.env, args.runner)

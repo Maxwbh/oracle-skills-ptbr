@@ -1,19 +1,19 @@
 # .github/workflows/deploy-liquibase.yml
 # Deploy GMUD via Liquibase com approval gates por GitHub Environment.
 #
-# COMO OS GATILHOS SE MATERIALIZAM (Aprovar / Reprovar / HML / PRD):
-#   No GitHub, crie 3 Environments: dev, hml, prd
-#   (Settings > Environments). Em hml e prd, configure "Required reviewers".
+# COMO OS GATILHOS SE MATERIALIZAM (Aprovar / Reprovar / HOM / PROD):
+#   No GitHub, crie 3 Environments: dev, hom, prod
+#   (Settings > Environments). Em hom e prod, configure "Required reviewers".
 #   - "Aprovar"            = reviewer aprova o deployment pendente do environment.
 #   - "Reprovar"           = reviewer rejeita -> o job falha e nada é aplicado.
-#   - "Enviar p/ HML"      = aprovar o gate do environment hml.
-#   - "Enviar p/ PRD"      = aprovar o gate do environment prd.
+#   - "Enviar p/ HOM"      = aprovar o gate do environment hom.
+#   - "Enviar p/ PROD"      = aprovar o gate do environment prod.
 #   O code review do CÓDIGO continua no Pull Request (required approvals na
 #   branch protection); este workflow cuida da PROMOÇÃO entre ambientes.
 #
 # ESTRATÉGIA DE ENTREGA AO BANCO (escolha 1 por projeto — ver reference):
 #   A) Runner hospedado conecta direto no banco (só se a rede permitir).
-#   B) Runner self-hosted DENTRO da rede do banco (recomendado p/ PRD).
+#   B) Runner self-hosted DENTRO da rede do banco (recomendado p/ PROD).
 #   C) Workflow só valida/monta o pacote; DBA aplica manualmente (Git não toca
 #      o banco) — use update-sql para gerar o script e publicá-lo como artefato.
 #
@@ -36,7 +36,7 @@ on:
       ambiente:
         description: "Ambiente alvo"
         type: choice
-        options: [dev, hml, prd]
+        options: [dev, hom, prod]
         required: true
   push:
     branches: [develop]     # merge em develop -> deploy automático em dev
@@ -96,13 +96,13 @@ jobs:
         run: liquibase --contexts=dev update
 
   # ---------------------------------------------------------------------------
-  # 3) HML — exige aprovação do environment "hml" (Enviar p/ HML).
+  # 3) HOM — exige aprovação do environment "hom" (Enviar p/ HOM).
   # ---------------------------------------------------------------------------
-  deploy-hml:
+  deploy-hom:
     needs: validar
-    if: inputs.ambiente == 'hml'
+    if: inputs.ambiente == 'hom'
     runs-on: ubuntu-latest    # ou self-hosted, conforme estratégia B
-    environment: hml          # required reviewers = approval gate
+    environment: hom          # required reviewers = approval gate
     env:
       LIQUIBASE_COMMAND_URL: ${{ secrets.DB_URL }}
       LIQUIBASE_COMMAND_USERNAME: ${{ secrets.DB_USER }}
@@ -116,23 +116,23 @@ jobs:
       - name: Validar changelog no banco
         run: liquibase validate
       - name: SQL previsto (update-sql)
-        run: liquibase --contexts=hml update-sql > deploy-previsto-hml.sql
+        run: liquibase --contexts=hom update-sql > deploy-previsto-hom.sql
       - uses: actions/upload-artifact@v4
         with:
-          name: deploy-previsto-hml
-          path: deploy-previsto-hml.sql
-      - name: Liquibase update (context hml)
-        run: liquibase --contexts=hml update
+          name: deploy-previsto-hom
+          path: deploy-previsto-hom.sql
+      - name: Liquibase update (context hom)
+        run: liquibase --contexts=hom update
 
   # ---------------------------------------------------------------------------
-  # 4) PRD — exige aprovação do environment "prd" (Enviar p/ PRD).
+  # 4) PROD — exige aprovação do environment "prod" (Enviar p/ PROD).
   #     Estratégia B (self-hosted) ou C (gerar SQL p/ DBA) recomendadas aqui.
   # ---------------------------------------------------------------------------
-  deploy-prd:
+  deploy-prod:
     needs: validar
-    if: inputs.ambiente == 'prd'
-    runs-on: ubuntu-latest    # troque por [self-hosted, oracle-prd] na estratégia B
-    environment: prd
+    if: inputs.ambiente == 'prod'
+    runs-on: ubuntu-latest    # troque por [self-hosted, oracle-prod] na estratégia B
+    environment: prod
     env:
       LIQUIBASE_COMMAND_URL: ${{ secrets.DB_URL }}
       LIQUIBASE_COMMAND_USERNAME: ${{ secrets.DB_USER }}
@@ -148,12 +148,12 @@ jobs:
 
       # Estratégia C: NÃO aplica; gera o script e publica para o DBA aplicar.
       - name: Gerar script GMUD para o DBA (estratégia C)
-        run: liquibase --contexts=prd update-sql > gmud-prd.sql
+        run: liquibase --contexts=prod update-sql > gmud-prod.sql
       - uses: actions/upload-artifact@v4
         with:
-          name: gmud-prd-sql
-          path: gmud-prd.sql
+          name: gmud-prod-sql
+          path: gmud-prod.sql
 
       # Estratégias A/B: aplicar de fato (descomente quando a rede permitir).
-      # - name: Liquibase update (context prd)
-      #   run: liquibase --contexts=prd update
+      # - name: Liquibase update (context prod)
+      #   run: liquibase --contexts=prod update

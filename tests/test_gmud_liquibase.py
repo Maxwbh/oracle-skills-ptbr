@@ -1,4 +1,4 @@
-"""gmud_liquibase.py — credenciais fora da linha de comando e prd sem input() em CI."""
+"""gmud_liquibase.py — credenciais fora da linha de comando e prod sem input() em CI."""
 import io
 import json
 import stat
@@ -35,7 +35,7 @@ def liquibase_falso(tmp_path, monkeypatch):
 @pytest.mark.parametrize("comando", ["update", "updateSQL", "validate"])
 def test_senha_vai_por_variavel_e_nao_pela_linha_de_comando(liquibase_falso, capsys, comando):
     master, reg = liquibase_falso
-    assert g.run_liquibase(master, comando, "hml", "liquibase") == 0
+    assert g.run_liquibase(master, comando, "hom", "liquibase") == 0
     dados = reg()
     assert SENHA not in " ".join(dados["argv"])
     assert dados["env"]["LIQUIBASE_COMMAND_PASSWORD"] == SENHA
@@ -46,7 +46,7 @@ def test_senha_vai_por_variavel_e_nao_pela_linha_de_comando(liquibase_falso, cap
 def test_runner_script_tambem_nao_expoe_senha(liquibase_falso, tmp_path, monkeypatch):
     master, reg = liquibase_falso
     monkeypatch.chdir(tmp_path)
-    assert g.run_liquibase(master, "updateSQL", "prd", "script") == 0
+    assert g.run_liquibase(master, "updateSQL", "prod", "script") == 0
     assert SENHA not in " ".join(reg()["argv"])
 
 
@@ -55,24 +55,24 @@ class _Stdin(io.StringIO):
         return False
 
 
-def test_prd_em_ci_sem_yes_recusa_sem_chamar_input(monkeypatch):
+def test_prod_em_ci_sem_yes_recusa_sem_chamar_input(monkeypatch):
     monkeypatch.setenv("CI", "true")
     monkeypatch.delenv("CONFIRMO_PROD", raising=False)
     monkeypatch.setattr("builtins.input", lambda *_: pytest.fail("input() em CI"))
-    assert g.confirmar_prd(False) is False
+    assert g.confirmar_prod(False) is False
 
 
-def test_prd_sem_tty_sem_yes_recusa(monkeypatch):
+def test_prod_sem_tty_sem_yes_recusa(monkeypatch):
     monkeypatch.delenv("CI", raising=False)
     monkeypatch.delenv("CONFIRMO_PROD", raising=False)
     monkeypatch.setattr("sys.stdin", _Stdin())
     monkeypatch.setattr("builtins.input", lambda *_: pytest.fail("input() sem TTY"))
-    assert g.confirmar_prd(False) is False
+    assert g.confirmar_prod(False) is False
 
 
-def test_prd_com_yes_segue(monkeypatch):
+def test_prod_com_yes_segue(monkeypatch):
     monkeypatch.setenv("CI", "true")
-    assert g.confirmar_prd(True) is True
+    assert g.confirmar_prod(True) is True
 
 
 def _changelog(tmp_path):

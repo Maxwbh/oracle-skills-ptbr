@@ -1,7 +1,7 @@
 # Liquibase, Code Review e Deploy GMUD por Ambiente
 
 Fluxo de deploy de banco Oracle versionado com **Liquibase** (changelog XML
-real), promovido entre ambientes (dev → hml → prd) por **GitHub Actions com
+real), promovido entre ambientes (dev → hom → prod) por **GitHub Actions com
 environments protegidos**, mantendo a regra de governança de que **o Git nunca
 conecta direto no banco de produção** quando o projeto assim exigir.
 
@@ -31,12 +31,12 @@ PR aberto ─► review do CÓDIGO (required approvals na branch protection)
    │ merge em develop
    ▼
 [dev]  deploy automático (sem gate)
-   │ workflow_dispatch ambiente=hml
+   │ workflow_dispatch ambiente=hom
    ▼
-[hml]  GATE: required reviewer aprova/reprova  ◄── "Enviar p/ HML"
-   │ workflow_dispatch ambiente=prd
+[hom]  GATE: required reviewer aprova/reprova  ◄── "Enviar p/ HOM"
+   │ workflow_dispatch ambiente=prod
    ▼
-[prd]  GATE: required reviewer aprova/reprova  ◄── "Enviar p/ PRD"
+[prod]  GATE: required reviewer aprova/reprova  ◄── "Enviar p/ PROD"
        (aplica direto, via runner interno, ou só gera SQL para o DBA)
 ```
 
@@ -44,7 +44,7 @@ Há **dois** pontos de aprovação distintos, que costumam ser confundidos:
 - **Code review** = aprovação do *código* no Pull Request (branch protection).
 - **Approval gate de ambiente** = aprovação da *promoção/deploy* num ambiente
   (GitHub Environment com required reviewers). É aqui que "Aprovar / Reprovar /
-  Enviar p/ HML / Enviar p/ PRD" se materializam.
+  Enviar p/ HOM / Enviar p/ PROD" se materializam.
 
 ## Eixos de decisão e matriz
 
@@ -86,17 +86,17 @@ O script só copia o template certo e cria as pastas — não conecta no banco.
 | Aprovar (código) | Pull Request approval (branch protection) | Permite merge |
 | Reprovar (código) | PR "Request changes" | Bloqueia merge |
 | Deploy em dev | `push` em `develop` | Job `deploy-dev` roda sem gate |
-| Enviar p/ HML | `workflow_dispatch` ambiente=hml | Job `deploy-hml` aguarda reviewer do environment `hml` |
-| Aprovar HML | Reviewer aprova o deployment pendente | Job prossegue e aplica em HML |
-| Reprovar HML | Reviewer rejeita | Job falha; nada é aplicado |
-| Enviar p/ PRD | `workflow_dispatch` ambiente=prd | Job `deploy-prd` aguarda reviewer do environment `prd` |
-| Aprovar/Reprovar PRD | Reviewer do environment `prd` | Aplica em PRD ou cancela |
+| Enviar p/ HOM | `workflow_dispatch` ambiente=hom | Job `deploy-hom` aguarda reviewer do environment `hom` |
+| Aprovar HOM | Reviewer aprova o deployment pendente | Job prossegue e aplica em HOM |
+| Reprovar HOM | Reviewer rejeita | Job falha; nada é aplicado |
+| Enviar p/ PROD | `workflow_dispatch` ambiente=prod | Job `deploy-prod` aguarda reviewer do environment `prod` |
+| Aprovar/Reprovar PROD | Reviewer do environment `prod` | Aplica em PROD ou cancela |
 
 Configuração no GitHub (uma vez por repositório):
-1. Settings → Environments → crie `dev`, `hml`, `prd`.
-2. Em `hml` e `prd`: marque **Required reviewers** (as pessoas que aprovam o
+1. Settings → Environments → crie `dev`, `hom`, `prod`.
+2. Em `hom` e `prod`: marque **Required reviewers** (as pessoas que aprovam o
    deploy). Opcional: **Wait timer** e **Deployment branches** (ex.: só `main`
-   pode deployar em prd).
+   pode deployar em prod).
 3. Em cada environment, cadastre os **Secrets** de conexão (`DB_URL`,
    `DB_USER`, `DB_PASSWORD`) — assim cada ambiente tem credencial isolada e o
    segredo de produção nunca fica acessível ao job de dev.
@@ -176,15 +176,15 @@ dependências entre objetos.
 ## Ambientes via context
 
 `context` é o seletor de ambiente. Um changeset sem `context` roda em todos; com
-`context="hml,prd"` roda só nesses. No deploy, passa-se o context do ambiente:
+`context="hom,prod"` roda só nesses. No deploy, passa-se o context do ambiente:
 
 ```bash
 liquibase changelog-file=db/changelog-master.xml contexts=dev update
-liquibase changelog-file=db/changelog-master.xml contexts=hml update
+liquibase changelog-file=db/changelog-master.xml contexts=hom update
 ```
 
 Padrão recomendado: DDL estrutural sem context (vai a todos os ambientes);
-cargas de dados de homologação/produção com `context="hml,prd"`; massa de teste
+cargas de dados de homologação/produção com `context="hom,prod"`; massa de teste
 só de dev com `context="dev"`.
 
 ## Três estratégias de entrega ao banco
@@ -195,11 +195,11 @@ Cada projeto escolhe **uma**, conforme a rede e a política de segurança. A reg
 **A) Runner hospedado conecta direto.** O job do GitHub Actions (runner
 ubuntu-latest) abre conexão Oracle e roda `update`. Simples, mas exige que o
 banco aceite conexão a partir da rede do runner — geralmente aceitável em
-dev/hml, raramente em prd. Mais simples de manter.
+dev/hom, raramente em prod. Mais simples de manter.
 
 **B) Runner self-hosted dentro da rede do banco.** Um runner próprio, instalado
 em servidor da rede interna, executa o `update`. O GitHub orquestra e aprova,
-mas a conexão nunca sai da rede segura. É a opção recomendada para prd quando se
+mas a conexão nunca sai da rede segura. É a opção recomendada para prod quando se
 quer automação completa sem expor o banco à internet.
 
 **C) Pipeline só gera o script; DBA aplica.** O workflow roda `updateSQL`
@@ -207,9 +207,9 @@ quer automação completa sem expor o banco à internet.
 conexão de produção parte do Git — o DBA revisa e aplica manualmente via SQLcl.
 É a opção mais conservadora e a que melhor honra "o Git não toca o banco".
 
-O workflow `github-deploy-liquibase.yml` traz os três caminhos: dev/hml na
-estratégia A (ajustável para B trocando `runs-on`), e prd já na C (gera
-`gmud-prd.sql`), com o bloco de `update` direto comentado para quem optar por A/B.
+O workflow `github-deploy-liquibase.yml` traz os três caminhos: dev/hom na
+estratégia A (ajustável para B trocando `runs-on`), e prod já na C (gera
+`gmud-prod.sql`), com o bloco de `update` direto comentado para quem optar por A/B.
 
 ## Rollback
 
@@ -233,13 +233,13 @@ dispara o Liquibase ou o SQLcl:
 python gmud_liquibase.py gerar    --root db                 # monta o master.xml
 python gmud_liquibase.py verificar --root db                # XML e arquivos (sem banco)
 python gmud_liquibase.py validar  --root db                 # liquibase validate (exige conexão)
-python gmud_liquibase.py prever   --root db --env hml        # updateSQL (dry-run)
-python gmud_liquibase.py aplicar  --root db --env hml        # update
-python gmud_liquibase.py rollback --root db --env hml --tag 2026.01-gmud-001
+python gmud_liquibase.py prever   --root db --env hom        # updateSQL (dry-run)
+python gmud_liquibase.py aplicar  --root db --env hom        # update
+python gmud_liquibase.py rollback --root db --env hom --tag 2026.01-gmud-001
 ```
 
 Conexão por variáveis de ambiente (`DB_URL`/`DB_USER`/`DB_PASSWORD`), nunca no
-código; repassadas ao Liquibase como `LIQUIBASE_COMMAND_*`. `aplicar --env prd`
+código; repassadas ao Liquibase como `LIQUIBASE_COMMAND_*`. `aplicar --env prod`
 pede confirmação só em terminal interativo; em CI exige `--yes` (dado após a
 aprovação do Environment). `--runner` escolhe `liquibase` (binário), `sqlcl` (Liquibase embutido no
 SQLcl da Oracle) ou `script` (só gera o SQL para o DBA — estratégia C).
@@ -261,7 +261,7 @@ Equivalência de conceitos:
 | Unidade de execução | `job` | `stage` com `deployment` job |
 | Ordem entre etapas | `needs:` | `dependsOn:` |
 | Approval gate por ambiente | Environment + Required reviewers | Environment + Approvals and checks |
-| Mirar o ambiente | `environment: hml` no job | `environment: hml` no deployment job |
+| Mirar o ambiente | `environment: hom` no job | `environment: hom` no deployment job |
 | Disparo manual com escolha | `workflow_dispatch` + `inputs` | `parameters` + execução manual |
 | Disparo por push | `on: push: branches:` | `trigger: branches:` |
 | Segredos por ambiente | Environment Secrets | Variable Group / Key Vault por ambiente |
@@ -273,9 +273,9 @@ e as três estratégias de entrega ao banco. Trocar de GitHub para Azure (ou
 manter os dois) é só escolher o arquivo de pipeline correspondente — nenhum
 changelog ou script GMUD precisa ser alterado.
 
-Setup mínimo no Azure (uma vez): Pipelines → Environments → criar `dev`, `hml`,
-`prd`; em `hml`/`prd` abrir Approvals and checks → Approvals e cadastrar os
-aprovadores; criar Variable Groups `oracle-dev`/`oracle-hml`/`oracle-prd` com
+Setup mínimo no Azure (uma vez): Pipelines → Environments → criar `dev`, `hom`,
+`prod`; em `hom`/`prod` abrir Approvals and checks → Approvals e cadastrar os
+aprovadores; criar Variable Groups `oracle-dev`/`oracle-hom`/`oracle-prod` com
 `DB_URL`/`DB_USER`/`DB_PASSWORD` (de preferência ligados ao Key Vault).
 
 ## Checklist de adoção
@@ -285,7 +285,7 @@ aprovadores; criar Variable Groups `oracle-dev`/`oracle-hml`/`oracle-prd` com
 3. Cada GMUD é uma pasta em `releases/` com `changelog.xml` + `.sql` + `rollback/`.
 4. Changesets de PL/SQL com `runOnChange` e `endDelimiter="/"`.
 5. Cargas por ambiente com `context` apropriado.
-6. GitHub Environments `dev`/`hml`/`prd` criados; reviewers em hml/prd.
+6. GitHub Environments `dev`/`hom`/`prod` criados; reviewers em hom/prod.
 7. Secrets de conexão por environment (isolados).
 8. Estratégia de entrega ao banco definida (A, B ou C) e refletida no workflow.
 9. `validate` + `updateSQL` rodando no CI antes de qualquer `update`.

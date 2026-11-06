@@ -2,8 +2,8 @@
 name: oracle-core-ptbr
 description: "Assistente central da suíte Oracle PT-BR (M&S do Brasil): roteamento entre os 9 módulos técnicos, convenções transversais (naming PT-BR + Trivadis 4.4, SQL antes de PL/SQL, APEX não comita, GMUD e promoção entre ambientes) e cenários multidisciplinares. ATIVE em dúvidas sobre qual skill Oracle usar, visão geral da suíte Oracle, convenções gerais de projeto Oracle, começar projeto Oracle/APEX do zero, 'como vocês organizam o código Oracle', 'qual o padrão do projeto'. Use com oracle-plsql-ptbr, oracle-trivadis-ptbr, oracle-apex-ptbr, oracle-ords-ptbr, oracle-dba-ptbr, oracle-tuning-ptbr, oracle-devops-ptbr , oracle-26ai-ptbr (só quando a versão-alvo for 23ai/26ai) e oracle-lab-ptbr (instalar/montar ambiente local) para cobertura técnica completa. NÃO ATIVE quando a demanda já é claramente de um módulo específico (código PL/SQL, página APEX, endpoint ORDS, sessão travada, query lenta, pipeline) — nesse caso ative o módulo direto."
 metadata:
-  version: "1.4.0"
-  release_date: "2026-09-15"
+  version: "1.4.1"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
   author: "Maxwell da Silva Oliveira"
@@ -14,7 +14,7 @@ metadata:
 
 # Suíte Oracle PT-BR — Core (oracle-core-ptbr)
 
-> **Versão:** 1.3.1 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (1 recurso nesta skill — roteamento puro + CHANGELOG.md)
+> **Versão:** 1.4.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
 > **v1.3.1:** convenção de padrão de código registra que Trivadis 4.4 é a versão final (projeto arquivado em fev/2026) e aponta o dbLinter como catálogo vivo. Histórico em `CHANGELOG.md`.
 
 Skill central da suíte Oracle PT-BR. Não contém templates próprios: define **como a suíte funciona como conjunto**, roteia demandas para o módulo certo e concentra as convenções que valem para todos.
@@ -36,7 +36,7 @@ Suíte completa (10 skills — conjunto único):
 - **Stack alvo:** Oracle Database **19c** (padrão) · APEX 24.2/26.1 · ORDS · SQLcl. 23ai/26ai só com versão declarada — ver `oracle-26ai-ptbr`; na dúvida, 19c
 - **Idioma:** identificadores de domínio e comentários em **PT-BR**; keywords SQL/PL/SQL, pacotes Oracle nativos, funções built-in, hints e prefixos Trivadis em **inglês**
 - **Padrão de código:** Trivadis PL/SQL & SQL Guidelines **4.4** (versão final — o projeto foi arquivado em fev/2026; catálogo vivo é o dbLinter, ver `oracle-trivadis-ptbr`)
-- **Deploy:** Git → pipeline (Azure DevOps/GitHub Actions) → ambientes dev → hml → main; Git **nunca** conecta direto em produção
+- **Deploy:** Git → pipeline (Azure DevOps/GitHub Actions) → ambientes dev → hom → prod (branches develop → hom → main); Git **nunca** conecta direto em produção
 
 ## Roteamento — sintoma → módulo
 
@@ -79,7 +79,7 @@ Valem em **todos** os módulos; cada um detalha as suas.
 5. **Auditabilidade.** `criado_em/criado_por/atualizado_em/atualizado_por` + soft delete (`ativo`, `excluido_em`).
 6. **Privilégio mínimo.** Owner faz DDL, app user faz DML; nunca DBA para usuário de aplicação.
 7. **Operações de risco pedem confirmação.** KILL SESSION, REBUILD sem ONLINE, GATHER_STATS em pico, TRUNCATE — sempre alertar antes. Tabela completa: `oracle-dba-ptbr`.
-8. **Deploy versionado.** Todo objeto passa por Git + pipeline com GMUD nomeada (`001_projeto_ddl_objeto.sql`); promoção dev→hml→main com aprovação. Detalhes: `oracle-devops-ptbr`.
+8. **Deploy versionado.** Todo objeto passa por Git + pipeline com GMUD nomeada (`001_projeto_ddl_objeto.sql`); promoção dev → hom → prod com aprovação. Detalhes: `oracle-devops-ptbr`.
 9. **19c por padrão.** Sintaxe 23ai/26ai só com versão-alvo declarada, marcada `-- 26ai` no código; módulos 19c apenas citam a alternativa. Detalhes: `oracle-26ai-ptbr`.
 
 ## Manutenção da suíte
