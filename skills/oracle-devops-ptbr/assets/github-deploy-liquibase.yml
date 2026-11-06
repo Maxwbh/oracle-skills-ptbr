@@ -15,10 +15,18 @@
 #   A) Runner hospedado conecta direto no banco (só se a rede permitir).
 #   B) Runner self-hosted DENTRO da rede do banco (recomendado p/ PRD).
 #   C) Workflow só valida/monta o pacote; DBA aplica manualmente (Git não toca
-#      o banco) — use updateSQL para gerar o script e publicá-lo como artefato.
+#      o banco) — use update-sql para gerar o script e publicá-lo como artefato.
 #
 # Segredos por environment (Settings > Environments > <env> > Secrets):
 #   DB_URL, DB_USER, DB_PASSWORD  (nunca no código; escopo por environment)
+#   Secrets de Environment só existem em jobs que declaram 'environment:' —
+#   por isso tudo que conecta no banco roda dentro dos jobs de deploy.
+#   As credenciais chegam ao Liquibase por LIQUIBASE_COMMAND_* (variáveis de
+#   ambiente), nunca na linha de comando.
+#
+# Liquibase 4.33.0 (Community) já traz o driver Oracle (ojdbc8). A partir do
+# 5.0 a edição Community não traz drivers: instale com 'liquibase lpm add ...'
+# (ver README do liquibase/setup-liquibase).
 
 name: deploy-liquibase
 
@@ -36,77 +44,85 @@ on:
 permissions:
   contents: read
 
+env:
+  LIQUIBASE_VERSION: "4.33.0"
+  LIQUIBASE_COMMAND_CHANGELOG_FILE: db/changelog-master.xml
+
 jobs:
   # ---------------------------------------------------------------------------
-  # 1) VALIDAÇÃO — sempre roda, sem tocar o banco. Gera o script previsto.
+  # 1) VALIDAÇÃO OFFLINE — sempre roda, sem tocar o banco.
+  #    O 'liquibase validate' exige conexão; ele roda dentro de cada deploy.
   # ---------------------------------------------------------------------------
   validar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Instalar Liquibase
-        uses: liquibase/liquibase-github-action@v7
+      - uses: actions/setup-python@v5
         with:
-          version: "4.33.0"
+          python-version: "3.12"
 
-      - name: Validar changelog (sintaxe, ids duplicados)
-        run: liquibase --changelog-file=db/changelog-master.xml validate
-
-      - name: Gerar SQL previsto (dry-run) e publicar como artefato
-        run: |
-          liquibase --changelog-file=db/changelog-master.xml \
-            --url="${{ secrets.DB_URL }}" \
-            --username="${{ secrets.DB_USER }}" \
-            --password="${{ secrets.DB_PASSWORD }}" \
-            updateSQL > deploy-previsto.sql || true
-        env: {}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: deploy-previsto-sql
-          path: deploy-previsto.sql
+      - name: XML bem-formado e arquivos referenciados existem
+        run: python scripts/gmud_liquibase.py verificar --root db
 
   # ---------------------------------------------------------------------------
   # 2) DEV — automático após merge em develop (sem gate).
   # ---------------------------------------------------------------------------
   deploy-dev:
     needs: validar
-    if: github.ref == 'refs/heads/develop' || github.event.inputs.ambiente == 'dev'
+    # push (só em develop) ou disparo manual escolhendo dev — nunca os dois.
+    if: github.event_name == 'push' || inputs.ambiente == 'dev'
     runs-on: ubuntu-latest
     environment: dev          # sem required reviewers
+    env:
+      LIQUIBASE_COMMAND_URL: ${{ secrets.DB_URL }}
+      LIQUIBASE_COMMAND_USERNAME: ${{ secrets.DB_USER }}
+      LIQUIBASE_COMMAND_PASSWORD: ${{ secrets.DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-      - uses: liquibase/liquibase-github-action@v7
+      - uses: liquibase/setup-liquibase@v3
         with:
-          version: "4.33.0"
+          version: ${{ env.LIQUIBASE_VERSION }}
+          edition: community
+      - name: Validar changelog no banco
+        run: liquibase validate
+      - name: SQL previsto (update-sql)
+        run: liquibase --contexts=dev update-sql > deploy-previsto-dev.sql
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deploy-previsto-dev
+          path: deploy-previsto-dev.sql
       - name: Liquibase update (context dev)
-        run: |
-          liquibase --changelog-file=db/changelog-master.xml \
-            --url="${{ secrets.DB_URL }}" \
-            --username="${{ secrets.DB_USER }}" \
-            --password="${{ secrets.DB_PASSWORD }}" \
-            --contexts=dev update
+        run: liquibase --contexts=dev update
 
   # ---------------------------------------------------------------------------
   # 3) HML — exige aprovação do environment "hml" (Enviar p/ HML).
   # ---------------------------------------------------------------------------
   deploy-hml:
     needs: validar
-    if: github.event.inputs.ambiente == 'hml'
+    if: inputs.ambiente == 'hml'
     runs-on: ubuntu-latest    # ou self-hosted, conforme estratégia B
     environment: hml          # required reviewers = approval gate
+    env:
+      LIQUIBASE_COMMAND_URL: ${{ secrets.DB_URL }}
+      LIQUIBASE_COMMAND_USERNAME: ${{ secrets.DB_USER }}
+      LIQUIBASE_COMMAND_PASSWORD: ${{ secrets.DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-      - uses: liquibase/liquibase-github-action@v7
+      - uses: liquibase/setup-liquibase@v3
         with:
-          version: "4.33.0"
+          version: ${{ env.LIQUIBASE_VERSION }}
+          edition: community
+      - name: Validar changelog no banco
+        run: liquibase validate
+      - name: SQL previsto (update-sql)
+        run: liquibase --contexts=hml update-sql > deploy-previsto-hml.sql
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deploy-previsto-hml
+          path: deploy-previsto-hml.sql
       - name: Liquibase update (context hml)
-        run: |
-          liquibase --changelog-file=db/changelog-master.xml \
-            --url="${{ secrets.DB_URL }}" \
-            --username="${{ secrets.DB_USER }}" \
-            --password="${{ secrets.DB_PASSWORD }}" \
-            --contexts=hml update
+        run: liquibase --contexts=hml update
 
   # ---------------------------------------------------------------------------
   # 4) PRD — exige aprovação do environment "prd" (Enviar p/ PRD).
@@ -114,23 +130,25 @@ jobs:
   # ---------------------------------------------------------------------------
   deploy-prd:
     needs: validar
-    if: github.event.inputs.ambiente == 'prd'
+    if: inputs.ambiente == 'prd'
     runs-on: ubuntu-latest    # troque por [self-hosted, oracle-prd] na estratégia B
     environment: prd
+    env:
+      LIQUIBASE_COMMAND_URL: ${{ secrets.DB_URL }}
+      LIQUIBASE_COMMAND_USERNAME: ${{ secrets.DB_USER }}
+      LIQUIBASE_COMMAND_PASSWORD: ${{ secrets.DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-      - uses: liquibase/liquibase-github-action@v7
+      - uses: liquibase/setup-liquibase@v3
         with:
-          version: "4.33.0"
+          version: ${{ env.LIQUIBASE_VERSION }}
+          edition: community
+      - name: Validar changelog no banco
+        run: liquibase validate
 
       # Estratégia C: NÃO aplica; gera o script e publica para o DBA aplicar.
       - name: Gerar script GMUD para o DBA (estratégia C)
-        run: |
-          liquibase --changelog-file=db/changelog-master.xml \
-            --url="${{ secrets.DB_URL }}" \
-            --username="${{ secrets.DB_USER }}" \
-            --password="${{ secrets.DB_PASSWORD }}" \
-            --contexts=prd updateSQL > gmud-prd.sql
+        run: liquibase --contexts=prd update-sql > gmud-prd.sql
       - uses: actions/upload-artifact@v4
         with:
           name: gmud-prd-sql
@@ -138,9 +156,4 @@ jobs:
 
       # Estratégias A/B: aplicar de fato (descomente quando a rede permitir).
       # - name: Liquibase update (context prd)
-      #   run: |
-      #     liquibase --changelog-file=db/changelog-master.xml \
-      #       --url="${{ secrets.DB_URL }}" \
-      #       --username="${{ secrets.DB_USER }}" \
-      #       --password="${{ secrets.DB_PASSWORD }}" \
-      #       --contexts=prd update
+      #   run: liquibase --contexts=prd update
