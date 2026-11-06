@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  changelog-master.xml
+  Changelog mestre Liquibase para projeto Oracle/APEX/ORDS (padrão GMUD).
+
+  Este é o ponto de entrada. Ele apenas INCLUI, na ordem correta, os changelogs
+  de cada release/GMUD. A ordem de <include> é a ordem de execução — Liquibase
+  roda os changesets na sequência em que aparecem.
+
+  Aplicar (CLI Liquibase):
+    liquibase changelog-file=changelog-master.xml update
+  ou, no SQLcl da Oracle:
+    lb update -changelog changelog-master.xml -context hml
+
+  Controle de ambiente por CONTEXT (dev | hml | prd). Ex.: um changeset com
+  context="prd" so roda quando o context prd e passado. Sem context, roda sempre.
+-->
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+      Pré-condição global: garante que o changelog só roda no Oracle e com o
+      usuário esperado. failOnError interrompe o deploy se não bater.
+    -->
+    <preConditions onFail="HALT" onError="HALT">
+        <dbms type="oracle"/>
+    </preConditions>
+
+    <!--
+      Inclua um changelog por release/GMUD, em ordem cronológica.
+      relativeToChangelogFile resolve o caminho a partir deste arquivo.
+      Use changelog-release-exemplo.xml como modelo de cada release.
+    -->
+    <include file="releases/2026.01-gmud-001/changelog.xml"
+             relativeToChangelogFile="true"/>
+    <!--
+    <include file="releases/2026.02-gmud-002/changelog.xml"
+             relativeToChangelogFile="true"/>
+    -->
+
+    <!--
+      Alternativa: incluir uma pasta inteira em ordem alfabética (por isso o
+      prefixo numérico no nome das releases/arquivos é importante).
+      <includeAll path="releases/" relativeToChangelogFile="true"/>
+    -->
+
+</databaseChangeLog>

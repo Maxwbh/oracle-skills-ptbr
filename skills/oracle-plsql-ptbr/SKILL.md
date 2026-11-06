@@ -1,19 +1,15 @@
 ---
 name: oracle-plsql-ptbr
-description: PL/SQL Oracle 19c — packages, procedures, functions, types, cursores, LOBs e EBR. ATIVE em BULK COLLECT, FORALL, NOCOPY, EXECUTE IMMEDIATE, MERGE INTO, compound trigger, editioning view, cross-edition trigger, CLOB/BLOB, Logger, exception handler, DML alternatives. Frases ambíguas com contexto PL/SQL — "criar package", "refatorar procedure", "processar LOB", "zero downtime deploy", "loop tá lento", "trigger de auditoria". NAO ATIVE em páginas APEX, endpoints ORDS, DBA operacional (sessões/locks/tablespace), tuning de queries (explain plan/AWR/ASH). Aplica naming Trivadis automaticamente — para revisão explícita do padrão use oracle-trivadis-ptbr. Templates em assets/.
+description: Módulo PL/SQL da suíte Oracle PT-BR. PL/SQL Oracle 19c — packages, procedures, functions, types, cursores, LOBs e EBR. ATIVE em BULK COLLECT, FORALL, NOCOPY, EXECUTE IMMEDIATE, MERGE INTO, compound trigger, editioning view, cross-edition trigger, CLOB/BLOB, Logger, exception handler, DML alternatives. Frases ambíguas com contexto PL/SQL — "criar package", "refatorar procedure", "processar LOB", "zero downtime deploy", "loop tá lento", "trigger de auditoria". NÃO ATIVE em páginas APEX, endpoints ORDS, DBA operacional (sessões/locks/tablespace), tuning de queries (explain plan/AWR/ASH). Aplica naming Trivadis automaticamente — para revisão explícita do padrão use oracle-trivadis-ptbr. Templates em assets/.
 metadata:
-  version: "2.0.0"
+  version: "2.2.2"
+  release_date: "2026-09-15"
+  repository: "https://github.com/maxwbh/oracle-skills-ptbr"
+  suite_size: 11
   author: "Maxwell da Silva Oliveira"
   contact: "contato@msbrasil.inf.br"
-  git: "https://github.com/maxwbh"
   organization: "M&S do Brasil LTDA"
   site: "https://msbrasil.inf.br"
-  changelog: |
-    v2.0.0: Breaking — divisão de oracle-sql-helper-ptbr v1.6.0 em 6 skills especializadas. Esta skill cobre PL/SQL, packages, procedures, functions, LOBs, EBR, triggers. Instale as 6 irmãs para cobertura completa da stack Oracle.
-    v1.6.0: (oracle-sql-helper-ptbr) Novo reference ords-data-dictionary-ptbr.md — USER_ORDS_*/DBA_ORDS_*, depreciacao OAUTH/ORDS_SECURITY, evolucao 18.x-25.x.
-    v1.5.0: (oracle-sql-helper-ptbr) Novo reference apex-data-dictionary-ptbr.md — hierarquia APEX_APPLICATION_*/APEX_APPL_*/APEX_WORKSPACE_*, versoes 19-26.1.
-    v1.4.0: (oracle-sql-helper-ptbr) Remocao de clientes reais. Autoria M&S do Brasil LTDA.
-    v1.3.0: (oracle-sql-helper-ptbr) Novo reference data-dictionary-ptbr.md — hierarquia Oracle, matriz edicao x tecnologia, evolucao 11g-26ai.
   tags:
     - "oracle"
     - "plsql"
@@ -29,7 +25,23 @@ metadata:
   icon: "🗄️"
 ---
 
-# oracle-plsql-ptbr — v2.0.0
+# Suíte Oracle PT-BR — Módulo PL/SQL (oracle-plsql-ptbr)
+
+> **Versão:** 2.2.2 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (11 recursos nesta skill)
+> **v2.2.2:** suíte com 10 skills (oracle-lab-ptbr). Histórico em `CHANGELOG.md`.
+
+Suíte completa (10 skills — conjunto único):
+- **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
+- **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
+- **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
+- **oracle-apex-ptbr** — APEX 26.1: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
+- **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
+- **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
+- **oracle-devops-ptbr** — Git/CI-CD: estrutura, Liquibase, pipelines, GMUD
+- **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
+- **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
+
 
 PL/SQL Oracle 19c seguindo Trivadis Guidelines 4.4. Foco em código correto, seguro e performático.
 
@@ -40,7 +52,7 @@ PL/SQL Oracle 19c seguindo Trivadis Guidelines 4.4. Foco em código correto, seg
 | Área | Reference | Assets |
 |---|---|---|
 | **EBR (zero downtime)** | `references/ebr-editioning-views.md` | (conceitual) |
-| **PL/SQL** | `references/` → **oracle-trivadis-ptbr** | `package_header.sql`, `package_body.sql`, `exception_template.sql`, `bulk_processing_template.sql`, `dml_alternatives_to_plsql.sql`, `nocopy_for_lobs.sql`, `clob_blob_operations.sql`, `logger_integration.sql`, `triggers_canonicos.sql` |
+| **PL/SQL** | naming/estrutura: **oracle-trivadis-ptbr** | `package_header.sql`, `package_body.sql`, `exception_template.sql`, `bulk_processing_template.sql`, `dml_alternatives_to_plsql.sql`, `nocopy_for_lobs.sql`, `clob_blob_operations.sql`, `logger_integration.sql`, `triggers_canonicos.sql` |
 
 > **Referência cruzada de nomenclatura:** padrão Trivadis 4.4 completo (prefixos, estrutura, naming PT-BR) está em **oracle-trivadis-ptbr**. Esta skill aplica as convenções automaticamente — carregue `oracle-trivadis-ptbr` quando o foco for revisão explícita de padrão.
 
@@ -58,6 +70,8 @@ PL/SQL Oracle 19c seguindo Trivadis Guidelines 4.4. Foco em código correto, seg
 - Qualquer menção a AUTONOMOUS_TRANSACTION, PRAGMA, DBMS_ERRLOG
 
 **Não usar** para: APEX pages/regions/items, ORDS endpoints/modules, DBA ops (sessão/lock/tablespace), tuning de queries.
+
+> **Fronteira com oracle-tuning-ptbr:** paralelismo *como técnica de escrita de DML* (hints `PARALLEL`/`APPEND` em INSERT SELECT, CTAS, external table) fica aqui. *Diagnóstico de plano de execução* (explain plan, AWR, ASH, escolha de índice) vai para **oracle-tuning-ptbr**.
 
 ## Princípios canônicos
 
@@ -89,3 +103,4 @@ PL/SQL Oracle 19c seguindo Trivadis Guidelines 4.4. Foco em código correto, seg
 | ORDS handler, módulo REST | **oracle-ords-ptbr** |
 | Sessão, lock, flashback, tablespace | **oracle-dba-ptbr** |
 | Explain plan, AWR, index, tuning | **oracle-tuning-ptbr** |
+| Sintaxe 23ai/26ai (BOOLEAN, RETURNING OLD/NEW, RESETTABLE, transpiler) — só com versão declarada | **oracle-26ai-ptbr** |

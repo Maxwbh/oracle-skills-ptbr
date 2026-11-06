@@ -1,6 +1,10 @@
 --==============================================================================
 -- Template: APEX BLOB Upload/Download
 --
+-- Compatibilidade: upload/download via APEX_APPLICATION_TEMP_FILES e
+--   WPG_DOCLOAD valem em 24.1/24.2/26.1. Document Generator com PDF protegido
+--   por senha é exclusivo do 26.1. Matriz: references/apex-version-matrix-ptbr.md
+--
 -- Cenários cobertos:
 --   1. Upload de arquivo via File Browse Item
 --   2. Salvar BLOB gerado em PL/SQL (ex: PDF criado por html2pdf.js)
@@ -41,16 +45,18 @@ DECLARE
   l_tipo_mime   VARCHAR2(100);
   l_id_documento     NUMBER;
 BEGIN
-  -- Recupera arquivo do storage temporário
-  SELECT blob_content, filename, tipo_mime
+  -- Recupera arquivo do storage temporário.
+  -- Colunas reais da view: name, filename, mime_type, blob_content.
+  -- (mapeadas para a tabela de aplicação documentos, cuja coluna é tipo_mime)
+  SELECT blob_content, filename, mime_type
     INTO l_blob, l_nome_arquivo, l_tipo_mime
     FROM APEX_APPLICATION_TEMP_FILES
-   WHERE nome = :P15_FILE_BROWSE;  -- nome do item de upload
+   WHERE name = :P15_FILE_BROWSE;  -- coluna NAME guarda o nome único do upload
 
   -- Validação de tipo
   IF l_tipo_mime NOT IN ('application/pdf', 'image/png', 'image/jpeg') THEN
     APEX_ERROR.add_error(
-      p_mensagem          => 'Tipo de arquivo não permitido: ' || l_tipo_mime,
+      p_message          => 'Tipo de arquivo não permitido: ' || l_tipo_mime,
       p_display_location => APEX_ERROR.c_inline_with_field_and_notif,
       p_page_item_name   => 'P15_FILE_BROWSE'
     );
@@ -60,7 +66,7 @@ BEGIN
   -- Validação de tamanho (max 10MB)
   IF DBMS_LOB.getlength(l_blob) > 10485760 THEN
     APEX_ERROR.add_error(
-      p_mensagem          => 'Arquivo excede limite de 10MB',
+      p_message          => 'Arquivo excede limite de 10MB',
       p_display_location => APEX_ERROR.c_inline_with_field_and_notif,
       p_page_item_name   => 'P15_FILE_BROWSE'
     );
@@ -83,7 +89,7 @@ BEGIN
   ) RETURNING id INTO l_id_documento;
 
   -- Limpa o arquivo temp da APEX (importante!)
-  DELETE FROM APEX_APPLICATION_TEMP_FILES WHERE nome = :P15_FILE_BROWSE;
+  DELETE FROM APEX_APPLICATION_TEMP_FILES WHERE name = :P15_FILE_BROWSE;
 
   COMMIT;
 
@@ -97,7 +103,7 @@ EXCEPTION
   WHEN OTHERS THEN
     APEX_DEBUG.error('Erro em ' || l_nome_unidade || ': ' || SQLERRM);
     APEX_ERROR.add_error(
-      p_mensagem          => 'Erro ao processar arquivo: ' || SQLERRM,
+      p_message          => 'Erro ao processar arquivo: ' || SQLERRM,
       p_display_location => APEX_ERROR.c_inline_in_notification
     );
 END;
@@ -132,11 +138,15 @@ async function generateAndSavePdf() {
   // Converte BLOB para Base64
   const base64 = await blobToBase64(pdfBlob);
   
+  // Fatia o Base64 em chunks de 30k: cada elemento de f01 é limitado a
+  // 32767 bytes — um único elemento com o PDF inteiro ESTOURA o limite.
+  const chunks = base64.match(/.{1,30000}/g);
+
   // Envia para servidor
   apex.server.process('SAVE_GENERATED_PDF', {
     x01: $v('P15_ID_FATURA'),         // contexto
     x02: 'demonstrativo_irpf.pdf',     // filename
-    f01: [base64]                       // payload (em F01 array, suporta tamanho)
+    f01: chunks                         // payload em chunks no array F01
   }, {
     dataType: 'json',
     success: function(data) {
@@ -415,7 +425,7 @@ END;
 /*
 ANTI-PATTERN 1: Não limpar APEX_APPLICATION_TEMP_FILES após processar
   - Storage temp acumula sem limite
-  - Após processar, sempre DELETE FROM APEX_APPLICATION_TEMP_FILES WHERE nome = ...
+  - Após processar, sempre DELETE FROM APEX_APPLICATION_TEMP_FILES WHERE name = ...
 
 ANTI-PATTERN 2: Não validar tipo_mime
   - Cliente pode renomear .exe para .pdf

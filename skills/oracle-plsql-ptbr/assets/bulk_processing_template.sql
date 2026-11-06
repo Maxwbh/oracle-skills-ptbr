@@ -13,7 +13,11 @@
 
 --==============================================================================
 -- VARIANTE 1: BULK COLLECT completo
--- Use quando volume cabe em memória (< ~100k linhas tipicamente)
+-- Use quando o resultado cabe com folga na PGA da sessão.
+-- O limite real NÃO é a contagem de linhas, e sim PGA disponível × tamanho
+-- médio da linha: um %ROWTYPE com colunas largas (LOB inline, VARCHAR2 grandes)
+-- pode estourar bem antes de 100k linhas. Em caso de dúvida, use a Variante 2
+-- (LIMIT). Regra prática: < ~100k linhas ESTREITAS.
 --==============================================================================
 
 DECLARE

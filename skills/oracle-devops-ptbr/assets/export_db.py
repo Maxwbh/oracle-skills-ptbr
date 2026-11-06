@@ -53,7 +53,7 @@ CABECALHO_TEMPLATE = """\
 -- export_db.py — M&S do Brasil LTDA — contato@msbrasil.inf.br
 -- ATENÇÃO: Arquivo gerado automaticamente.
 --          Altere no banco e execute export_db.py para sincronizar.
--- {'─' * 60}
+-- {separador}
 
 """
 
@@ -140,6 +140,7 @@ def escrever_arquivo(
         tipo=tipo,
         schema=schema.upper(),
         data=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        separador="─" * 60,
     )
     destino.write_text(cabecalho + ddl.strip() + "\n", encoding="utf-8")
 
@@ -343,8 +344,9 @@ def main() -> None:
     log.info(SEP2)
     log.info("")
     log.info("Próximos passos:")
+    data_commit = datetime.now().strftime("%Y-%m-%d")
     log.info(f"  git add db/")
-    log.info(f"  git commit -m 'db: export DDL {schema.upper()} — {datetime.now().strftime('%Y-%m-%d')}'")
+    log.info(f"  git commit -m 'db: export DDL {schema.upper()} — {data_commit}'")
 
 
 if __name__ == "__main__":

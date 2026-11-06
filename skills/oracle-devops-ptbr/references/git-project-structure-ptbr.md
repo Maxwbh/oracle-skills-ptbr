@@ -1,8 +1,24 @@
 # Estrutura Git para Projetos Oracle/APEX/ORDS
 
-Referência completa para organizar projetos Oracle 19c + APEX 24.2 + ORDS no Git. Cobre estrutura de diretórios, convenções de nomenclatura de arquivos, ordem de deploy, estratégia de branches, versionamento de módulos ORDS, export split do APEX, GMUD naming e CI/CD com GitHub Actions.
+Referência completa para organizar projetos Oracle 19c + APEX 24.2/26.1 + ORDS no Git. Cobre estrutura de diretórios, convenções de nomenclatura de arquivos, ordem de deploy, estratégia de branches, versionamento de módulos ORDS, export split do APEX, GMUD naming e CI/CD com GitHub Actions.
 
 ---
+
+## Índice
+
+- [1. Estrutura canônica do repositório](#1-estrutura-canônica-do-repositório)
+- [2. Convenções de nomenclatura de arquivos](#2-convenções-de-nomenclatura-de-arquivos)
+- [3. Extensões de arquivo Oracle no Git](#3-extensões-de-arquivo-oracle-no-git)
+- [4. Ordem de deploy — dependências entre objetos](#4-ordem-de-deploy-dependências-entre-objetos)
+- [5. Estratégia de branches](#5-estratégia-de-branches)
+- [6. Export APEX — modo split (recomendado)](#6-export-apex-modo-split-recomendado)
+- [7. Versionamento de módulos ORDS no Git](#7-versionamento-de-módulos-ords-no-git)
+- [8. Configuração de environments](#8-configuração-de-environments)
+- [9. CI/CD — GitHub Actions](#9-cicd-github-actions)
+- [10. Fontes e referências](#10-fontes-e-referências)
+- [12. Scripts Python — uso rápido](#12-scripts-python-uso-rápido)
+- [Linkagem interna](#linkagem-interna)
+- [11. Sistema de Changelog do banco — migrations rastreadas](#11-sistema-de-changelog-do-banco-migrations-rastreadas)
 
 ## 1. Estrutura canônica do repositório
 
@@ -475,9 +491,16 @@ Se `DB_SCHEMA` não for definido, o deploy ocorre no próprio schema de `DB_USER
 
 ## 11. Sistema de Changelog do banco — migrations rastreadas
 
+> **Legado.** Este fluxo (changelog YAML + `apply_changelog.py` + tabela
+> `db_changelog`) precede a adoção do Liquibase e permanece para projetos que já
+> o usam. Para **novos projetos, prefira o Liquibase** (changelog XML real,
+> `DATABASECHANGELOG`, rollback por tag, contexts por ambiente, suporte nativo
+> no SQLcl) — ver `references/liquibase-cicd-gmud-ptbr.md`. O assistente
+> `assets/setup_devops.py` gera qualquer um dos dois conforme a escolha.
+
 ### Conceito
 
-Similar ao Flyway/Liquibase, mas nativo Oracle + shell. Cada alteração no banco é um arquivo SQL rastreado por `db/changelog.yml` e controlado pela tabela `db_changelog`.
+Similar ao Flyway/Liquibase, mas nativo Oracle + Python. Cada alteração no banco é um arquivo SQL rastreado por `db/changelog.yml` e controlado pela tabela `db_changelog`.
 
 ```
 db/

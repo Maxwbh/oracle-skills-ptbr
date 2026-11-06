@@ -2,6 +2,22 @@
 
 Performance tuning para desenvolvedor Oracle. Foco no que dá retorno mais rápido: bind variables, indexes, plan análise, e bulk processing. Não cobre AWR/ASH (escopo DBA) nem otimização de hardware.
 
+## Índice
+
+- [Princípio fundamental: medir antes, depois](#princípio-fundamental-medir-antes-depois)
+- [Bind Variables — a otimização #1](#bind-variables-a-otimização-1)
+- [EXPLAIN PLAN](#explain-plan)
+- [Indexes](#indexes)
+- [Hints — uso parcimonioso](#hints-uso-parcimonioso)
+- [Paralelismo (Parallel Execution)](#paralelismo-parallel-execution)
+- [Cursor sharing e bind peeking](#cursor-sharing-e-bind-peeking)
+- [Bulk Processing como otimização](#bulk-processing-como-otimização)
+- [Identificar queries problemáticas](#identificar-queries-problemáticas)
+- [Statistics — manter atualizadas](#statistics-manter-atualizadas)
+- [Anti-patterns Performance](#anti-patterns-performance)
+- [Checklist rápido para query lenta](#checklist-rápido-para-query-lenta)
+- [Linkagem](#linkagem)
+
 ## Princípio fundamental: medir antes, depois
 
 Não otimize por intuição. Sempre:
@@ -89,11 +105,11 @@ Bind é automático com:
 ```sql
 -- Forma 1: gerar plan antes de executar
 EXPLAIN PLAN FOR
-SELECT c.name, COUNT(i.id)
+SELECT c.nome, COUNT(i.id)
   FROM clientes c
   LEFT JOIN faturas i ON c.id = i.id_cliente
  WHERE c.status = 'A'
- GROUP BY c.name;
+ GROUP BY c.nome;
 
 SELECT * FROM TABLE(DBMS_XPLAN.display);
 ```
@@ -148,7 +164,7 @@ Quando a query usa um índice, o plan mostra um destes tipos. **Não são equiva
 | `INDEX UNIQUE SCAN` | 1-3 LIO | Acesso por valor único (PK ou unique constraint). Best case absoluto. |
 | `INDEX RANGE SCAN` | 1-N LIO | Range de valores; pode retornar 1 linha ou milhares |
 | `INDEX FULL SCAN` | mais que TABLE FULL geralmente | Lê o índice inteiro (geralmente ruim) |
-| `INDEX FAST FULL SCAN` | similar a FULL SCAN | Lê índice em paralelo, sem ordem |
+| `INDEX FAST FULL SCAN` | similar a TABLE FULL SCAN | Lê o índice inteiro com I/O multibloco, sem ordenação (pode ser paralelizado). Útil quando todas as colunas da query estão no índice |
 | `INDEX SKIP SCAN` | variável | "Pula" prefixos do composite index quando primeira coluna não é filtrada |
 
 #### `INDEX UNIQUE SCAN` — query por chave única
@@ -248,24 +264,56 @@ Se `E-Rows` e `A-Rows` divergem muito, optimizer escolheu plan errado. Atualize 
 ### Tipos de index
 
 ```sql
--- B-tree (default) — alta seletividade
-CREATE INDEX idx_customers_status ON clientes(status);
+-- B-tree (default) — alta seletividade, OLTP
+CREATE INDEX idx_clientes_status ON clientes(status);
 
--- Composite — múltiplas colunas em sequência
-CREATE INDEX idx_invoices_cust_date ON faturas(id_cliente, data_emissao);
+-- Composite — múltiplas colunas em sequência (ordem importa, ver abaixo)
+CREATE INDEX idx_faturas_cli_data ON faturas(id_cliente, data_emissao);
 
--- Function-based — quando WHERE usa função
-CREATE INDEX idx_emp_upper_name ON funcionarios(UPPER(name));
--- Agora isto usa index:
-SELECT * FROM funcionarios WHERE UPPER(name) = 'JOÃO SILVA';
+-- Function-based — quando WHERE usa função (predicado e índice com a MESMA função)
+CREATE INDEX idx_func_upper_nome ON funcionarios(UPPER(nome));
+SELECT * FROM funcionarios WHERE UPPER(nome) = 'JOÃO SILVA';  -- agora usa o índice
 
--- Bitmap — baixa cardinalidade (poucos valores distintos), poucas modificações
--- Útil em data warehouse, NÃO em OLTP
-CREATE BITMAP INDEX idx_emp_gender ON funcionarios(gender);
+-- Bitmap — baixa cardinalidade, em DATA WAREHOUSE (NÃO em OLTP — ver alerta)
+CREATE BITMAP INDEX idx_func_sexo ON funcionarios(sexo);
 
--- Unique — força unicidade + agiliza lookup
-CREATE UNIQUE INDEX uk_customers_cpf ON clientes(cpf);
+-- Unique — força unicidade + agiliza lookup (INDEX UNIQUE SCAN)
+CREATE UNIQUE INDEX uk_clientes_cpf ON clientes(cpf);
+
+-- Reverse Key — inverte os bytes da chave para espalhar inserts sequenciais
+-- (evita "hot block"/contenção no lado direito do índice quando a PK vem de
+--  sequence em ambiente de alta concorrência). Custo: range scan deixa de
+--  funcionar (só igualdade).
+CREATE INDEX idx_fat_id_rev ON faturas(id) REVERSE;
+
+-- Invisible — mantido por DML, mas IGNORADO pelo optimizer por padrão.
+-- Use para testar a remoção de um índice sem droppar, ou introduzir um índice
+-- novo sem afetar planos até validar.
+CREATE INDEX idx_fat_teste ON faturas(total) INVISIBLE;
+ALTER INDEX idx_fat_teste VISIBLE;     -- promove a visível quando validado
+ALTER INDEX idx_fat_teste INVISIBLE;   -- volta a esconder
+-- Para o optimizer enxergar invisíveis só nesta sessão (teste):
+ALTER SESSION SET optimizer_use_invisible_indexes = TRUE;
 ```
+
+> **Bitmap — por que NÃO em OLTP:** numa entrada de bitmap, uma única chave
+> cobre um range de rowids. Quando um DML altera a coluna indexada, o Oracle
+> trava **todas as linhas do fragmento de bitmap** afetado (não a linha única),
+> gerando contenção `enq: TX` e até deadlocks sob concorrência. Bitmap é para
+> data warehouse (carga em lote, leitura intensa), não para tabelas
+> transacionais. Disponível só em Enterprise Edition.
+
+> **"Covering index" não é um tipo no Oracle.** O termo (vindo do SQL Server)
+> descreve a situação em que **todas as colunas da query estão no índice**, então
+> o optimizer não precisa ler a tabela. No Oracle isso é apenas um índice
+> (composite) cujo plano resultante NÃO tem `TABLE ACCESS BY INDEX ROWID` —
+> aparece como `INDEX RANGE SCAN`/`INDEX FAST FULL SCAN` puro. É uma técnica,
+> não um `CREATE ... <tipo>`.
+
+> **Invisible × Unusable** (não confundir): *invisible* é mantido por DML e
+> ignorado pelo optimizer (a menos do parâmetro acima) — reversível e barato
+> para testes. *Unusable* não é mantido por DML e não tem segmento — usado para
+> acelerar cargas em lote (depois `ALTER INDEX ... REBUILD`).
 
 ### Composite index — ordem importa
 
@@ -286,14 +334,15 @@ SELECT * FROM faturas WHERE data_emissao > SYSDATE - 30;
 
 ```sql
 -- Indexes não utilizados (precisa MONITORING USAGE primeiro)
-ALTER INDEX idx_customers_status MONITORING USAGE;
+ALTER INDEX idx_clientes_status MONITORING USAGE;
 
--- Depois de período de uso
-SELECT index_name, used FROM v$object_usage
- WHERE table_name = 'CUSTOMERS';
+-- Depois de período de uso (USER_OBJECT_USAGE substituiu V$OBJECT_USAGE,
+-- deprecada desde 12.1; em 19c use USER_OBJECT_USAGE / DBA_OBJECT_USAGE)
+SELECT index_name, used FROM user_object_usage
+ WHERE table_name = 'CLIENTES';
 
 -- Para parar
-ALTER INDEX idx_customers_status NOMONITORING USAGE;
+ALTER INDEX idx_clientes_status NOMONITORING USAGE;
 ```
 
 ### Quando index pode atrapalhar
@@ -309,8 +358,8 @@ Hints forçam optimizer a escolher caminho específico. **Quase sempre é melhor
 ### Sintaxe
 
 ```sql
-SELECT /*+ INDEX(c idx_customers_status) */
-       c.id, c.name
+SELECT /*+ INDEX(c idx_clientes_status) */
+       c.id, c.nome
   FROM clientes c
  WHERE c.status = 'A';
 ```
@@ -325,7 +374,9 @@ SELECT /*+ INDEX(c idx_customers_status) */
 | `USE_NL(tab1 tab2)` | Força nested loops |
 | `USE_HASH(tab1 tab2)` | Força hash join |
 | `LEADING(tabela)` | Define primeira tabela no join order |
-| `PARALLEL(tabela, N)` | Habilita paralelismo |
+| `PARALLEL(N)` | Paralelismo no nível do statement (DOP N) — autoriza PX em todos os acessos elegíveis |
+| `PARALLEL(tabela, N)` | Paralelismo no nível do objeto (sobrepõe o DOP da tabela) |
+| `NO_PARALLEL(tabela)` | Desabilita paralelismo para a tabela/operação |
 | `RESULT_CACHE` | Cacheia resultado da query |
 | `MATERIALIZE` em WITH | Força materialização de subquery |
 
@@ -340,6 +391,106 @@ SELECT /*+ INDEX(c idx_customers_status) */
 - "Vi um cara na internet usar" — sem entender o porquê
 - Para "garantir" comportamento — frágil quando dados mudam
 - Em vez de criar index — quase sempre o index resolveria melhor
+
+## Paralelismo (Parallel Execution)
+
+Paralelismo divide o trabalho de uma operação entre vários processos (PX
+servers). Ajuda em **operações grandes** (full scans de tabelas grandes, joins
+volumosos, criação de índice, ETL). **Não ajuda — e atrapalha — em OLTP de
+linhas isoladas e tabelas pequenas.**
+
+### Quando paralelismo ajuda x atrapalha
+
+| Cenário | Paralelismo |
+|---|---|
+| Full scan de tabela grande (milhões de linhas) | Ajuda |
+| Join volumoso (HASH JOIN sobre tabelas grandes) | Ajuda |
+| CREATE INDEX / ALTER INDEX REBUILD em tabela grande | Ajuda |
+| CTAS / INSERT ... SELECT em massa (ETL) | Ajuda (com parallel DML) |
+| Lookup por PK / poucas linhas (OLTP) | Atrapalha (overhead de coordenacao) |
+| Tabela pequena (ate milhares de linhas, dezenas de blocos) | Nunca habilitar |
+| Sistema ja saturado de CPU | Atrapalha (cada query consome mais cores) |
+
+Regra pratica: paralelismo troca **mais CPU/processos** por **menos tempo de
+parede**. So vale quando ha trabalho grande a dividir e recursos ociosos.
+
+### Sintaxe do hint - statement-level vs object-level (11.2+)
+
+A partir do 11.2 ha duas formas (nao confundir):
+
+```sql
+-- STATEMENT-LEVEL: DOP para todo o statement (forma recomendada hoje).
+-- Sem objeto no hint -> escopo e o statement inteiro.
+SELECT /*+ PARALLEL(4) */ c.id, c.nome
+  FROM clientes c
+  JOIN faturas f ON f.id_cliente = c.id;
+
+-- DOP omitido -> Oracle calcula (Auto DOP); minimo e 2.
+SELECT /*+ PARALLEL */ ... ;
+
+-- OBJECT-LEVEL: DOP so para a tabela/alias indicado.
+SELECT /*+ PARALLEL(f, 4) */ ... FROM faturas f;
+```
+
+Detalhes que importam:
+- Hints **statement-level tem precedencia** sobre object-level.
+- Um hint `PARALLEL` no nivel de statement **habilita Auto DOP**
+  independentemente de `PARALLEL_DEGREE_POLICY`.
+- `NO_PARALLEL(tabela)` desliga paralelismo para um objeto.
+
+### Parallel DML exige habilitacao explicita (pegadinha classica)
+
+Diferente de query e DDL (paralelos por padrao quando ha hint/atributo), **o
+parallel DML esta DESABILITADO por padrao na sessao**. Sem habilitar, um
+`INSERT`/`UPDATE`/`DELETE`/`MERGE` **nao roda em paralelo nem com o hint
+PARALLEL** - apenas a parte de SELECT/scan pode paralelizar.
+
+```sql
+-- Forma classica (sessao): habilite ANTES, fora de transacao aberta
+ALTER SESSION ENABLE PARALLEL DML;
+
+INSERT /*+ PARALLEL(4) */ INTO arquivo_faturas
+SELECT /*+ PARALLEL(4) */ * FROM faturas WHERE data_emissao < ADD_MONTHS(SYSDATE, -12);
+COMMIT;
+
+-- Forma por statement (12.1+): hint ENABLE_PARALLEL_DML, sem ALTER SESSION
+INSERT /*+ ENABLE_PARALLEL_DML PARALLEL(4) */ INTO arquivo_faturas
+SELECT * FROM faturas WHERE data_emissao < ADD_MONTHS(SYSDATE, -12);
+COMMIT;
+```
+
+Cuidados:
+- **ORA-12841:** nao da para `ALTER SESSION ENABLE/DISABLE PARALLEL DML` dentro
+  de uma transacao aberta - faca COMMIT/ROLLBACK antes.
+- Apos parallel DML em uma tabela, a sessao **nao pode ler a mesma tabela** sem
+  antes commitar (restricao transacional do PDML).
+- Parallel DML/DDL **nao e suportado com object types** - executa serial.
+
+### Conferir paralelismo
+
+```sql
+-- DOP solicitado vs efetivo das sessoes PX ativas
+SELECT req_degree AS dop_solicitado, degree AS dop_efetivo
+  FROM v$px_session
+ WHERE req_degree IS NOT NULL;
+
+-- Atributo PARALLEL definido em tabelas (DEGREE 1 = serial)
+SELECT table_name, degree
+  FROM user_tables
+ WHERE TRIM(degree) NOT IN ('1');
+
+-- No plano: procure PX COORDINATOR, PX SEND, PX BLOCK ITERATOR.
+-- Em DML, se a operacao LOAD aparece ACIMA do PX COORDINATOR, o parallel DML
+-- NAO foi habilitado; o bloco "Note" do DBMS_XPLAN tambem sinaliza isso.
+```
+
+### Anti-patterns de paralelismo
+
+- Hint `PARALLEL` em query OLTP de poucas linhas -> overhead de coordenacao > ganho.
+- Definir `ALTER TABLE ... PARALLEL N` permanente em tabela OLTP -> todo full scan
+  vira paralelo, drena PX servers do sistema. Prefira o hint pontual.
+- Esperar parallel DML sem `ENABLE PARALLEL DML` -> roda serial silenciosamente.
+- DOP altissimo "para ir mais rapido" -> satura CPU; o ganho satura e depois piora.
 
 ## Cursor sharing e bind peeking
 
@@ -374,7 +525,7 @@ Loops linha-a-linha em PL/SQL são MUITO mais lentos que bulk. Diferença de 10x
 
 ```sql
 FOR r IN (SELECT id, valor FROM faturas) LOOP
-  INSERT INTO archive_invoices VALUES (r.id, r.valor, SYSDATE);
+  INSERT INTO arquivo_faturas VALUES (r.id, r.valor, SYSDATE);
 END LOOP;
 ```
 
@@ -382,14 +533,14 @@ END LOOP;
 
 ```sql
 DECLARE
-  TYPE t_inv_tab IS TABLE OF faturas%ROWTYPE;
-  l_invs t_inv_tab;
+  TYPE t_faturas IS TABLE OF faturas%ROWTYPE;
+  l_faturas t_faturas;
 BEGIN
-  SELECT * BULK COLLECT INTO l_invs FROM faturas;
+  SELECT * BULK COLLECT INTO l_faturas FROM faturas;
 
-  FORALL i IN l_invs.FIRST..l_invs.LAST
-    INSERT INTO archive_invoices(id, valor, archived_at)
-    VALUES (l_invs(i).id, l_invs(i).valor, SYSDATE);
+  FORALL i IN l_faturas.FIRST..l_faturas.LAST
+    INSERT INTO arquivo_faturas(id, valor, arquivado_em)
+    VALUES (l_faturas(i).id, l_faturas(i).valor, SYSDATE);
 
   COMMIT;
 END;
@@ -399,23 +550,23 @@ END;
 
 ```sql
 DECLARE
-  CURSOR co_inv IS SELECT * FROM faturas;
-  TYPE t_inv_tab IS TABLE OF faturas%ROWTYPE;
-  l_invs t_inv_tab;
+  CURSOR co_faturas IS SELECT * FROM faturas;
+  TYPE t_faturas IS TABLE OF faturas%ROWTYPE;
+  l_faturas t_faturas;
   lc_limit CONSTANT PLS_INTEGER := 10000;
 BEGIN
-  OPEN co_inv;
+  OPEN co_faturas;
   LOOP
-    FETCH co_inv BULK COLLECT INTO l_invs LIMIT lc_limit;
-    EXIT WHEN l_invs.COUNT = 0;
+    FETCH co_faturas BULK COLLECT INTO l_faturas LIMIT lc_limit;
+    EXIT WHEN l_faturas.COUNT = 0;
 
-    FORALL i IN l_invs.FIRST..l_invs.LAST
-      INSERT INTO archive_invoices(id, valor, archived_at)
-      VALUES (l_invs(i).id, l_invs(i).valor, SYSDATE);
+    FORALL i IN l_faturas.FIRST..l_faturas.LAST
+      INSERT INTO arquivo_faturas(id, valor, arquivado_em)
+      VALUES (l_faturas(i).id, l_faturas(i).valor, SYSDATE);
 
-    COMMIT;  -- chunk-level commit
+    COMMIT;  -- commit por chunk
   END LOOP;
-  CLOSE co_inv;
+  CLOSE co_faturas;
 END;
 ```
 
@@ -453,7 +604,7 @@ SELECT s.sid, s.serial#, s.username, s.event, s.wait_class,
        s.seconds_in_wait, s.sql_id
   FROM v$session s
  WHERE s.username IS NOT NULL
-   AND s.status = 'ATIVO'
+   AND s.status = 'ACTIVE'
    AND s.event NOT LIKE 'SQL*Net%idle%'
  ORDER BY s.seconds_in_wait DESC;
 ```
@@ -472,13 +623,19 @@ SELECT table_name, last_analyzed, num_rows, blocks
  ORDER BY last_analyzed NULLS FIRST;
 
 -- Coletar para tabela
-EXEC DBMS_STATS.gather_table_stats(USER, 'INVOICES', cascade => TRUE);
+EXEC DBMS_STATS.gather_table_stats(USER, 'FATURAS', cascade => TRUE);
 
 -- Schema inteiro
 EXEC DBMS_STATS.gather_schema_stats(USER, cascade => TRUE);
 ```
 
 **Frequência:** geralmente Oracle Auto Task roda diariamente. Mas após cargas pesadas, force coleta manual.
+
+> Para aprofundamento — histogramas (frequency/top-frequency/height-balanced/hybrid),
+> estatísticas estendidas (column groups), preferences, SQL Plan Directives,
+> lock/pending/restore/retention/report e o Optimizer Statistics Advisor — veja
+> `references/optimizer-statistics-ptbr.md` e o asset
+> `assets/optimizer_statistics_examples.sql`.
 
 ## Anti-patterns Performance
 

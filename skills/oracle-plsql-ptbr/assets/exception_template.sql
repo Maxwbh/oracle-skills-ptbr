@@ -10,6 +10,13 @@
 --   - Exception handler em três níveis: específico → conhecido → catch-all
 --   - ROLLBACK explícito antes de re-raise quando houve DML
 --   - Mensagens de erro com contexto (lc_nome_unidade) para debugging
+--
+-- DEPENDÊNCIAS DE CONTEXTO (este é um esqueleto, não compila isolado):
+--   - gc_nome_pacote: constante declarada no PACKAGE BODY
+--     (ex.: gc_nome_pacote CONSTANT VARCHAR2(30) := 'MEU_PKG';)
+--   - e_regra_negocio_conhecida: EXCEPTION declarada no spec ou body,
+--     com PRAGMA EXCEPTION_INIT se mapeada a um código Oracle
+--   Cole este bloco DENTRO de um package que já declare ambos.
 --==============================================================================
 
 PROCEDURE <nome_procedure> (

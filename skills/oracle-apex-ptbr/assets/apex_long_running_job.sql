@@ -5,18 +5,19 @@
 -- Solução: rodar em background, retornar imediatamente, polling via AJAX
 --          para mostrar progresso ao usuário.
 --
--- Versão: APEX 24.2
+-- Versão de referência: APEX 26.1 (padrões válidos de 24.2+)
 --
 -- Duas abordagens cobertas:
---   1. APEX_BACKGROUND_PROCESS (APEX 21.2+) — usa Scheduler internamente,
---                                              integrado com APEX session
+--   1. Background Page Processing (Execution Chain "Run in Background",
+--      APEX 23.1+) — declarativo, integrado à APEX session; o package
+--      APEX_BACKGROUND_PROCESS reporta progresso/status
 --   2. DBMS_SCHEDULER + tabela de status — funciona em qualquer versão,
---                                          mais flexível
+--      mais flexível, disparo programático explícito
 --==============================================================================
 
 
 --==============================================================================
--- ABORDAGEM 1: APEX_BACKGROUND_PROCESS (recomendado em 24.2)
+-- ABORDAGEM 1: Background Page Processing (Execution Chain, APEX 23.1+)
 --==============================================================================
 
 -- A. Criar tabela de status (pode ser compartilhada entre todos jobs do APEX)
@@ -40,6 +41,24 @@ CREATE INDEX idx_app_job_status_status ON app_status_job(status);
 
 
 -- B. Package que executa o trabalho pesado
+-- Spec primeiro: executar_arquivamento_faturas chama atualizar_progresso, que
+-- é definida DEPOIS no body — sem estar no spec, o body não compila (PLS-00313).
+CREATE OR REPLACE PACKAGE heavy_job_pkg AS
+
+  PROCEDURE executar_arquivamento_faturas (
+    p_id_job     IN VARCHAR2,
+    p_data_corte IN DATE
+  );
+
+  PROCEDURE atualizar_progresso (
+    p_id_job            IN VARCHAR2,
+    p_progresso_pct     IN NUMBER,
+    p_message_progresso IN VARCHAR2
+  );
+
+END heavy_job_pkg;
+/
+
 CREATE OR REPLACE PACKAGE BODY heavy_job_pkg AS
   
   gc_nome_pacote CONSTANT VARCHAR2(30) := 'HEAVY_JOB_PKG';
@@ -109,7 +128,7 @@ CREATE OR REPLACE PACKAGE BODY heavy_job_pkg AS
         atualizar_progresso(
           p_id_job      => p_id_job,
           p_progresso_pct => ROUND((l_processados / l_total) * 100, 2),
-          p_mensagem_progresso => l_processados || ' de ' || l_total || ' faturas arquivadas'
+          p_message_progresso => l_processados || ' de ' || l_total || ' faturas arquivadas'
         );
 
         COMMIT;
@@ -152,13 +171,13 @@ CREATE OR REPLACE PACKAGE BODY heavy_job_pkg AS
   PROCEDURE atualizar_progresso (
     p_id_job       IN VARCHAR2,
     p_progresso_pct IN NUMBER,
-    p_mensagem_progresso IN VARCHAR2
+    p_message_progresso IN VARCHAR2
   ) IS
     PRAGMA AUTONOMOUS_TRANSACTION;
   BEGIN
     UPDATE app_status_job
        SET progresso_pct = p_progresso_pct,
-           mensagem_progresso = p_mensagem_progresso
+           mensagem_progresso = p_message_progresso
      WHERE id_job = p_id_job;
     COMMIT;
   END atualizar_progresso;
@@ -167,32 +186,43 @@ END heavy_job_pkg;
 /
 
 
--- C. APEX Page Process (chamado quando usuário clica "Iniciar Arquivamento")
+-- C. Disparo em background no APEX 23.1+ — via Execution Chain (declarativo)
+--
+-- ATENÇÃO: NÃO existe APEX_BACKGROUND_PROCESS.execute(). O disparo em
+-- background no APEX é DECLARATIVO: crie um Process do tipo "Execution Chain"
+-- e ligue o switch "Run in Background". O package APEX_BACKGROUND_PROCESS
+-- serve para REPORTAR progresso/status (set_progress, set_status, get_execution,
+-- terminate) e monitorar via a view APEX_APPL_PAGE_BG_PROC_STATUS — não para
+-- enfileirar o job. Por baixo, o APEX usa DBMS_SCHEDULER.
+--
+-- Configuração (App Builder):
+--   1. Process Type: Execution Chain  → switch "Execute in Background": On
+--   2. Child Process: Execute PL/SQL Code chamando heavy_job_pkg
+--   3. Dentro do código do job, reporte progresso com:
+--        APEX_BACKGROUND_PROCESS.set_progress(
+--          p_sofar => l_processados, p_totalwork => l_total,
+--          p_message => l_processados || '/' || l_total);
+--
+-- O Page Process abaixo apenas registra o job e devolve o id; o disparo em
+-- si é feito pela Execution Chain. Para disparo PROGRAMÁTICO puro, use a
+-- Abordagem 2 (DBMS_SCHEDULER), mais explícita.
 DECLARE
   l_id_job VARCHAR2(50);
 BEGIN
   -- Gera ID único do job
   l_id_job := 'archive_' || :APP_SESSION || '_' || TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS');
 
-  -- Cria registro de status
+  -- Cria registro de status (a tabela app_status_job complementa o tracking
+  -- nativo, útil quando se quer estado de negócio próprio)
   INSERT INTO app_status_job (id_job, sessao_apex, usuario_apex, nome_job, status)
   VALUES (l_id_job, :APP_SESSION, :APP_USER, 'arquivar_faturas', 'PENDENTE');
   COMMIT;
 
-  -- Dispara em background usando APEX_BACKGROUND_PROCESS (APEX 21.2+)
-  APEX_BACKGROUND_PROCESS.execute(
-    p_application_id  => :APP_ID,
-    p_callback        => 'BEGIN heavy_job_pkg.executar_arquivamento_faturas(p_id_job => '''
-                          || l_id_job || ''', p_data_corte => TO_DATE(''' 
-                          || TO_CHAR(:P10_DATE_CUTOFF, 'YYYY-MM-DD')
-                          || ''', ''YYYY-MM-DD'')); END;'
-  );
-
   -- Devolve id_job para o cliente via item
   :P10_ID_JOB := l_id_job;
-  
+
   -- Mensagem inicial
-  APEX_APPLICATION.g_print_success_message := 
+  APEX_APPLICATION.g_print_success_message :=
     '<span class="t-Icon icon-check"></span> Arquivamento iniciado em background. ID: ' || l_id_job;
 END;
 
@@ -288,7 +318,7 @@ BEGIN
   COMMIT;
 
   DBMS_SCHEDULER.create_job(
-    nome_job        => 'JOB_' || l_id_job,
+    job_name        => 'JOB_' || l_id_job,
     job_type        => 'PLSQL_BLOCK',
     job_action      => 'BEGIN heavy_job_pkg.executar_arquivamento_faturas('''
                        || l_id_job || ''', TO_DATE(''' 
@@ -307,7 +337,7 @@ END;
 -- B. Job recorrente (ex: limpeza diária às 3h)
 BEGIN
   DBMS_SCHEDULER.create_job(
-    nome_job        => 'MS_LIMPEZA_DIARIA',
+    job_name        => 'MS_LIMPEZA_DIARIA',
     job_type        => 'PLSQL_BLOCK',
     job_action      => 'BEGIN limpeza_pkg.executar_limpeza_diaria; END;',
     start_date      => TRUNC(SYSDATE) + 1 + 3/24,  -- amanhã 03:00
@@ -320,15 +350,15 @@ END;
 
 
 -- C. Monitorar jobs scheduler
-SELECT nome_job, state, last_start_date, last_run_duration, run_count, failure_count
+SELECT job_name, state, last_start_date, last_run_duration, run_count, failure_count
   FROM user_scheduler_jobs
- WHERE nome_job LIKE 'MS_%'
+ WHERE job_name LIKE 'MS_%'
  ORDER BY last_start_date DESC NULLS LAST;
 
 -- Histórico de execuções
 SELECT log_date, status, run_duration, additional_info
   FROM user_scheduler_job_run_details
- WHERE nome_job = 'MS_LIMPEZA_DIARIA'
+ WHERE job_name = 'MS_LIMPEZA_DIARIA'
  ORDER BY log_date DESC
  FETCH FIRST 10 ROWS ONLY;
 
@@ -344,26 +374,27 @@ EXEC DBMS_SCHEDULER.drop_job('MS_LIMPEZA_DIARIA');
 --==============================================================================
 
 /*
-APEX_BACKGROUND_PROCESS:
+Background Page Processing (Execution Chain, APEX 23.1+):
   ✓ Integrado com APEX (session, segurança, debug)
-  ✓ Configuração mais simples
-  ✓ Visível em APEX_BG_PROCESSES (monitoring nativo)
-  ✗ Apenas one-shot (não recorrente)
-  ✗ Limitado ao contexto da app APEX
-  ✗ Versão APEX 21.2+
+  ✓ Disparo declarativo (switch "Run in Background")
+  ✓ Progresso/status via APEX_BACKGROUND_PROCESS.set_progress/set_status
+  ✓ Monitorável via APEX_APPL_PAGE_BG_PROC_STATUS
+  ✗ Atrelado a um Process da página APEX
+  ✗ Requer APEX 23.1+
 
 DBMS_SCHEDULER:
   ✓ Funciona em qualquer versão Oracle
   ✓ Suporta jobs recorrentes (cron-like)
-  ✓ Mais controle (chains, classes, prioridades)
+  ✓ Mais controle (chains, classes, prioridades), disparo programático
   ✓ Visível via DBA tools de monitoramento
   ✗ Não integra automaticamente com APEX session
   ✗ Configuração mais verbosa
 
 ESCOLHA:
-  - Job triggered de página APEX, one-shot, contexto APEX importa → APEX_BACKGROUND_PROCESS
-  - Job recorrente, ETL, limpeza, fora de APEX → DBMS_SCHEDULER
-  - Em APEX 24.2 (sua versão), APEX_BACKGROUND_PROCESS é o default para jobs APEX
+  - Job triggered de página APEX, contexto APEX importa → Execution Chain (Abordagem 1)
+  - Job recorrente, ETL, limpeza, fora de APEX → DBMS_SCHEDULER (Abordagem 2)
+  - APEX 26.1 (versão atual) traz melhorias de Workflow e automações que também
+    cobrem cenários assíncronos — avalie conforme o caso
 */
 
 

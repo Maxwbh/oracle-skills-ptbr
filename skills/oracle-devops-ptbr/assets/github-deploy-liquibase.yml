@@ -1,0 +1,146 @@
+# .github/workflows/deploy-liquibase.yml
+# Deploy GMUD via Liquibase com approval gates por GitHub Environment.
+#
+# COMO OS GATILHOS SE MATERIALIZAM (Aprovar / Reprovar / HML / PRD):
+#   No GitHub, crie 3 Environments: dev, hml, prd
+#   (Settings > Environments). Em hml e prd, configure "Required reviewers".
+#   - "Aprovar"            = reviewer aprova o deployment pendente do environment.
+#   - "Reprovar"           = reviewer rejeita -> o job falha e nada é aplicado.
+#   - "Enviar p/ HML"      = aprovar o gate do environment hml.
+#   - "Enviar p/ PRD"      = aprovar o gate do environment prd.
+#   O code review do CÓDIGO continua no Pull Request (required approvals na
+#   branch protection); este workflow cuida da PROMOÇÃO entre ambientes.
+#
+# ESTRATÉGIA DE ENTREGA AO BANCO (escolha 1 por projeto — ver reference):
+#   A) Runner hospedado conecta direto no banco (só se a rede permitir).
+#   B) Runner self-hosted DENTRO da rede do banco (recomendado p/ PRD).
+#   C) Workflow só valida/monta o pacote; DBA aplica manualmente (Git não toca
+#      o banco) — use updateSQL para gerar o script e publicá-lo como artefato.
+#
+# Segredos por environment (Settings > Environments > <env> > Secrets):
+#   DB_URL, DB_USER, DB_PASSWORD  (nunca no código; escopo por environment)
+
+name: deploy-liquibase
+
+on:
+  workflow_dispatch:        # disparo manual com escolha de ambiente
+    inputs:
+      ambiente:
+        description: "Ambiente alvo"
+        type: choice
+        options: [dev, hml, prd]
+        required: true
+  push:
+    branches: [develop]     # merge em develop -> deploy automático em dev
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1) VALIDAÇÃO — sempre roda, sem tocar o banco. Gera o script previsto.
+  # ---------------------------------------------------------------------------
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Liquibase
+        uses: liquibase/liquibase-github-action@v7
+        with:
+          version: "4.33.0"
+
+      - name: Validar changelog (sintaxe, ids duplicados)
+        run: liquibase --changelog-file=db/changelog-master.xml validate
+
+      - name: Gerar SQL previsto (dry-run) e publicar como artefato
+        run: |
+          liquibase --changelog-file=db/changelog-master.xml \
+            --url="${{ secrets.DB_URL }}" \
+            --username="${{ secrets.DB_USER }}" \
+            --password="${{ secrets.DB_PASSWORD }}" \
+            updateSQL > deploy-previsto.sql || true
+        env: {}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deploy-previsto-sql
+          path: deploy-previsto.sql
+
+  # ---------------------------------------------------------------------------
+  # 2) DEV — automático após merge em develop (sem gate).
+  # ---------------------------------------------------------------------------
+  deploy-dev:
+    needs: validar
+    if: github.ref == 'refs/heads/develop' || github.event.inputs.ambiente == 'dev'
+    runs-on: ubuntu-latest
+    environment: dev          # sem required reviewers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: liquibase/liquibase-github-action@v7
+        with:
+          version: "4.33.0"
+      - name: Liquibase update (context dev)
+        run: |
+          liquibase --changelog-file=db/changelog-master.xml \
+            --url="${{ secrets.DB_URL }}" \
+            --username="${{ secrets.DB_USER }}" \
+            --password="${{ secrets.DB_PASSWORD }}" \
+            --contexts=dev update
+
+  # ---------------------------------------------------------------------------
+  # 3) HML — exige aprovação do environment "hml" (Enviar p/ HML).
+  # ---------------------------------------------------------------------------
+  deploy-hml:
+    needs: validar
+    if: github.event.inputs.ambiente == 'hml'
+    runs-on: ubuntu-latest    # ou self-hosted, conforme estratégia B
+    environment: hml          # required reviewers = approval gate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: liquibase/liquibase-github-action@v7
+        with:
+          version: "4.33.0"
+      - name: Liquibase update (context hml)
+        run: |
+          liquibase --changelog-file=db/changelog-master.xml \
+            --url="${{ secrets.DB_URL }}" \
+            --username="${{ secrets.DB_USER }}" \
+            --password="${{ secrets.DB_PASSWORD }}" \
+            --contexts=hml update
+
+  # ---------------------------------------------------------------------------
+  # 4) PRD — exige aprovação do environment "prd" (Enviar p/ PRD).
+  #     Estratégia B (self-hosted) ou C (gerar SQL p/ DBA) recomendadas aqui.
+  # ---------------------------------------------------------------------------
+  deploy-prd:
+    needs: validar
+    if: github.event.inputs.ambiente == 'prd'
+    runs-on: ubuntu-latest    # troque por [self-hosted, oracle-prd] na estratégia B
+    environment: prd
+    steps:
+      - uses: actions/checkout@v4
+      - uses: liquibase/liquibase-github-action@v7
+        with:
+          version: "4.33.0"
+
+      # Estratégia C: NÃO aplica; gera o script e publica para o DBA aplicar.
+      - name: Gerar script GMUD para o DBA (estratégia C)
+        run: |
+          liquibase --changelog-file=db/changelog-master.xml \
+            --url="${{ secrets.DB_URL }}" \
+            --username="${{ secrets.DB_USER }}" \
+            --password="${{ secrets.DB_PASSWORD }}" \
+            --contexts=prd updateSQL > gmud-prd.sql
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gmud-prd-sql
+          path: gmud-prd.sql
+
+      # Estratégias A/B: aplicar de fato (descomente quando a rede permitir).
+      # - name: Liquibase update (context prd)
+      #   run: |
+      #     liquibase --changelog-file=db/changelog-master.xml \
+      #       --url="${{ secrets.DB_URL }}" \
+      #       --username="${{ secrets.DB_USER }}" \
+      #       --password="${{ secrets.DB_PASSWORD }}" \
+      #       --contexts=prd update
