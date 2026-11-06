@@ -2,7 +2,7 @@
 
 **Skills Claude para Oracle — Stack Completa em Português**
 
-10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 24.2 + ORDS.
+10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 24.2–26.2 + ORDS.
 
 ---
 
@@ -172,13 +172,29 @@ oracle-devops-ptbr ←→  oracle-ords-ptbr          (ords/modules/)
 
 ---
 
+## Versões suportadas
+
+| Item | Situação em 06/11/2026 | Fonte |
+|---|---|---|
+| **Oracle Database 19c** | Long Term Support Release · **Premier até 31/12/2029 · Extended até 31/12/2032** · RU mais recente com página de novidades: **19.33** · upgrade **direto 19c → 26ai** (detalhe em `oracle-26ai-ptbr`) | [Lifetime Support Policy](https://www.oracle.com/us/assets/lifetime-support-technology-069183.pdf) (02/10/2026), [26ai Upgrade Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/upgrd/oracle-database-releases-that-support-direct-upgrade.html), [RU 19.33](https://docs.oracle.com/en/database/oracle/oracle-database/19/newft/ru-19-33.html) |
+| Oracle AI Database 26ai | Long Term Support Release · Premier até dez/2031 | Lifetime Support Policy |
+| **APEX 26.2** | **atual** — GA 06/10/2026 · exige **ORDS 26.3.0+**, **SQLcl 26.3.0+**, banco **19c RU 19.18+** ou **26ai 23.26.0+** · upgrade direto a partir do 18.1 · patch 26.2.1 | [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html), [downloads](https://www.oracle.com/tools/downloads/apex-downloads) |
+| APEX 26.1 | GA 14/05/2026 · ORDS 26.1.1+ · patch 26.1.6 | [downloads 26.1](https://www.oracle.com/tools/downloads/apex-261-downloads) |
+| **APEX 24.2** | **baseline suportada da suíte** · patch set mais recente **24.2.22** (04/11/2026) · ⚠ 24.2.0–24.2.20 na faixa da **CVE-2026-101521** (CVSS 9.8) | [downloads 24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) |
+| ORDS | **26.3.1** (04/11/2026) é a mais recente · 26.4 planejada ("Winter 2026", Tomcat 10/WebLogic 15) | [ORDS changelog](https://www.oracle.com/tools/ords/ords-changelog.html) |
+| SQLcl | **26.3.1** (03/11/2026) · CodeScan com regras para APEXlang desde 26.3.0 | [SQLcl changelog](https://www.oracle.com/tools/sqlcl/sqlcl-changelog.html) |
+
+**A verificar:** datas de fim de suporte do APEX (24.2, 26.1, 26.2); data de lançamento do RU 19.33; primeira versão corrigida da CVE-2026-101521.
+
+---
+
 ## Stack coberta
 
 | Tecnologia | Versão | Cobertura |
 |---|---|---|
-| Oracle Database | 19c (LTS) | PL/SQL, SQL, tipos, EBR, Data Dictionary 11g→26ai |
-| Oracle APEX | 24.2 | Development + Data Dictionary (APEX_APPLICATION_* etc.) |
-| Oracle ORDS | 24.4 / 25.x | REST services + Data Dictionary (USER/DBA_ORDS_*) |
+| Oracle Database | 19c (padrão) · 23ai/26ai só com versão declarada | PL/SQL, SQL, tipos, EBR, Data Dictionary 11g→26ai |
+| Oracle APEX | 24.2 (baseline) → 26.2 | Development + Data Dictionary (APEX_APPLICATION_* etc.) |
+| Oracle ORDS | 24.4 → 26.3 | REST services + Data Dictionary (USER/DBA_ORDS_*) |
 | Trivadis Guidelines | 4.4 | Nomenclatura PT-BR + checklist |
 | Python oracledb | 2.0+ (Thin Mode) | Scripts DevOps sem Oracle Client |
 | GitHub Actions | — | CI/CD com deploy por ambiente e aprovação prod |
