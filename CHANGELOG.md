@@ -22,6 +22,16 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 - Removidos nomes de clientes reais que vieram da versão instalada (lab, core, matriz APEX).
 - README, `docs/index.html` e `marketplace.yml` com as 10 skills e versões reais.
 
+### Fase 1 — bloqueadores de DevOps (oracle-devops-ptbr 3.6.2 → 4.0.0)
+
+- Scripts SQL executados pelo SQLcl com `WHENEVER SQLERROR/OSERROR EXIT FAILURE ROLLBACK` e checagem de `ALL_ERRORS`; parser reescrito como tokenizador.
+- `db_changelog` com status `EM_ANDAMENTO`/`APLICADA`/`ERRO`, bloqueio e retomada (`--retomar`, `--marcar-resolvida`).
+- `confirmar_producao()` sem `input()` em CI; `--confirmar-prod`.
+- Import do APEX pelo SQLcl a partir do export split.
+- Workflows com GitHub Environments; pipelines Liquibase (GitHub/Azure) corrigidos; actionlint limpo.
+- Novos: `pyproject.toml` (ruff), `pytest.ini`, `tests/` (unitários + integração em container Oracle Free).
+- `build.py`: `__pycache__` fora do pacote.
+
 ---
 
 ## [3.1.0] — 2026-05-26
