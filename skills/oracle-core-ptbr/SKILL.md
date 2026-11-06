@@ -35,7 +35,22 @@ Suíte completa (10 skills — conjunto único):
 
 ## Contexto da suíte
 
-- **Stack alvo:** Oracle Database **19c** (padrão) · APEX 24.2/26.1 · ORDS · SQLcl. 23ai/26ai só com versão declarada — ver `oracle-26ai-ptbr`; na dúvida, 19c
+- **Stack alvo:** Oracle Database **19c** (padrão) · APEX **24.2 (baseline) a 26.2** · ORDS · SQLcl. 23ai/26ai só com versão declarada — ver `oracle-26ai-ptbr`; na dúvida, 19c
+
+### Versões suportadas (06/11/2026)
+
+| Item | Situação em 06/11/2026 | Fonte |
+|---|---|---|
+| **Oracle Database 19c** | Long Term Support Release · **Premier até 31/12/2029 · Extended até 31/12/2032** · RU mais recente com página de novidades: **19.33** · upgrade **direto 19c → 26ai** (detalhe em `oracle-26ai-ptbr`) | [Lifetime Support Policy](https://www.oracle.com/us/assets/lifetime-support-technology-069183.pdf) (02/10/2026), [26ai Upgrade Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/upgrd/oracle-database-releases-that-support-direct-upgrade.html), [RU 19.33](https://docs.oracle.com/en/database/oracle/oracle-database/19/newft/ru-19-33.html) |
+| Oracle AI Database 26ai | Long Term Support Release · Premier até dez/2031 | Lifetime Support Policy |
+| **APEX 26.2** | **atual** — GA 06/10/2026 · exige **ORDS 26.3.0+**, **SQLcl 26.3.0+**, banco **19c RU 19.18+** ou **26ai 23.26.0+** · upgrade direto a partir do 18.1 · patch 26.2.1 | [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html), [downloads](https://www.oracle.com/tools/downloads/apex-downloads) |
+| APEX 26.1 | GA 14/05/2026 · ORDS 26.1.1+ · patch 26.1.6 | [downloads 26.1](https://www.oracle.com/tools/downloads/apex-261-downloads) |
+| **APEX 24.2** | **baseline suportada da suíte** · patch set mais recente **24.2.22** (04/11/2026) · ⚠ 24.2.0–24.2.20 na faixa da **CVE-2026-101521** (CVSS 9.8) | [downloads 24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) |
+| ORDS | **26.3.1** (04/11/2026) é a mais recente · 26.4 planejada ("Winter 2026", Tomcat 10/WebLogic 15) | [ORDS changelog](https://www.oracle.com/tools/ords/ords-changelog.html) |
+| SQLcl | **26.3.1** (03/11/2026) · CodeScan com regras para APEXlang desde 26.3.0 | [SQLcl changelog](https://www.oracle.com/tools/sqlcl/sqlcl-changelog.html) |
+
+**A verificar:** datas de fim de suporte do APEX (24.2, 26.1, 26.2); data de lançamento do RU 19.33; primeira versão corrigida da CVE-2026-101521.
+
 - **Idioma:** identificadores de domínio e comentários em **PT-BR**; keywords SQL/PL/SQL, pacotes Oracle nativos, funções built-in, hints e prefixos Trivadis em **inglês**
 - **Padrão de código:** Trivadis PL/SQL & SQL Guidelines **4.4** (versão final — o projeto foi arquivado em fev/2026; catálogo vivo é o dbLinter, ver `oracle-trivadis-ptbr`)
 - **Deploy:** Git → pipeline (Azure DevOps/GitHub Actions) → ambientes dev → hom → prod (branches develop → hom → main); Git **nunca** conecta direto em produção
