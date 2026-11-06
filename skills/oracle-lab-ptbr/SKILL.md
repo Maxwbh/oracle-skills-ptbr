@@ -94,8 +94,9 @@ Sempre deixar **pelo menos 4 GB livres para o host**. VM sem RAM não dá erro c
 
 | Peça | Exigência | Observação |
 |---|---|---|
+| APEX 26.2 | **ORDS ≥ 26.3.0** e **SQLcl ≥ 26.3.0** | Release notes do APEX 26.2 (consultadas em 06/11/2026) |
 | APEX 26.1 | **ORDS ≥ 26.1.1** | Regra da doc de instalação do APEX 26.1 |
-| APEX 26.1 em 26ai | banco **≥ 23.26.0** (out/2025) | Em 19c, ≥ 19.18 |
+| APEX 26.1 / 26.2 em 26ai | banco **≥ 23.26.0** (out/2025) | Em 19c, ≥ 19.18 |
 | APEX 26.1 | SGA ≥ 1200 MB, PGA ≥ 300 MB, `WORKAREA_SIZE_POLICY=AUTO` na sessão de instalação | |
 | ORDS 26.1.x | **Java 17 ou 21** (Oracle JDK **ou** GraalVM) | GraalVM só é obrigatório para GraphQL |
 | ORDS 26.1.x | **Tomcat 9.0.x** ou WebLogic 14.1.2 | Tomcat 10 só a partir do ORDS 26.4 (inverno/2026) — **não antecipe a migração** |

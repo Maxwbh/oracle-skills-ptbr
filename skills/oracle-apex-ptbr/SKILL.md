@@ -1,6 +1,6 @@
 ---
 name: oracle-apex-ptbr
-description: Módulo APEX da suíte Oracle PT-BR. Oracle APEX 26.1 (padrões válidos de 24.2+) — desenvolvimento e dicionário de metadados. ATIVE em Dynamic Actions, Interactive Report, Interactive Grid, Classic Report, Page Process, AJAX Callback, Validations, Authorization Schemes, pagination, LOV, APEX_APPLICATION_*, APEX_APPLICATION_PAGE_*, APEX_WORKSPACE_*, APEX_APPL_*, Workflows, Tasks, AI configs, ACL, JSON Sources, APEX_ACTIVITY_LOG. Frases — "página APEX", "region IR", "IG editável", "process no submit", "qual view APEX usar", "auditar paginação APEX". NÃO ATIVE em PL/SQL puro, ORDS endpoints, DBA operacional. Para naming use oracle-trivadis-ptbr. Templates em assets/.
+description: Módulo APEX da suíte Oracle PT-BR. Oracle APEX 26.2 (padrões válidos de 24.2+) — desenvolvimento e dicionário de metadados. ATIVE em Dynamic Actions, Interactive Report, Interactive Grid, Classic Report, Page Process, AJAX Callback, Validations, Authorization Schemes, pagination, LOV, APEX_APPLICATION_*, APEX_APPLICATION_PAGE_*, APEX_WORKSPACE_*, APEX_APPL_*, Workflows, Tasks, AI configs, ACL, JSON Sources, APEX_ACTIVITY_LOG. Frases — "página APEX", "region IR", "IG editável", "process no submit", "qual view APEX usar", "auditar paginação APEX". NÃO ATIVE em PL/SQL puro, ORDS endpoints, DBA operacional. Para naming use oracle-trivadis-ptbr. Templates em assets/.
 metadata:
   version: "2.5.0"
   release_date: "2026-11-06"
@@ -32,7 +32,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 26.1: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
@@ -43,7 +43,7 @@ Suíte completa (10 skills — conjunto único):
 > Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
 
 
-Oracle APEX 26.1 (padrões válidos de 24.2+) — padrões de desenvolvimento e dicionário completo de views de metadados.
+Oracle APEX 26.2 (padrões válidos de 24.2+; 24.2 é a baseline suportada) — padrões de desenvolvimento e dicionário completo de views de metadados.
 
 **Desenvolvido por:** Maxwell da Silva Oliveira — [M&S do Brasil LTDA](https://msbrasil.inf.br)
 
@@ -51,7 +51,7 @@ Oracle APEX 26.1 (padrões válidos de 24.2+) — padrões de desenvolvimento e 
 
 | Área | Reference | Assets |
 |---|---|---|
-| **Padrões APEX 26.1** | `references/apex-patterns.md` | `apex_dynamic_action.sql`, `apex_pagination_pattern.sql`, `apex_pl_sql_process.sql`, `apex_long_running_job.sql`, `apex_interactive_grid.sql`, `apex_blob_upload_download.sql`, `apex_json_source.sql` |
+| **Padrões APEX (24.2–26.2)** | `references/apex-patterns.md` | `apex_dynamic_action.sql`, `apex_pagination_pattern.sql`, `apex_pl_sql_process.sql`, `apex_long_running_job.sql`, `apex_interactive_grid.sql`, `apex_blob_upload_download.sql`, `apex_json_source.sql` |
 | **APIs PL/SQL APEX (aprofundamento)** | — | `apex_util_reference.sql`, `apex_collection_reference.sql`, `apex_application_global.sql`, `apex_json_reference.sql`, `apex_debug_patterns.sql`, `apex_item_legacy.sql` |
 | **Autenticação custom** | — | `apex_authentication_custom.sql` (custom scheme, sentry, OIDC, HTTP Header) |
 | **Universal Theme** | — | `universal_theme_patterns.sql` (classes t-/u-, tokens --ut-*, dark mode) |
