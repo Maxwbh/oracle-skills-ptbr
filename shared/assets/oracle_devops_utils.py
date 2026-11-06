@@ -459,13 +459,46 @@ _RE_ERRO_SQLCL = re.compile(
 )
 
 
+_RE_LINHA_ERRO = re.compile(r"^(ORA|PLS|SP2|SQL Error: ORA)-?\d*", re.MULTILINE)
+
+
 def extrair_erro_sqlcl(saida: str) -> tuple[str, str]:
-    """(statement, erro) do último 'Error report' da saída do SQLcl."""
+    """
+    (statement, erro) do último erro na saída do SQLcl. Reconhece os dois
+    formatos que o SQLcl usa:
+      "Error starting at line : N ... Error report -\nORA-..."   e
+      "<statement>\n*\nERROR at line N:\nORA-..."   (ex.: CREATE TRIGGER)
+    """
     achados = list(_RE_ERRO_SQLCL.finditer(saida))
-    if not achados:
-        return "", "\n".join(saida.strip().splitlines()[-8:])
-    m = achados[-1]
-    return m.group("stmt").strip(), m.group("erro").strip()
+    pos_formato2 = saida.rfind("\nERROR at line ")
+    if achados and achados[-1].start() > pos_formato2:
+        m = achados[-1]
+        return m.group("stmt").strip(), m.group("erro").strip()
+    if pos_formato2 != -1:
+        antes = saida[:pos_formato2].splitlines()
+        if antes and antes[-1].strip() == "*":
+            antes = antes[:-1]
+        stmt: list[str] = []
+        for linha in reversed(antes):
+            if not linha.strip() or linha.strip() == "Rollback":
+                break
+            stmt.insert(0, linha)
+        depois = saida[pos_formato2 + 1:].splitlines()[1:]
+        erro: list[str] = []
+        for linha in depois:
+            if not linha.strip():
+                break
+            erro.append(linha)
+        return "\n".join(stmt).strip(), "\n".join(erro).strip()
+    return "", "\n".join(saida.strip().splitlines()[-8:])
+
+
+def resumo_erro(erro: str) -> str:
+    """Primeira linha com código de erro (ORA-/PLS-/SP2-), ou a primeira linha."""
+    m = _RE_LINHA_ERRO.search(erro)
+    if m:
+        return erro[m.start():].splitlines()[0]
+    return erro.splitlines()[0] if erro else "sem mensagem"
 
 
 def executar_script_sqlcl(
@@ -514,7 +547,7 @@ def executar_script_sqlcl(
                 log.info(f"    {DIM}│{RESET} {linha}")
     if proc.returncode != 0:
         stmt, erro = extrair_erro_sqlcl(saida)
-        primeira = erro.splitlines()[0] if erro else "sem mensagem"
+        primeira = resumo_erro(erro)
         raise ErroSQLcl(
             f"SQLcl terminou com código {proc.returncode} em {arquivo.name}: {primeira}",
             statement=stmt, erro_oracle=erro, saida=saida, codigo=proc.returncode,
