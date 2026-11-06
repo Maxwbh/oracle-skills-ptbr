@@ -1,5 +1,8 @@
 # Changelog — oracle-plsql-ptbr
 
+## [3.0.1] - 2026-11-06
+- Docs — roteamento para a skill irmã oracle-26ai-helper-ptbr; lista da suíte com APEX 24.2–26.2.
+
 ## [3.0.0] - 2026-11-06
 - Breaking — regra 4 reescrita: transação tem dono. Rotina reutilizável não faz COMMIT nem ROLLBACK total; usa SAVEPOINT + ROLLBACK TO e propaga o erro (RAISE). COMMIT/ROLLBACK total só no ponto de entrada (job, endpoint, script), documentado; no APEX o dono é o APEX. A regra antiga ("ROLLBACK antes do re-raise") desfazia o trabalho do chamador.
 - Breaking — regra 3: erro inesperado não vira mais -20999 com SQLERRM (perdia código e pilha); log + RAISE, ou raise_application_error(..., TRUE).
