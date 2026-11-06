@@ -7,9 +7,10 @@ collection:
   name: "oracle-skills-ptbr"
   display_name: "Oracle Stack PT-BR"
   description: >
-    7 Skills Claude cobrindo toda a stack Oracle em português:
-    PL/SQL 19c, APEX 24.2, ORDS, DBA operacional, Performance Tuning,
-    Trivadis Guidelines 4.4 e DevOps com Python + oracledb.
+    10 Skills Claude cobrindo toda a stack Oracle em português:
+    assistente central (roteamento), PL/SQL 19c, APEX, ORDS, DBA operacional,
+    Performance Tuning, Trivadis Guidelines 4.4, DevOps com Python + oracledb,
+    ambiente local (lab) e novidades 23ai/26ai.
     Desenvolvido para equipes brasileiras que trabalham com Oracle Database.
   version: "3.1.0"
   language: "pt-BR"
@@ -46,6 +47,7 @@ collection:
     type: "skill_file"
     base_url: "https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download"
     files:
+      - "oracle-core-ptbr.skill"
       - "oracle-plsql-ptbr.skill"
       - "oracle-apex-ptbr.skill"
       - "oracle-ords-ptbr.skill"
@@ -53,11 +55,22 @@ collection:
       - "oracle-tuning-ptbr.skill"
       - "oracle-trivadis-ptbr.skill"
       - "oracle-devops-ptbr.skill"
+      - "oracle-lab-ptbr.skill"
+      - "oracle-26ai-ptbr.skill"
 
 skills:
+  - name: "oracle-core-ptbr"
+    display_name: "Oracle Core PT-BR"
+    version: "1.4.0"
+    icon: "🧭"
+    category: "database"
+    description: "Assistente central — roteamento entre módulos e convenções transversais"
+    tags: ["oracle", "roteamento", "convencoes", "gmud"]
+    file: "dist/oracle-core-ptbr.skill"
+
   - name: "oracle-plsql-ptbr"
     display_name: "Oracle PL/SQL PT-BR"
-    version: "2.0.0"
+    version: "2.2.2"
     icon: "🗄️"
     category: "database"
     description: "PL/SQL 19c — packages, procedures, LOBs, EBR e Trivadis 4.4"
@@ -66,16 +79,16 @@ skills:
 
   - name: "oracle-apex-ptbr"
     display_name: "Oracle APEX PT-BR"
-    version: "2.0.0"
+    version: "2.4.2"
     icon: "⚡"
     category: "development"
-    description: "APEX 24.2 — development patterns e Data Dictionary completo"
+    description: "APEX (padrões de 24.2+) — development patterns e Data Dictionary completo"
     tags: ["oracle", "apex", "interactive-report", "interactive-grid", "workflow"]
     file: "dist/oracle-apex-ptbr.skill"
 
   - name: "oracle-ords-ptbr"
     display_name: "Oracle ORDS PT-BR"
-    version: "2.0.0"
+    version: "2.4.0"
     icon: "🌐"
     category: "development"
     description: "ORDS — REST services, OAuth, AutoREST e Data Dictionary"
@@ -84,7 +97,7 @@ skills:
 
   - name: "oracle-dba-ptbr"
     display_name: "Oracle DBA PT-BR"
-    version: "2.0.0"
+    version: "2.3.2"
     icon: "🛡️"
     category: "database"
     description: "DBA operacional — sessões, locks, flashback e Data Dictionary"
@@ -93,7 +106,7 @@ skills:
 
   - name: "oracle-tuning-ptbr"
     display_name: "Oracle Tuning PT-BR"
-    version: "2.0.0"
+    version: "2.6.2"
     icon: "🚀"
     category: "database"
     description: "Performance tuning — explain plan, AWR, ASH e index strategy"
@@ -102,7 +115,7 @@ skills:
 
   - name: "oracle-trivadis-ptbr"
     display_name: "Oracle Trivadis PT-BR"
-    version: "2.0.0"
+    version: "2.3.1"
     icon: "📐"
     category: "development"
     description: "Trivadis Guidelines 4.4 — nomenclatura e revisão de código"
@@ -111,9 +124,27 @@ skills:
 
   - name: "oracle-devops-ptbr"
     display_name: "Oracle DevOps PT-BR"
-    version: "3.1.0"
+    version: "3.6.2"
     icon: "⚙️"
     category: "devops"
     description: "Git, CI/CD, changelog Oracle, deploy Python + oracledb Thin Mode"
     tags: ["oracle", "devops", "cicd", "git", "python", "oracledb"]
     file: "dist/oracle-devops-ptbr.skill"
+
+  - name: "oracle-lab-ptbr"
+    display_name: "Oracle Lab PT-BR"
+    version: "1.0.2"
+    icon: "🧪"
+    category: "database"
+    description: "Ambiente local — Vagrant/VirtualBox, container Free, APEX/ORDS locais"
+    tags: ["oracle", "lab", "vagrant", "virtualbox", "container"]
+    file: "dist/oracle-lab-ptbr.skill"
+
+  - name: "oracle-26ai-ptbr"
+    display_name: "Oracle 23ai/26ai PT-BR"
+    version: "1.0.2"
+    icon: "🆕"
+    category: "database"
+    description: "Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada)"
+    tags: ["oracle", "26ai", "23ai", "migracao"]
+    file: "dist/oracle-26ai-ptbr.skill"
