@@ -1,5 +1,14 @@
 # Changelog — oracle-plsql-ptbr
 
+## [3.0.0] - 2026-11-06
+- Breaking — regra 4 reescrita: transação tem dono. Rotina reutilizável não faz COMMIT nem ROLLBACK total; usa SAVEPOINT + ROLLBACK TO e propaga o erro (RAISE). COMMIT/ROLLBACK total só no ponto de entrada (job, endpoint, script), documentado; no APEX o dono é o APEX. A regra antiga ("ROLLBACK antes do re-raise") desfazia o trabalho do chamador.
+- Breaking — regra 3: erro inesperado não vira mais -20999 com SQLERRM (perdia código e pilha); log + RAISE, ou raise_application_error(..., TRUE).
+- Breaking — regra 10: compound trigger quando há estado entre linha e statement (mutating table, auditoria em lote, bulk); trigger simples FOR EACH ROW continua válida.
+- Fix — package_body.sql: processar_registro sem COMMIT/ROLLBACK total; novo processar_pendentes (ponto de entrada); ramo "já processado" era inalcançável. package_header.sql com processar_pendentes. exception_template.sql com esqueletos A (reutilizável) e B (ponto de entrada).
+- Fix — triggers_canonicos.sql: auditoria_pkg não compilava (tipo usado antes de declarado; sem body); trigger de surrogate key sobre coluna IDENTITY falhava com ORA-32795; reorganizado em trigger simples × compound.
+- Fix — logger_integration.sql: processar_pagamento comitava e trocava o erro por -20999.
+- Testes de integração em container (tests/integracao/test_plsql_templates_oracle.py).
+
 ## [2.2.2] - 2026-09-15
 - Docs — suíte com 10 skills (oracle-lab-ptbr).
 

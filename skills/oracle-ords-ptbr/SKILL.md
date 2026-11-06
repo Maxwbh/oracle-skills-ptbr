@@ -2,8 +2,8 @@
 name: oracle-ords-ptbr
 description: Módulo ORDS da suíte Oracle PT-BR. Oracle ORDS — REST services e dicionário USER_ORDS_*/DBA_ORDS_*. ATIVE em define_module, define_template, define_handler, AutoREST, OAuth, ORDS_SECURITY, ORDS_SECURITY_ADMIN, JWT, PAR via ORDS_PAR, ORDS_EXPORT_ADMIN, delete_module/drop_rest_for_schema, privilege, role ORDS, ORDS_EXPORT, USER_ORDS_MODULES, USER_ORDS_HANDLERS, USER_ORDS_SCHEMAS, DBA_ORDS_*, source_type_collection_feed, source_type_collection_item, CORS, versionamento de API, depreciação OAUTH package. Frases — "criar endpoint REST", "módulo ORDS", "autenticar API", "inventário de handlers ORDS", "OAUTH deprecated". NÃO ATIVE em APEX pages, PL/SQL puro, DBA operacional. Templates em assets/.
 metadata:
-  version: "2.4.0"
-  release_date: "2026-09-15"
+  version: "2.4.1"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 6
   author: "Maxwell da Silva Oliveira"
@@ -25,7 +25,7 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo ORDS (oracle-ords-ptbr)
 
-> **Versão:** 2.4.0 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
+> **Versão:** 2.4.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
 > **v2.4.0:** linha do tempo ORDS 24.3→26.4 (25.1 ORDS_EXPORT_ADMIN, 25.3 remoção do OAUTH, 26.1 export com DROP, 26.1.1 para APEX 26.1, 26.4 Tomcat 10) e limpeza de metadata. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):

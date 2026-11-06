@@ -19,12 +19,12 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 | Skill | Versão | Escopo | Recursos |
 |---|---|---|---|
 | `oracle-core-ptbr` | 1.4.1 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
-| `oracle-plsql-ptbr` | 2.2.2 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
-| `oracle-apex-ptbr` | 2.4.2 | APEX (padrões de 24.2+) development + Data Dictionary completo | 20 |
-| `oracle-ords-ptbr` | 2.4.0 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
+| `oracle-plsql-ptbr` | 3.0.0 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
+| `oracle-apex-ptbr` | 2.5.0 | APEX (padrões de 24.2+) development + Data Dictionary completo | 20 |
+| `oracle-ords-ptbr` | 2.4.1 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
 | `oracle-dba-ptbr` | 2.3.2 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
 | `oracle-tuning-ptbr` | 2.6.2 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
-| `oracle-trivadis-ptbr` | 2.3.1 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
+| `oracle-trivadis-ptbr` | 2.4.0 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
 | `oracle-devops-ptbr` | 4.0.0 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 30 |
 | `oracle-lab-ptbr` | 1.0.2 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
 | `oracle-26ai-ptbr` | 1.0.2 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |

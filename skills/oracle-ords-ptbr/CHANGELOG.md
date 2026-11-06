@@ -1,5 +1,8 @@
 # Changelog — oracle-ords-ptbr
 
+## [2.4.1] - 2026-11-06
+- Docs — ords_handler.sql: handler PL/SQL é o ponto de entrada e dono da transação; packages chamados não comitam (regra 4 da oracle-plsql-ptbr).
+
 ## [2.4.0] - 2026-09-15
 - Feature — seção "Linha do tempo das versões": a skill parava em 24.4 enquanto lab/apex/26ai já afirmavam ORDS 26.1.1. Agora cobre 25.1 (ORDS_EXPORT_ADMIN), 25.3 (remoção do OAUTH, DELETE_TEMPLATE/HANDLER), 26.1 (export com DROP, VecDB), 26.1.1 (exigido pelo APEX 26.1) e 26.4 (Tomcat 10/WebLogic 15), mais Java 17/21 e a regra de não antecipar o Tomcat 10.
 - Feature — limpeza de metadata: delete_module/delete_template/delete_handler e a diferença entre drop_rest_for_object (desabilita) e drop_rest_for_schema (apaga).

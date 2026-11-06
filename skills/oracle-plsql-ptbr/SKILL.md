@@ -2,8 +2,8 @@
 name: oracle-plsql-ptbr
 description: Módulo PL/SQL da suíte Oracle PT-BR. PL/SQL Oracle 19c — packages, procedures, functions, types, cursores, LOBs e EBR. ATIVE em BULK COLLECT, FORALL, NOCOPY, EXECUTE IMMEDIATE, MERGE INTO, compound trigger, editioning view, cross-edition trigger, CLOB/BLOB, Logger, exception handler, DML alternatives. Frases ambíguas com contexto PL/SQL — "criar package", "refatorar procedure", "processar LOB", "zero downtime deploy", "loop tá lento", "trigger de auditoria". NÃO ATIVE em páginas APEX, endpoints ORDS, DBA operacional (sessões/locks/tablespace), tuning de queries (explain plan/AWR/ASH). Aplica naming Trivadis automaticamente — para revisão explícita do padrão use oracle-trivadis-ptbr. Templates em assets/.
 metadata:
-  version: "2.2.2"
-  release_date: "2026-09-15"
+  version: "3.0.0"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 11
   author: "Maxwell da Silva Oliveira"
@@ -27,7 +27,7 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo PL/SQL (oracle-plsql-ptbr)
 
-> **Versão:** 2.2.2 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (11 recursos nesta skill)
+> **Versão:** 3.0.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (11 recursos nesta skill)
 > **v2.2.2:** suíte com 10 skills (oracle-lab-ptbr). Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):

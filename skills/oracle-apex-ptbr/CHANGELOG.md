@@ -1,5 +1,10 @@
 # Changelog — oracle-apex-ptbr
 
+## [2.5.0] - 2026-11-06
+- Fix — COMMIT/ROLLBACK alinhados à regra 4 da oracle-plsql-ptbr e ao "APEX não comita": autenticação customizada com contador de tentativas e log de acesso em AUTONOMOUS_TRANSACTION; page processes sem COMMIT; AJAX callbacks que capturam o erro usam SAVEPOINT + ROLLBACK TO; apex_item_legacy.sql afirmava que o page process precisava de COMMIT explícito.
+- Fix — IG: FORALL ... INDICES OF (lista vazia não quebra).
+- Fix — removido nome de cliente real da matriz de versões (vindo da versão instalada).
+
 ## [2.4.2] - 2026-09-15
 - Docs — suíte com 10 skills; referência cruzada para montar APEX+ORDS local.
 
