@@ -18,14 +18,14 @@ Guia para planejar a saída do 19c (long term release atual) para o 26ai (próxi
 
 | Versão | Papel | Observação |
 |---|---|---|
-| **19c** | Long term release em uso na maioria dos clientes | Recebe RUs trimestrais; features 23ai backportadas em 19.16 (TLS `system:`) e 19.28 (IF NOT EXISTS, Annotations, DBMS_DEVELOPER). Confirme datas de fim de suporte no MOS (Doc 742060.1) — mudaram mais de uma vez |
+| **19c** | Long term release em uso na maioria dos clientes | Recebe RUs trimestrais; features 23ai backportadas em 19.16 (TLS `system:`) e 19.28 (IF NOT EXISTS, Annotations, DBMS_DEVELOPER). Premier até 31/12/2029 e Extended até 31/12/2032 ([Lifetime Support Policy](https://www.oracle.com/us/assets/lifetime-support-technology-069183.pdf), 02/10/2026) — já mudaram mais de uma vez, confira de novo antes de planejar |
 | 21c | Innovation release | Não é destino; serve só como degrau de upgrade |
 | 23ai | Base do 26ai | 23ai → 26ai é **patch** (23.26.x), não upgrade completo. Versão Free existe para laboratório |
 | **26ai** | Long term release sucessor do 19c | "Oracle AI Database 26ai"; numeração interna 23.26.x |
 
 ## 2. Caminhos de upgrade
 
-- **Direto para 26ai:** apenas de **19c e 21c**. Versões anteriores passam por 19c primeiro (`11.2.0.4 → 19c → 26ai`; `10.2 → 12.2 → 19c → 26ai`).
+- **Direto para 26ai:** apenas de **19c e 21c** ([26ai Upgrade Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/upgrd/oracle-database-releases-that-support-direct-upgrade.html), consultado em 06/11/2026). Versões anteriores passam por 19c primeiro (`11.2.0.4 → 19c → 26ai`; `10.2 → 12.2 → 19c → 26ai`).
 - **Non-CDB foi desuportado em 21c:** não existe 26ai non-CDB. Todo 19c non-CDB vira PDB dentro de um CDB 26ai — o AutoUpgrade converte automaticamente ao abrir a PDB.
 - **Ferramenta:** `autoupgrade.jar` (baixe sempre o mais recente do MOS 2485457.1, substitua o que veio no `$ORACLE_HOME/rdbms/admin`). Modos `-mode analyze` → `fixups` → `deploy`. DBUA existe, mas o padrão da comunidade é AutoUpgrade.
 - **Cenários típicos:**

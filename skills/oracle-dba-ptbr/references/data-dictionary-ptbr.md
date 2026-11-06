@@ -550,8 +550,9 @@ SELECT sql_text, executions, disk_reads FROM stats$sql_summary
 - Automatic Indexing → `DBA_AUTO_INDEX_CONFIG`, `DBA_AUTO_INDEXES`
 
 **Notas 19c importantes:**
-- 19c é a versão LTS atual — máxima compatibilidade para produção
-- Suporte estendido até 2027 (Premier), 2030 (Extended)
+- 19c é Long Term Support Release — máxima compatibilidade para produção; o sucessor LTS é o 26ai (upgrade direto 19c → 26ai)
+- **Premier Support até 31/12/2029; Extended Support até 31/12/2032** ([Lifetime Support Policy](https://www.oracle.com/us/assets/lifetime-support-technology-069183.pdf), versão de 02/10/2026). Nas portas que dependem de Java 8 de terceiros (AIX, zLinux, HP-UX, Solaris, Windows), a política exclui o suporte a esse software de 01/05/2027 em diante — veja a nota 3 do PDF
+- **RU 19.32:** novo provedor criptográfico baseado em OpenSSL, ao lado do Dell BSAFE — habilita **TLS 1.3**, **FIPS 140-3** (OpenSSL 3.5.x FIPS provider) e **criptografia pós-quântica** (ML-KEM para troca de chaves, ML-DSA para assinatura). **Não vem ativo:** o provedor legado continua o padrão; a troca é pelo script `set_crypto_provider.py` + restart da instância e do listener ([RU 19.32](https://docs.oracle.com/en/database/oracle/oracle-database/19/newft/ru-19-32.html))
 - Todas as views de 12c e 18c presentes
 
 ---
