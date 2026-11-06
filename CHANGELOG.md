@@ -31,6 +31,7 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 - Workflows com GitHub Environments; pipelines Liquibase (GitHub/Azure) corrigidos; actionlint limpo.
 - Novos: `pyproject.toml` (ruff), `pytest.ini`, `tests/` (unitários + integração em container Oracle Free).
 - `build.py`: `__pycache__` fora do pacote.
+- Ambientes unificados em `dev`/`hom`/`prod` em toda a suíte (inclusive Liquibase). oracle-core-ptbr 1.4.0 → 1.4.1.
 
 ---
 

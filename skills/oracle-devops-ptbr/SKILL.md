@@ -63,11 +63,11 @@ Estrutura Git, scripts de deploy e CI/CD para projetos Oracle 19c + APEX 24.2/26
 - Export APEX split via SQLcl (`apex export -split`)
 - Export de módulos ORDS via `ORDS_EXPORT.export_schema()`
 - Versionamento de módulos ORDS (`clientes_v1/`, `clientes_v2/`)
-- Branch strategy (`main` / `hml` / `develop` / `feature/*`) — `hml` é o nome canônico da suíte para homologação; o fluxo legado (changelog.yml, `github-deploy.yml`, scripts `deploy_*.py`) usa `hom`
+- Branch strategy (`main` / `hom` / `develop` / `feature/*`) e ambientes `dev` / `hom` / `prod` — nomes únicos da suíte, iguais no fluxo Python (`github-deploy.yml`, `deploy_*.py`) e no Liquibase (Environments, Variable Groups e contexts)
 - GitHub Actions ou Azure DevOps Pipelines para Oracle/APEX/ORDS (CI-agnóstico)
 - Escolha do combo CI/CD (Git/Azure/Manual) × Liquibase (sim/não) — assistente `setup_devops.py`
 - Deploy GMUD via Liquibase (changelog XML real, `databaseChangeLog`/`changeSet`)
-- Code review e promoção entre ambientes (Aprovar/Reprovar/Enviar p/ HML/Enviar p/ PRD) com GitHub Environments protegidos
+- Code review e promoção entre ambientes (Aprovar/Reprovar/Enviar p/ HOM/Enviar p/ PROD) com GitHub Environments protegidos
 - Ordem de execução por changelog (estilo Liquibase) e rollback por tag de release
 - `.gitignore` para projetos Oracle
 - `.gitattributes` (encoding UTF-8, LF)
@@ -173,8 +173,8 @@ Implementado em `assets/deploy_db.py` (subdiretórios `db/constraints/`, `db/fk/
 | `gmud_liquibase.py` | Python | Gera `changelog-master.xml` a partir das releases e invoca liquibase/SQLcl/script |
 | `changelog-master.xml` | Liquibase | `databaseChangeLog` mestre — inclui os changelogs de release |
 | `changelog-release-exemplo.xml` | Liquibase | Exemplo de release com `changeSet`, `sqlFile`, `runOnChange`, `context`, `rollback`, `tagDatabase` |
-| `github-deploy-liquibase.yml` | CI/CD | GitHub Actions com Environments protegidos dev/hml/prd como approval gates; credenciais via `LIQUIBASE_COMMAND_*` |
-| `azure-pipelines-liquibase.yml` | CI/CD | Azure DevOps — stages dev/hml/prd com deployment jobs + Approvals and checks |
+| `github-deploy-liquibase.yml` | CI/CD | GitHub Actions com Environments protegidos dev/hom/prod como approval gates; credenciais via `LIQUIBASE_COMMAND_*` |
+| `azure-pipelines-liquibase.yml` | CI/CD | Azure DevOps — stages dev/hom/prod com deployment jobs + Approvals and checks |
 
 ## Referências cruzadas
 

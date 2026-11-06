@@ -3,22 +3,22 @@
 # Environment. Equivalente ao github-deploy-liquibase.yml — mesmo miolo
 # (Liquibase + changelog XML), só muda a camada de orquestração.
 #
-# COMO OS GATILHOS SE MATERIALIZAM (Aprovar / Reprovar / HML / PRD):
-#   Pipelines > Environments > crie: dev, hml, prd
-#   Em hml e prd: Approvals and checks > Approvals > adicione os aprovadores.
+# COMO OS GATILHOS SE MATERIALIZAM (Aprovar / Reprovar / HOM / PROD):
+#   Pipelines > Environments > crie: dev, hom, prod
+#   Em hom e prod: Approvals and checks > Approvals > adicione os aprovadores.
 #   - "Aprovar"        = aprovador libera o stage pendente do environment.
 #   - "Reprovar"       = aprovador rejeita -> stage marcado como skipped/failed.
-#   - "Enviar p/ HML"  = rodar o pipeline manualmente com ambiente=hml (aguarda approval).
-#   - "Enviar p/ PRD"  = rodar manualmente com ambiente=prd (aguarda approval do prd).
+#   - "Enviar p/ HOM"  = rodar o pipeline manualmente com ambiente=hom (aguarda approval).
+#   - "Enviar p/ PROD"  = rodar manualmente com ambiente=prod (aguarda approval do prod).
 #   O code review do CÓDIGO continua na Pull Request policy do Azure Repos.
 #
 # ESTRATÉGIA DE ENTREGA AO BANCO (escolha 1 por projeto — ver reference):
 #   A) Agente hospedado (Microsoft-hosted) conecta direto no banco.
-#   B) Self-hosted agent DENTRO da rede do banco (recomendado p/ PRD).
+#   B) Self-hosted agent DENTRO da rede do banco (recomendado p/ PROD).
 #   C) Pipeline só gera o SQL (update-sql) como artefato; DBA aplica (Git não toca o banco).
 #
-# Segredos: Variable Groups (Library) — um por ambiente: oracle-dev, oracle-hml,
-# oracle-prd — com DB_URL, DB_USER e DB_PASSWORD (marcada como secret), ou
+# Segredos: Variable Groups (Library) — um por ambiente: oracle-dev, oracle-hom,
+# oracle-prod — com DB_URL, DB_USER e DB_PASSWORD (marcada como secret), ou
 # vinculados ao Azure Key Vault. NUNCA no YAML. Cada job de deploy referencia
 # SÓ o grupo do seu ambiente. Variável secreta não vira variável de ambiente
 # sozinha: é mapeada explicitamente em 'env:' para LIQUIBASE_COMMAND_* —
@@ -39,7 +39,7 @@ parameters:
     displayName: "Ambiente alvo (para execução manual)"
     type: string
     default: dev
-    values: [dev, hml, prd]
+    values: [dev, hom, prod]
 
 variables:
   liquibaseVersion: "4.33.0"
@@ -105,21 +105,21 @@ stages:
                   artifact: deploy-previsto-dev
 
   # ---------------------------------------------------------------------------
-  # 3) HML — environment hml com Approval (Enviar p/ HML).
+  # 3) HOM — environment hom com Approval (Enviar p/ HOM).
   # ---------------------------------------------------------------------------
-  - stage: DeployHml
+  - stage: DeployHom
     dependsOn: Validar
     condition: >-
       and(succeeded(),
           eq(variables['Build.Reason'], 'Manual'),
-          eq('${{ parameters.ambiente }}', 'hml'))
+          eq('${{ parameters.ambiente }}', 'hom'))
     jobs:
-      - deployment: deployHml
-        environment: hml          # Approvals and checks = approval gate
+      - deployment: deployHom
+        environment: hom          # Approvals and checks = approval gate
         pool:
           vmImage: ubuntu-latest  # ou self-hosted (estratégia B)
         variables:
-          - group: oracle-hml
+          - group: oracle-hom
         strategy:
           runOnce:
             deploy:
@@ -136,33 +136,33 @@ stages:
                 - script: |
                     set -euo pipefail
                     liquibase validate
-                    liquibase --contexts=hml update-sql > "$(Build.ArtifactStagingDirectory)/deploy-previsto-hml.sql"
-                    liquibase --contexts=hml update
-                  displayName: "Liquibase validate + update-sql + update (context hml)"
+                    liquibase --contexts=hom update-sql > "$(Build.ArtifactStagingDirectory)/deploy-previsto-hom.sql"
+                    liquibase --contexts=hom update
+                  displayName: "Liquibase validate + update-sql + update (context hom)"
                   env:
                     LIQUIBASE_COMMAND_URL: $(DB_URL)
                     LIQUIBASE_COMMAND_USERNAME: $(DB_USER)
                     LIQUIBASE_COMMAND_PASSWORD: $(DB_PASSWORD)
-                - publish: $(Build.ArtifactStagingDirectory)/deploy-previsto-hml.sql
-                  artifact: deploy-previsto-hml
+                - publish: $(Build.ArtifactStagingDirectory)/deploy-previsto-hom.sql
+                  artifact: deploy-previsto-hom
 
   # ---------------------------------------------------------------------------
-  # 4) PRD — environment prd com Approval (Enviar p/ PRD).
+  # 4) PROD — environment prod com Approval (Enviar p/ PROD).
   #     Estratégia C por padrão: gera o SQL para o DBA aplicar.
   # ---------------------------------------------------------------------------
-  - stage: DeployPrd
+  - stage: DeployProd
     dependsOn: Validar
     condition: >-
       and(succeeded(),
           eq(variables['Build.Reason'], 'Manual'),
-          eq('${{ parameters.ambiente }}', 'prd'))
+          eq('${{ parameters.ambiente }}', 'prod'))
     jobs:
-      - deployment: deployPrd
-        environment: prd
+      - deployment: deployProd
+        environment: prod
         pool:
           vmImage: ubuntu-latest  # troque por self-hosted na estratégia B
         variables:
-          - group: oracle-prd
+          - group: oracle-prod
         strategy:
           runOnce:
             deploy:
@@ -180,17 +180,17 @@ stages:
                 - script: |
                     set -euo pipefail
                     liquibase validate
-                    liquibase --contexts=prd update-sql > "$(Build.ArtifactStagingDirectory)/gmud-prd.sql"
+                    liquibase --contexts=prod update-sql > "$(Build.ArtifactStagingDirectory)/gmud-prod.sql"
                   displayName: "Validar e gerar script GMUD p/ o DBA (estratégia C)"
                   env:
                     LIQUIBASE_COMMAND_URL: $(DB_URL)
                     LIQUIBASE_COMMAND_USERNAME: $(DB_USER)
                     LIQUIBASE_COMMAND_PASSWORD: $(DB_PASSWORD)
-                - publish: $(Build.ArtifactStagingDirectory)/gmud-prd.sql
-                  artifact: gmud-prd-sql
+                - publish: $(Build.ArtifactStagingDirectory)/gmud-prod.sql
+                  artifact: gmud-prod-sql
                 # Estratégias A/B: aplicar de fato (descomente quando a rede permitir).
-                # - script: liquibase --contexts=prd update
-                #   displayName: "Liquibase update (context prd)"
+                # - script: liquibase --contexts=prod update
+                #   displayName: "Liquibase update (context prod)"
                 #   env:
                 #     LIQUIBASE_COMMAND_URL: $(DB_URL)
                 #     LIQUIBASE_COMMAND_USERNAME: $(DB_USER)
