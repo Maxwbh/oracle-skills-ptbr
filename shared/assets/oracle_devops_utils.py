@@ -373,7 +373,11 @@ def validar_arquivo_sql(arquivo: Path) -> list[str]:
     Retorna lista de problemas (vazia = OK). Comandos de cliente são aceitos.
     """
     try:
-        split_oracle_sql(arquivo.read_text(encoding="utf-8"), permitir_cliente=True)
+        conteudo = arquivo.read_text(encoding="utf-8")
+    except UnicodeDecodeError as e:
+        return [f"{arquivo.name}: não é UTF-8 (byte {e.start})"]
+    try:
+        split_oracle_sql(conteudo, permitir_cliente=True)
     except ErroParserSQL as e:
         return [f"{arquivo.name}: {e}"]
     return []

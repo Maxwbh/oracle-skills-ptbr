@@ -62,6 +62,7 @@ from oracle_devops_utils import (  # noqa: E402
     executar_e_verificar,
     log,
     obter_config_db,
+    validar_arquivo_sql,
 )
 
 # ─── Estados ──────────────────────────────────────────────────────────────────
@@ -384,6 +385,22 @@ def processar_migration(
                               checksum=checksum_atual, duracao_ms=duracao_ms)
 
 
+def validar_offline(migrations: list[Migration], db_dir: Path) -> int:
+    """Arquivos existem, são UTF-8 e passam no parser. Não conecta no banco."""
+    problemas: list[str] = []
+    for m in migrations:
+        arquivo = db_dir / m.arquivo
+        if not arquivo.exists():
+            problemas.append(f"{m.id}: arquivo não encontrado: db/{m.arquivo}")
+            continue
+        problemas += [f"{m.id}: {p}" for p in validar_arquivo_sql(arquivo)]
+    for p in problemas:
+        log.error(f"  {RED}✗ {p}{RESET}")
+    if not problemas:
+        log.info(f"  {GREEN}✓ {len(migrations)} migration(s) válidas{RESET}")
+    return 1 if problemas else 0
+
+
 # ─── Exibição ─────────────────────────────────────────────────────────────────
 
 def exibir_status(registros: dict[str, Registro], migrations: list[Migration]) -> None:
@@ -439,6 +456,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Simula sem aplicar migrations")
     parser.add_argument("--status", action="store_true",
                         help="Exibe estado atual das migrations e sai")
+    parser.add_argument("--validar", action="store_true",
+                        help="Só valida changelog.yml e os arquivos (sem conectar no banco)")
     acao = parser.add_mutually_exclusive_group()
     acao.add_argument("--retomar", metavar="ID",
                       help="Reexecuta a migration em ERRO/EM_ANDAMENTO e segue com as demais")
@@ -458,12 +477,15 @@ def main(argv: list[str] | None = None) -> int:
 
     banner("apply_changelog.py — Migrations do banco", args.env, args.dry_run)
 
-    if args.env == "prod" and not args.status:
+    if args.env == "prod" and not (args.status or args.validar):
         confirmar_producao(args.dry_run, confirmado=args.confirmar_prod)
 
     migrations = ler_changelog(changelog_path)
     por_id = {m.id: m for m in migrations}
     log.info(f"  {len(migrations)} migrations em changelog.yml")
+
+    if args.validar:
+        return validar_offline(migrations, db_dir)
 
     cfg = obter_config_db()
     conn = conectar(cfg)
