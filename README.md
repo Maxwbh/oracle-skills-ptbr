@@ -25,7 +25,7 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 | `oracle-dba-ptbr` | 2.3.2 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
 | `oracle-tuning-ptbr` | 2.6.2 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
 | `oracle-trivadis-ptbr` | 2.3.1 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
-| `oracle-devops-ptbr` | 3.6.2 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 30 |
+| `oracle-devops-ptbr` | 4.0.0 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 30 |
 | `oracle-lab-ptbr` | 1.0.2 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
 | `oracle-26ai-ptbr` | 1.0.2 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
 
