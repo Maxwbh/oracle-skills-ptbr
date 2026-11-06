@@ -2,10 +2,10 @@
 name: oracle-devops-ptbr
 description: Módulo DevOps da suíte Oracle PT-BR. Estrutura Git e CI/CD para projetos Oracle/APEX/ORDS. ATIVE em estrutura de projeto Oracle no Git, commit de objetos do banco, script de deploy, GitHub Actions ou Azure Pipelines para Oracle, export APEX split via SQLcl, versionamento de módulos ORDS, GMUD naming (001_projeto_ddl_objeto.sql), deploy-db/deploy-apex/deploy-ords, branch strategy, .gitignore Oracle, rollback, ordem de dependências, changelog Liquibase XML (databaseChangeLog/changeSet), code review e promoção entre ambientes via GitHub/Azure. Frases — "estruturar projeto no Git", "script de deploy Oracle", "export do APEX para Git", "deploy ordenado do banco", "nomenclatura GMUD", "changelog Liquibase", "pipeline Azure DevOps", "deploy com aprovação por ambiente", "enviar para homologação/produção". NÃO ATIVE em código PL/SQL (oracle-plsql-ptbr), APEX pages (oracle-apex-ptbr), ORDS handlers (oracle-ords-ptbr), DBA operacional (oracle-dba-ptbr), tuning (oracle-tuning-ptbr). Templates em assets/.
 metadata:
-  version: "4.0.0"
+  version: "4.1.0"
   release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
-  suite_size: 30
+  suite_size: 31
   author: "Maxwell da Silva Oliveira"
   contact: "contato@msbrasil.inf.br"
   organization: "M&S do Brasil LTDA"
@@ -27,8 +27,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo DevOps (oracle-devops-ptbr)
 
-> **Versão:** 4.0.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (30 recursos nesta skill)
-> **v3.6.2:** suíte com 10 skills; referência cruzada para o lab local como ambiente de teste do pipeline. Histórico em `CHANGELOG.md`.
+> **Versão:** 4.1.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (31 recursos nesta skill)
+> **v4.1.0:** gate de CI com SQLcl CodeScan (SQL, PL/SQL e APEXlang .apx) e APEXlang no pipeline. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
