@@ -37,7 +37,7 @@ meu-projeto-apex/
 │   │   └── pkg_clientes.pkb            ← .pkb = package body
 │   ├── procedures/                     ← Procedures standalone
 │   ├── functions/                      ← Functions standalone
-│   ├── triggers/                       ← Compound triggers
+│   ├── triggers/                       ← Triggers (simples ou compound)
 │   ├── types/                          ← Object types e collections
 │   ├── sequences/                      ← Sequences e identity columns
 │   ├── synonyms/                       ← Sinônimos públicos e privados
