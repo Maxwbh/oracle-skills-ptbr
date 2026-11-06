@@ -33,21 +33,26 @@ from oracle_devops_utils import (
 # ─── Mapeamento: tipo → (subdir, extensões) ───────────────────────────────────
 
 TIPOS = {
-    "sequences":  ("sequences",  [".sql"]),
-    "types":      ("types",      [".typ", ".sql"]),
-    "tables":     ("tables",     [".sql"]),
-    "views":      ("views",      [".vw", ".sql"]),
-    "grants":     ("grants",     [".sql"]),
-    "synonyms":   ("synonyms",   [".sql"]),
-    "procedures": ("procedures", [".prc", ".sql"]),
-    "functions":  ("functions",  [".fnc", ".sql"]),
-    "triggers":   ("triggers",   [".trg", ".sql"]),
+    "sequences":   ("sequences",   [".sql"]),
+    "types":       ("types",       [".typ", ".sql"]),
+    "tables":      ("tables",      [".sql"]),
+    "constraints": ("constraints", [".sql"]),
+    "fk":          ("fk",          [".sql"]),
+    "indexes":     ("indexes",     [".sql"]),
+    "views":       ("views",       [".vw", ".sql"]),
+    "grants":      ("grants",      [".sql"]),
+    "synonyms":    ("synonyms",    [".sql"]),
+    "procedures":  ("procedures",  [".prc", ".sql"]),
+    "functions":   ("functions",   [".fnc", ".sql"]),
+    "triggers":    ("triggers",    [".trg", ".sql"]),
 }
 
 # Ordem canônica de deploy (respeita dependências entre objetos)
+# Alinhada à seção "Ordem de deploy" do SKILL.md.
 ORDEM_DEPLOY = [
-    "sequences", "types", "tables", "views",
-    "grants", "synonyms",
+    "sequences", "types", "tables",
+    "constraints", "fk", "indexes",
+    "grants", "synonyms", "views",
     # packages tratados à parte (spec antes do body)
     "procedures", "functions", "triggers",
 ]

@@ -34,7 +34,7 @@ BEGIN
     p_module_name    => 'faturas.v1',
     p_pattern        => 'fatura',
     p_method         => 'GET',
-    p_source_type    => ORDS.source_type_collection_query,
+    p_source_type    => ORDS.source_type_collection_feed,
     p_items_per_page => 25,
     p_source         => 
 'SELECT id, numero_fatura, id_cliente, data_emissao, data_vencimento, valor, status
@@ -58,7 +58,7 @@ BEGIN
     p_module_name    => 'faturas.v1',
     p_pattern        => 'fatura/:id',
     p_method         => 'GET',
-    p_source_type    => ORDS.source_type_query_one_row,
+    p_source_type    => ORDS.source_type_collection_item,
     p_source         =>
 'SELECT id, numero_fatura, id_cliente, data_emissao, data_vencimento, valor, status,
         criado_em, atualizado_em
@@ -261,10 +261,16 @@ END;
 
 --==============================================================================
 -- 8. Cria OAuth client (para integração com sistema externo)
+--
+-- Use ORDS_SECURITY (ORDS 24.3+). Os pacotes OAUTH/OAUTH_ADMIN foram
+-- depreciados em ORDS 24.3 e REMOVIDOS em ORDS 25.3 (out/2025).
+-- Em ORDS < 24.3, o equivalente é OAUTH.create_client (mesmos parâmetros).
+-- O client secret é retornado UMA única vez na criação e não fica em
+-- USER_ORDS_CLIENTS — capture e guarde no momento da criação.
 --==============================================================================
 
 BEGIN
-  OAUTH.create_client(
+  ORDS_SECURITY.create_client(
     p_name            => 'sistema_integrador',
     p_grant_type      => 'client_credentials',
     p_owner           => 'MS_BRASIL',

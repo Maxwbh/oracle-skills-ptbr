@@ -31,7 +31,7 @@ SELECT
                     AND sq.child_number = s.sql_child_number
  WHERE s.username IS NOT NULL    -- exclui sessões internas Oracle
    AND s.type = 'USER'           -- só usuários (não SYS background)
-   AND s.status = 'ATIVO'       -- só executando algo
+   AND s.status = 'ACTIVE'       -- só executando algo
  ORDER BY s.last_call_et DESC;
 
 
@@ -61,7 +61,7 @@ SELECT s.sid,
   FROM v$session s
   JOIN v$sql sq ON s.sql_id = sq.sql_id
                 AND sq.child_number = s.sql_child_number
- WHERE s.status = 'ATIVO'
+ WHERE s.status = 'ACTIVE'
    AND s.last_call_et > 60
    AND s.username IS NOT NULL
  ORDER BY s.last_call_et DESC;
@@ -139,16 +139,22 @@ SELECT
 -- 7. KILL session — uso operacional
 --==============================================================================
 
--- ANTES de KILL, sempre identifique o que a sessão está fazendo:
+-- ANTES de KILL, sempre identifique o que a sessão está fazendo
+-- e se há transação ativa (rollback pode ser longo):
 SELECT
-    sid, serial#, username, machine, status,
-    last_call_et AS sec_in_call,
-    sql_id,
-    (SELECT sql_text FROM v$sql 
-      WHERE sql_id = s.sql_id 
+    s.sid, s.serial#, s.username, s.machine, s.status, s.type,
+    s.last_call_et AS sec_in_call,
+    s.sql_id,
+    t.used_ublk AS undo_blocks,   -- tamanho da transação (NULL = sem transação ativa)
+    (SELECT sql_text FROM v$sql
+      WHERE sql_id = s.sql_id
         AND rownum = 1) AS sql_text
   FROM v$session s
- WHERE sid = 1234;  -- ← substitua pelo SID real
+  LEFT JOIN v$transaction t ON t.ses_addr = s.saddr
+ WHERE s.sid = 1234;  -- ← substitua pelo SID real
+
+-- Confirme que é type = 'USER' (NUNCA mate sessão de background/SYS).
+-- used_ublk alto = rollback potencialmente demorado ao matar.
 
 -- Se confirmou que pode killar, em single-instance:
 -- ALTER SYSTEM KILL SESSION '1234,5678' IMMEDIATE;
@@ -176,7 +182,7 @@ SELECT inst_id, sid, serial#, username, machine, program, status,
   FROM gv$session
  WHERE username IS NOT NULL
    AND type = 'USER'
-   AND status = 'ATIVO'
+   AND status = 'ACTIVE'
  ORDER BY inst_id, sid;
 
 -- Identifica instâncias disponíveis
@@ -193,7 +199,7 @@ SELECT s.sid, s.serial#, s.username, s.event, s.wait_class,
        s.seconds_in_wait, s.state, s.sql_id
   FROM v$session s
  WHERE s.username IS NOT NULL
-   AND s.status = 'ATIVO'
+   AND s.status = 'ACTIVE'
    AND s.event NOT LIKE 'SQL*Net%idle%'
    AND s.wait_class != 'Idle'
  ORDER BY s.seconds_in_wait DESC;
@@ -226,7 +232,7 @@ SELECT
     last_call_et AS sec_since_last_call
   FROM v$session
  WHERE username IS NOT NULL
-   AND status = 'INATIVO'
+   AND status = 'INACTIVE'
    AND (SYSDATE - logon_time) > 1/24  -- mais de 1 hora logado
    AND last_call_et > 1800            -- inativa por >30 minutos
  ORDER BY logon_time;
@@ -244,13 +250,13 @@ SELECT s.sid, s.username, s.program,
   FROM v$session s
   LEFT JOIN (
        SELECT sid,
-              SUM(CASE WHEN nome = 'physical reads' THEN value END) AS physical_reads,
-              SUM(CASE WHEN nome = 'session logical reads' THEN value END) AS logical_reads,
-              SUM(CASE WHEN nome = 'CPU used by this session' THEN value END) AS cpu_used,
-              SUM(CASE WHEN nome = 'execute count' THEN value END) AS executions
+              SUM(CASE WHEN name = 'physical reads' THEN value END) AS physical_reads,
+              SUM(CASE WHEN name = 'session logical reads' THEN value END) AS logical_reads,
+              SUM(CASE WHEN name = 'CPU used by this session' THEN value END) AS cpu_used,
+              SUM(CASE WHEN name = 'execute count' THEN value END) AS executions
          FROM v$sesstat ss
          JOIN v$statname sn ON ss.statistic# = sn.statistic#
-        WHERE sn.nome IN ('physical reads', 'session logical reads',
+        WHERE sn.name IN ('physical reads', 'session logical reads',
                          'CPU used by this session', 'execute count')
         GROUP BY sid
        ) stat ON s.sid = stat.sid

@@ -134,7 +134,7 @@ SELECT table_name,
        stale_stats
   FROM dba_tab_statistics
  WHERE owner = USER
-   AND table_name IN ('CUSTOMERS', 'INVOICES')
+   AND table_name IN ('CLIENTES', 'FATURAS')
  ORDER BY table_name;
 
 -- Stats das colunas usadas em WHERE/JOIN/GROUP BY
@@ -146,8 +146,8 @@ SELECT table_name, column_name,
        last_analyzed
   FROM dba_tab_col_statistics
  WHERE owner = USER
-   AND table_name IN ('CUSTOMERS', 'INVOICES')
-   AND column_name IN ('STATUS', 'CUSTOMER_ID', 'INVOICE_DATE')
+   AND table_name IN ('CLIENTES', 'FATURAS')
+   AND column_name IN ('STATUS', 'ID_CLIENTE', 'DATA_EMISSAO')
  ORDER BY table_name, column_name;
 
 -- Indexes das tabelas
@@ -160,7 +160,7 @@ SELECT i.index_name, i.index_type, i.uniqueness,
   JOIN dba_ind_columns c ON i.owner = c.index_owner
                          AND i.index_name = c.index_name
  WHERE i.owner = USER
-   AND i.table_name IN ('CUSTOMERS', 'INVOICES')
+   AND i.table_name IN ('CLIENTES', 'FATURAS')
  GROUP BY i.index_name, i.index_type, i.uniqueness, i.last_analyzed,
           i.distinct_keys, i.clustering_factor
  ORDER BY i.table_name;
@@ -173,7 +173,7 @@ SELECT i.index_name, i.index_type, i.uniqueness,
 -- Tabela única
 EXEC DBMS_STATS.gather_table_stats(
   ownname          => USER,
-  tabname          => 'INVOICES',
+  tabname          => 'FATURAS',
   estimate_percent => DBMS_STATS.auto_sample_size,
   method_opt       => 'FOR ALL COLUMNS SIZE AUTO',
   cascade          => TRUE,                    -- inclui indexes
@@ -183,7 +183,7 @@ EXEC DBMS_STATS.gather_table_stats(
 -- Coluna específica com histograma forçado (para distribuição skewed)
 EXEC DBMS_STATS.gather_table_stats(
   ownname    => USER,
-  tabname    => 'INVOICES',
+  tabname    => 'FATURAS',
   method_opt => 'FOR COLUMNS status SIZE 254'
 );
 
