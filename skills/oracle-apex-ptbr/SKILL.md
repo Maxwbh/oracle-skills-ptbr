@@ -56,6 +56,7 @@ Oracle APEX 26.1 (padrões válidos de 24.2+) — padrões de desenvolvimento e 
 | **Autenticação custom** | — | `apex_authentication_custom.sql` (custom scheme, sentry, OIDC, HTTP Header) |
 | **Universal Theme** | — | `universal_theme_patterns.sql` (classes t-/u-, tokens --ut-*, dark mode) |
 | **Auditoria via metadata** | `references/apex-data-dictionary-ptbr.md` | `apex_metadata_queries.sql` (linter caseiro, pre-deploy validation) |
+| **Segurança — patch level (CPU out/2026)** | `references/apex-version-matrix-ptbr.md` (seção Segurança) | `apex_verificar_patch_seguranca.sql` (classifica a versão instalada contra CVE-2026-101521 e CVE-2026-66010) |
 | **Matriz de versões (24 vs 26)** | `references/apex-version-matrix-ptbr.md` | (tabela embutida no reference) |
 
 ## Quando ativar
@@ -81,6 +82,7 @@ Oracle APEX 26.1 (padrões válidos de 24.2+) — padrões de desenvolvimento e 
 - **Items sensíveis:** `Value Protected: Yes` sempre em Hidden PKs.
 - **Exception em process APEX:** use `APEX_ERROR.add_error` — nunca `raise_application_error` direto sem handler.
 - **APEX não comita:** processos PL/SQL dentro de APEX não fazem COMMIT — o framework gerencia.
+- **Patch level antes de orientar uma instância:** ao gerar código ou orientação para uma instância APEX **existente**, pergunte (ou peça para rodar `apex_verificar_patch_seguranca.sql`) a versão completa com patch set — ex.: 24.2.**22**. Se estiver em **24.1.0–24.1.21, 24.2.0–24.2.20 ou 26.1.0–26.1.4**, alerte primeiro: **CVE-2026-101521**, CVSS 9.8, tomada do APEX **sem autenticação via HTTPS** (Oracle CPU out/2026). O advisory não nomeia a versão que corrige: oriente aplicar o Patch Set Bundle mais recente da versão e conferir o documento CPU359 da Oracle Support.
 - **APEX_DICTIONARY:** ponto de entrada para descoberta de qualquer view de metadados APEX.
 - **Consciência de versão:** features divergem entre 24.1, 24.2 e 26.1. Antes de gerar código que dependa de versão (IA no app, APEXlang, Select One/Many, Slots, Workflow/Working Copy, session state BOOLEAN, Universal Theme Iris), confirme a versão-alvo — ver regra abaixo. Consulte `references/apex-version-matrix-ptbr.md` para o que é exclusivo de cada release.
 
