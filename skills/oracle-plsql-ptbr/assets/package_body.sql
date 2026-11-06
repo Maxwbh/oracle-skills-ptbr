@@ -107,7 +107,8 @@ CREATE OR REPLACE PACKAGE BODY <nome_pacote>_pkg AS
     
     WHEN OTHERS THEN
       ROLLBACK;
-      registrar_evento(lc_nome_unidade || ': ERRO INESPERADO - ' || SQLERRM);
+      registrar_evento(lc_nome_unidade || ': ERRO INESPERADO - ' || SQLERRM
+        || ' | ' || DBMS_UTILITY.format_error_backtrace);
       raise_application_error(-20999,
         'Erro inesperado em ' || lc_nome_unidade || ': ' || SQLERRM);
   END processar_registro;
@@ -168,8 +169,11 @@ CREATE OR REPLACE PACKAGE BODY <nome_pacote>_pkg AS
     RETURN r_resultado;
   EXCEPTION
     WHEN OTHERS THEN
+      -- Função de leitura pura: agregados não lançam NO_DATA_FOUND.
+      -- Preserva o backtrace original para não perder a origem do erro.
       raise_application_error(-20999,
-        'Erro inesperado em ' || lc_nome_unidade || ': ' || SQLERRM);
+        'Erro inesperado em ' || lc_nome_unidade || ': ' || SQLERRM
+        || CHR(10) || DBMS_UTILITY.format_error_backtrace);
   END obter_resumo;
 
 
@@ -183,13 +187,14 @@ CREATE OR REPLACE PACKAGE BODY <nome_pacote>_pkg AS
   -----------------------------------------------------------------------------
   PROCEDURE validar_estado_registro (p_id IN NUMBER) IS
     lc_nome_unidade CONSTANT VARCHAR2(60) := gc_nome_pacote || '.validar_estado_registro';
-    l_estado VARCHAR2(1);
+    l_status VARCHAR2(1);
   BEGIN
-    SELECT estado INTO l_estado
+    -- Lê a MESMA coluna status usada no fluxo principal (consistência)
+    SELECT status INTO l_status
       FROM registros
      WHERE id = p_id;
 
-    IF l_estado NOT IN (gc_status_pendente, gc_status_ativo) THEN
+    IF l_status NOT IN (gc_status_pendente, gc_status_ativo) THEN
       RAISE e_estado_invalido;
     END IF;
   EXCEPTION

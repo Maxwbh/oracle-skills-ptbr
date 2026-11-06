@@ -1,6 +1,11 @@
 --==============================================================================
 -- Template: APEX PL/SQL Process e AJAX Callback
 --
+-- Compatibilidade: Page Process, AJAX Callback, Validation e Computation valem
+--   em 24.1/24.2/26.1. Recursos de IA (APEX_AI, geração de texto) divergem por
+--   versão — em dúvida, pergunte a versão-alvo. Matriz:
+--   references/apex-version-matrix-ptbr.md
+--
 -- Cobre dois cenários:
 --   1. Page Process (executa no Submit/Load)
 --   2. AJAX Callback (chamado via apex.server.process do JavaScript)
@@ -80,7 +85,7 @@ EXCEPTION
   WHEN DUP_VAL_ON_INDEX THEN
     -- Mensagem amigável para violação de unicidade
     APEX_ERROR.add_error(
-      p_mensagem          => 'Já existe uma fatura com este número.',
+      p_message          => 'Já existe uma fatura com este número.',
       p_display_location => APEX_ERROR.c_inline_with_field_and_notif,
       p_page_item_name   => 'P10_NUMERO_FATURA'
     );
@@ -88,7 +93,7 @@ EXCEPTION
   WHEN OTHERS THEN
     APEX_DEBUG.error('Erro em ' || l_nome_unidade || ': ' || SQLERRM);
     APEX_ERROR.add_error(
-      p_mensagem          => 'Erro ao salvar fatura: ' || SQLERRM,
+      p_message          => 'Erro ao salvar fatura: ' || SQLERRM,
       p_display_location => APEX_ERROR.c_inline_in_notification
     );
 END;
@@ -231,7 +236,11 @@ END;
 -- PL/SQL Expression (uma linha):
 TO_CHAR(SYSDATE, 'YYYY') || '-' || LPAD(faturas_seq.NEXTVAL, 6, '0')
 
--- Resultado: '2024-000123'
+-- Resultado: '2026-000123'
+-- ATENÇÃO: NEXTVAL em Before Header consome a sequência a cada render da
+-- página (usuário que abre e abandona a tela queima números). Se buracos na
+-- numeração importam (ex.: numeração fiscal), gere o número no INSERT do
+-- Page Process — não em computation de render.
 
 
 --==============================================================================

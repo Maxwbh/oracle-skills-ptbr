@@ -1,0 +1,35 @@
+# Tema de marca M&S do Brasil no formato theme-factory-ptbr.
+# A M&S ainda não tem paleta própria definida: este arquivo NÃO inventa cores — ele aponta
+# para o tema Tech Innovation do catálogo e só ajusta identidade, casos de uso e mídia.
+# Quando existir uma paleta oficial, acrescente aqui os blocos `colors`, `fonts` e `semantic`
+# (a theme-factory re-deriva roles, presets e contrastes) ou publique um gerador como o da MJC.
+# Uso: aplicar_tema.py --tema msbrasil --arquivo <arquivo>  |  theme_factory.load_theme("msbrasil")
+brand:
+  name: msbrasil
+  owner: oracle-core-ptbr
+  aliases:
+  - msbrasil
+  - m&s do brasil
+  - m&s
+extends: tech-innovation
+name: msbrasil
+display_name: M&S do Brasil
+display_name_pt: M&S do Brasil
+version: "1.0"
+category: branded
+description: Identidade provisória da M&S do Brasil LTDA — herda Tech Innovation até que exista
+  paleta oficial da marca.
+mood:
+- técnico
+- moderno
+- confiável
+use_cases:
+- Propostas técnicas e documentos de projeto da M&S do Brasil
+- Apresentações de arquitetura, GMUD e pós-implantação
+- Materiais de entrega para clientes de projetos Oracle/APEX
+notes: |
+  Provisório e declarado como tal: as cores são as do tema Tech Innovation, não uma identidade
+  M&S. Não apresente como "identidade visual da M&S" para cliente sem avisar. Substitua assim
+  que houver paleta oficial — basta acrescentar `colors`/`fonts`/`semantic` neste arquivo.
+  Para material de cliente final (IMESC, Nexdom, Zitrus e outros), use o tema do cliente quando
+  existir; na ausência, escolha pelo contexto (theme-factory `pick_theme`), não este.

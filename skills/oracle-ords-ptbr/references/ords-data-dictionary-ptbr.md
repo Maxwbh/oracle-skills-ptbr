@@ -4,6 +4,19 @@ Referência para consulta e uso correto das views do dicionário do Oracle REST 
 
 ---
 
+## Índice
+
+- [1. Como funciona o dicionário ORDS](#1-como-funciona-o-dicionário-ords)
+- [2. Hierarquia de objetos ORDS e suas views](#2-hierarquia-de-objetos-ords-e-suas-views)
+- [3. Nomenclatura interna de colunas](#3-nomenclatura-interna-de-colunas)
+- [4. Mapa por categoria — views mais importantes](#4-mapa-por-categoria-views-mais-importantes)
+- [5. DBA_ORDS_* — visão cross-schema (ORDS 24.4+)](#5-dba_ords_-visão-cross-schema-ords-244)
+- [6. Queries práticas de auditoria](#6-queries-práticas-de-auditoria)
+- [7. Evolução por versão — ORDS 18.x a 25.x](#7-evolução-por-versão-ords-18x-a-25x)
+- [8. Impacto Oracle Edition nas features ORDS](#8-impacto-oracle-edition-nas-features-ords)
+- [9. Fontes confiáveis para atualização](#9-fontes-confiáveis-para-atualização)
+- [Linkagem interna](#linkagem-interna)
+
 ## 1. Como funciona o dicionário ORDS
 
 ### Schema interno: ORDS_METADATA
@@ -66,7 +79,7 @@ Cada view corresponde diretamente aos objetos criados pelas APIs `ORDS.*`:
 | `ORDS.define_parameter(...)` | `USER_ORDS_PARAMETERS` |
 | `ORDS.create_role(...)` | `USER_ORDS_ROLES` |
 | `ORDS.define_privilege(...)` | `USER_ORDS_PRIVILEGES` |
-| `ORDS_SECURITY.create_client(...)` *(24.4+)* | `USER_ORDS_CLIENTS` |
+| `ORDS_SECURITY.create_client(...)` *(24.3+)* | `USER_ORDS_CLIENTS` |
 | `ORDS.enable_object(...)` *(AutoREST)* | `USER_ORDS_ENABLED_OBJECTS` |
 
 ---
@@ -90,7 +103,7 @@ USER_ORDS_PRIVILEGE_ROLES      ← Roles atribuídas a cada privilege
 USER_ORDS_PRIVILEGE_MODULES    ← Módulos protegidos por cada privilege
 USER_ORDS_PRIVILEGE_MAPPINGS   ← Mapeamento de URIs para privileges
 
-USER_ORDS_CLIENTS              ← OAuth2 clients (ORDS_SECURITY 24.4+)
+USER_ORDS_CLIENTS              ← OAuth2 clients (API ORDS_SECURITY desde 24.3)
 USER_ORDS_CLIENT_PRIVILEGES    ← Privileges de cada client
 USER_ORDS_CLIENT_ROLES         ← Roles de cada client
 
@@ -256,12 +269,12 @@ SELECT p.name AS privilege, m.name AS modulo
 
 ### OAuth 2.0 Clients
 
-**ATENÇÃO — depreciação crítica em ORDS 24.4:**
+**ATENÇÃO — depreciação crítica:**
 
 | Pacote | Status | Substituído por |
 |---|---|---|
-| `OAUTH` | ⛔ Depreciado em 24.4, **removido em ORDS 25.3** | `ORDS_SECURITY` |
-| `OAUTH_ADMIN` | ⛔ Depreciado em 24.4, **removido em ORDS 25.3** | `ORDS_SECURITY_ADMIN` |
+| `OAUTH` | ⛔ Depreciado em 24.3, **removido em ORDS 25.3** | `ORDS_SECURITY` |
+| `OAUTH_ADMIN` | ⛔ Depreciado em 24.3, **removido em ORDS 25.3** | `ORDS_SECURITY_ADMIN` |
 
 ```sql
 -- Clients OAuth cadastrados
@@ -527,7 +540,29 @@ END;
 
 ---
 
-### ORDS 24.4 (Dezembro 2024) — mudança crítica de segurança
+### ORDS 24.3 (Setembro 2024) — depreciação do OAUTH
+
+**Depreciação do OAUTH / OAUTH_ADMIN (início em 24.3):**
+
+As interfaces PL/SQL de gestão de clients OAuth2 foram consolidadas nos pacotes
+`ORDS_SECURITY` e `ORDS_SECURITY_ADMIN`. A partir do 24.3, `OAUTH` e `OAUTH_ADMIN`
+estão depreciados.
+
+| Pacote antigo | Substituição (desde 24.3) | Removido em |
+|---|---|---|
+| `OAUTH.create_client(...)` | `ORDS_SECURITY.create_client(...)` | ORDS 25.3 |
+| `OAUTH.grant_client_role(...)` | `ORDS_SECURITY.grant_client_role(...)` | ORDS 25.3 |
+| `OAUTH_ADMIN.revoke_client_token(...)` | `ORDS_SECURITY_ADMIN.revoke_client_token(...)` | ORDS 25.3 |
+
+Compatibilidade retroativa mantida até ORDS 25.2; desuporte a partir de 25.3
+(outubro 2025). Em ORDS 25.3+, chamadas a `OAUTH.*`/`OAUTH_ADMIN.*` resultam em erro.
+
+Novidade adicional de segurança: o client secret passa a ser exibido apenas uma
+vez na criação e não fica armazenado em `USER_ORDS_CLIENTS`.
+
+---
+
+### ORDS 24.4 (Dezembro 2024)
 
 **Novas views `DBA_ORDS_*` (lista completa na seção 5)**
 
@@ -536,15 +571,8 @@ END;
 - `ORDS_PAR.define_for_handler(p_module_name, p_pattern, p_method, p_duration)`
 - `ORDS_PAR.revoke(p_par_id)`
 
-**Depreciação do OAUTH / OAUTH_ADMIN:**
-
-| Pacote antigo | Substituição em 24.4 | Removido em |
-|---|---|---|
-| `OAUTH.create_client(...)` | `ORDS_SECURITY.create_client(...)` | ORDS 25.3 |
-| `OAUTH.grant_client_role(...)` | `ORDS_SECURITY.grant_client_role(...)` | ORDS 25.3 |
-| `OAUTH_ADMIN.revoke_client_token(...)` | `ORDS_SECURITY_ADMIN.revoke_client_token(...)` | ORDS 25.3 |
-
-**Ação requerida:** Qualquer código que use `OAUTH.*` ou `OAUTH_ADMIN.*` precisou ser migrado antes de ORDS 25.3 (outubro 2025). Em instalações ORDS 25.3+, essas chamadas resultam em erro.
+**Lembrete:** a depreciação de `OAUTH`/`OAUTH_ADMIN` começou em 24.3 (ver acima) —
+em 24.4 ela continua válida, com remoção planejada para 25.3.
 
 ---
 
@@ -625,7 +653,8 @@ thatjeffsmith.com                               ← Jeff Smith — queries e dic
 https://www.oracle.com/tools/ords/ords-relnotes-{VER}.html
 
 # Exemplos diretos
-https://www.oracle.com/tools/ords/ords-relnotes-24.4.html   ← DBA_ORDS_*, ORDS_PAR, depreciação OAUTH
+https://www.oracle.com/tools/ords/ords-relnotes-24.3.html   ← início depreciação OAUTH → ORDS_SECURITY
+https://www.oracle.com/tools/ords/ords-relnotes-24.4.html   ← DBA_ORDS_*, ORDS_PAR
 https://www.oracle.com/tools/ords/ords-relnotes-25.2.html   ← JWT pool-level
 https://www.oracle.com/tools/ords/ords-relnotes-25.4.html   ← ORDS_EXPORT fix MLE
 

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  releases/2026.01-gmud-001/changelog.xml
+  Changelog de UMA release/GMUD. Cada changeset referencia um .sql GMUD via
+  <sqlFile> e tem um <rollback> correspondente.
+
+  Convenções importantes do Liquibase:
+  - id + author + caminho do arquivo = identidade ÚNICA do changeset. Nunca
+    reaproveite um id já aplicado; crie um novo changeset.
+  - A ordem dos changesets aqui é a ordem de execução (respeite dependências:
+    tabelas -> constraints/índices -> views -> packages -> dados).
+  - Liquibase grava cada changeset aplicado em DATABASECHANGELOG; reexecutar o
+    update NÃO reaplica o que já passou (exceto runOnChange/runAlways).
+-->
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- 1) DDL de tabela. Roda uma vez; rollback derruba a tabela. -->
+    <changeSet id="2026.01-001-ddl-tb_cliente" author="maxwbh" labels="gmud-001">
+        <comment>Cria tabela TB_CLIENTE</comment>
+        <sqlFile path="001_projeto_ddl_tb_cliente.sql"
+                 relativeToChangelogFile="true"
+                 endDelimiter="/"
+                 splitStatements="true"
+                 stripComments="false"/>
+        <rollback>
+            <sqlFile path="rollback/001_drop_tb_cliente.sql"
+                     relativeToChangelogFile="true"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 2) Constraints/índices, após a tabela existir. -->
+    <changeSet id="2026.01-002-constraints-tb_cliente" author="maxwbh" labels="gmud-001">
+        <comment>PK, FK e índices de TB_CLIENTE</comment>
+        <sqlFile path="002_projeto_ddl_constraints.sql"
+                 relativeToChangelogFile="true"
+                 endDelimiter="/" splitStatements="true"/>
+        <rollback>
+            <sqlFile path="rollback/002_drop_constraints.sql"
+                     relativeToChangelogFile="true"/>
+        </rollback>
+    </changeSet>
+
+    <!--
+      3) Package: como o corpo muda com frequência, runOnChange="true" reaplica
+      sempre que o checksum do arquivo muda (ideal para CREATE OR REPLACE).
+    -->
+    <changeSet id="2026.01-003-pkg_cliente" author="maxwbh" labels="gmud-001"
+               runOnChange="true">
+        <comment>Package PKG_CLIENTE (spec + body)</comment>
+        <sqlFile path="003_projeto_plsql_pkg_cliente.sql"
+                 relativeToChangelogFile="true"
+                 endDelimiter="/" splitStatements="true"/>
+        <!-- CREATE OR REPLACE é idempotente; rollback recria a versão anterior -->
+        <rollback>
+            <sqlFile path="rollback/003_pkg_cliente_anterior.sql"
+                     relativeToChangelogFile="true"/>
+        </rollback>
+    </changeSet>
+
+    <!--
+      4) Carga de dados que SÓ deve ir para HML e PRD (não em dev de teste).
+      context restringe o ambiente; só roda com -context hml ou -context prd.
+    -->
+    <changeSet id="2026.01-004-seed-dominios" author="maxwbh" labels="gmud-001"
+               context="hml,prd">
+        <comment>Popula tabelas de domínio</comment>
+        <sqlFile path="004_projeto_dml_dominios.sql"
+                 relativeToChangelogFile="true"/>
+        <rollback>
+            <sqlFile path="rollback/004_delete_dominios.sql"
+                     relativeToChangelogFile="true"/>
+        </rollback>
+    </changeSet>
+
+    <!--
+      5) Tag de release: marca um ponto de rollback nomeado. Permite
+      "liquibase rollback 2026.01-gmud-001" para voltar tudo desta release.
+    -->
+    <changeSet id="2026.01-999-tag" author="maxwbh">
+        <tagDatabase tag="2026.01-gmud-001"/>
+    </changeSet>
+
+</databaseChangeLog>

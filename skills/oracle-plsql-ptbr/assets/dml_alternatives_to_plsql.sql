@@ -240,7 +240,8 @@ ORGANIZATION EXTERNAL (
   )
   LOCATION ('faturas.csv')
 )
-REJECT LIMIT UNLIMITED;
+REJECT LIMIT UNLIMITED
+PARALLEL 4;   -- ← cláusula PARALLEL no nível CREATE TABLE (NÃO dentro de ACCESS PARAMETERS)
 
 -- Uso: SELECT na external table como tabela normal
 INSERT INTO faturas_destino
@@ -254,7 +255,10 @@ COMMIT;
 
 -- Vantagens External Tables:
 --   - Parsing CSV nativo (sem regex manual)
---   - Paralelizável: ACCESS PARAMETERS PARALLEL
+--   - Paralelizável: cláusula PARALLEL no CREATE TABLE (ex.: PARALLEL 4),
+--     fora do bloco ACCESS PARAMETERS. O driver ORACLE_LOADER divide o
+--     arquivo em chunks processados em paralelo (não vale para fonte
+--     sequencial nem multibyte sem fronteira de char determinável)
 --   - Permite preprocessor (descompactar gz, executar comando antes de ler)
 --   - Bad file e log file separados para análise
 --   - Combinável com DBMS_ERRLOG para tratamento de erros

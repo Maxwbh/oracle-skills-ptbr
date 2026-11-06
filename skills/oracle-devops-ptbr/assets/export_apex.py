@@ -200,8 +200,9 @@ def main() -> None:
     log.info(SEP2)
     log.info("")
     log.info("Próximos passos:")
+    data_commit = datetime.now().strftime("%Y-%m-%d")
     log.info(f"  git add apex/app_{args.app_id}/")
-    log.info(f"  git commit -m 'apex: export split app {args.app_id} — {datetime.now().strftime(\"%Y-%m-%d\")}'")
+    log.info(f"  git commit -m 'apex: export split app {args.app_id} — {data_commit}'")
 
 
 if __name__ == "__main__":

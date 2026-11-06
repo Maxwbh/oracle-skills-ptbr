@@ -4,6 +4,17 @@ Referência para consulta e uso correto das views do dicionário de dados Oracle
 
 ---
 
+## Índice
+
+- [1. Hierarquia de prefixos](#1-hierarquia-de-prefixos)
+- [2. Nomenclatura interna de colunas](#2-nomenclatura-interna-de-colunas)
+- [3. Mapa por categoria — views mais importantes](#3-mapa-por-categoria-views-mais-importantes)
+- [4. Matriz Edição × Disponibilidade de Views](#4-matriz-edição-disponibilidade-de-views)
+- [5. Matriz Tecnologia × Views específicas](#5-matriz-tecnologia-views-específicas)
+- [6. Evolução por versão — 11g a 26ai](#6-evolução-por-versão-11g-a-26ai)
+- [7. Fontes confiáveis para atualização](#7-fontes-confiáveis-para-atualização)
+- [Linkagem interna](#linkagem-interna)
+
 ## 1. Hierarquia de prefixos
 
 O dicionário Oracle é em camadas: cada camada abstrai a anterior e controla o que o usuário pode enxergar.

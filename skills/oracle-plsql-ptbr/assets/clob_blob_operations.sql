@@ -318,6 +318,10 @@ END;
 CREATE OR REPLACE FUNCTION clob_para_linhas (
   p_clob IN CLOB
 ) RETURN sys.odcivarchar2list PIPELINED IS
+  -- AVISO: cada linha é devolvida via DBMS_LOB.substr, que retorna VARCHAR2
+  -- limitado a 32767 bytes. Linhas CSV mais longas que isso são TRUNCADAS
+  -- silenciosamente. Para registros potencialmente maiores, prefira External
+  -- Table (ver dml_alternatives_to_plsql.sql, Cenário 4) ou devolva CLOB.
   l_total      NUMBER;
   l_offset     NUMBER := 1;
   l_pos        NUMBER;

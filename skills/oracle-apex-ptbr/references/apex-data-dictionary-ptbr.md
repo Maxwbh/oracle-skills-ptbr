@@ -4,6 +4,18 @@ Referência para consulta e uso correto das views do dicionário do Oracle APEX.
 
 ---
 
+## Índice
+
+- [1. Como funciona o dicionário APEX](#1-como-funciona-o-dicionário-apex)
+- [2. Hierarquia de prefixos](#2-hierarquia-de-prefixos)
+- [3. Nomenclatura interna de colunas APEX](#3-nomenclatura-interna-de-colunas-apex)
+- [4. Mapa por categoria — views mais importantes](#4-mapa-por-categoria-views-mais-importantes)
+- [5. Queries práticas de auditoria](#5-queries-práticas-de-auditoria)
+- [6. Evolução por versão — APEX 19 a 26.1](#6-evolução-por-versão-apex-19-a-261)
+- [7. Impacto Oracle Edition nas views APEX](#7-impacto-oracle-edition-nas-views-apex)
+- [8. Fontes confiáveis para atualização](#8-fontes-confiáveis-para-atualização)
+- [Linkagem interna](#linkagem-interna)
+
 ## 1. Como funciona o dicionário APEX
 
 ### Schema versionado
@@ -414,11 +426,13 @@ SELECT application_id, page_id, page_name
 
 ```sql
 -- Items hidden sem VALUE_PROTECTED (risco mass assignment)
+-- Nota: o domínio de VALUE_PROTECTED varia por versão ('N'/'No') — confirme
+-- antes com SELECT DISTINCT value_protected FROM apex_application_page_items;
 SELECT application_id, page_id, item_name, display_as
   FROM apex_application_page_items
  WHERE application_id = :APP_ID
    AND display_as = 'NATIVE_HIDDEN'
-   AND value_protected = 'N'
+   AND value_protected IN ('N', 'No')
  ORDER BY page_id, item_name;
 ```
 
@@ -541,7 +555,7 @@ ORDER BY 1;
 
 ---
 
-### APEX 24.2 (versão LTS atual — foco da skill)
+### APEX 24.2
 
 **Introduzido: JSON Sources**
 - `APEX_APPL_JSON_SOURCES` — JSON Sources component
@@ -563,7 +577,7 @@ ORDER BY 1;
 
 ---
 
-### APEX 26.1 (preview — não usar em produção ainda)
+### APEX 26.1 (versão atual — GA desde mai/2026)
 
 **APEXlang:** nova linguagem declarativa de especificação de aplicações — impacto futuro em como aplicações são definidas e exportadas.
 

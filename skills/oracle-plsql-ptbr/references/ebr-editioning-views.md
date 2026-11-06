@@ -2,11 +2,25 @@
 
 Conceitos e padrões para zero-downtime application upgrade no Oracle Database.
 
-EBR está disponível desde Oracle 11g R2 e funciona em **todas as editions** (Standard, Enterprise) sem licença adicional. "EBR is available for use in all editions of Oracle Database without the need to license it".
+## Índice
+
+- [Conceito](#conceito)
+- [Componentes-chave](#componentes-chave) — Edition, Editioning View, Cross-Edition Trigger
+- [Tipos de objetos editionable](#tipos-de-objetos-editionable)
+- [Quando usar EBR](#quando-usar-ebr)
+- [Guia de adoção — quando e como começar](#guia-de-adoção--quando-e-como-começar)
+- [Procedimento canônico — deploy via EBR](#procedimento-canônico--deploy-via-ebr)
+- [Limitações](#limitações)
+- [Anti-patterns EBR](#anti-patterns-ebr)
+- [Privilégios necessários](#privilégios-necessários)
+- [Recursos](#recursos)
+- [Considerações para 26ai](#considerações-para-26ai)
+
+EBR está disponível desde Oracle 11g R2 e funciona em **todas as editions** (Standard, Enterprise) sem licença adicional — não exige licenciamento próprio em nenhuma edition do banco.
 
 ## Conceito
 
-EBR permite upgrade do componente database de uma aplicação enquanto ela está em uso, mantendo a aplicação disponível durante todo o processo. "Allow arbitrary changes to a set of artifacts implementing application's database of record. Utilize both pre-upgrade and post-upgrade applications simultaneously (hot rollover). Maintain uninterrupted availability of the application across editions (live operation)".
+EBR permite upgrade do componente database de uma aplicação enquanto ela está em uso, mantendo a aplicação disponível durante todo o processo. A ideia central: aplicar mudanças arbitrárias nos artefatos de banco da aplicação, manter as versões pré e pós-upgrade rodando ao mesmo tempo (hot rollover) e preservar a disponibilidade ininterrupta ao longo da transição entre editions (live operation).
 
 Mecanismo:
 1. Sessões existentes continuam usando edition antiga
@@ -18,7 +32,7 @@ Mecanismo:
 
 ### Edition
 
-Espaço nomeado, isolado, dentro do schema. "Editions are nonschema objects; as such, they do not have owners. Editions are created in a single namespace, and multiple editions can coexist in the database. The database must have at least one edition. Every newly created or upgraded Oracle Database starts with one edition named ora$base".
+Espaço nomeado, isolado, dentro do schema. Editions são objetos non-schema — não têm owner — e vivem em um namespace único onde várias editions coexistem. O banco tem sempre ao menos uma edition; toda instância nova ou recém-atualizada começa com uma chamada `ora$base`.
 
 ```sql
 -- Criar edition filha
@@ -36,7 +50,7 @@ DROP EDITION ora$base CASCADE;
 
 ### Editioning View
 
-"These views are EDITIONING enabled. New editions can contain new versions of the view (changing projections, joins, or underlying logic) without altering the base table structure".
+Editioning views são habilitadas para edition: cada nova edition pode conter sua própria versão da view — alterando projeção de colunas, joins ou lógica — sem mexer na estrutura da tabela base.
 
 A tabela física fica oculta atrás da editioning view. Cada edition tem sua própria versão da view, projetando colunas diferentes da mesma tabela base.
 
@@ -62,7 +76,7 @@ SELECT id_cliente, cpf, primeiro_nome, sobrenome
   FROM "_clientes";
 ```
 
-Convenção de naming Insum/Oracle: tabela base com underscore + lowercase (`"_clientes"`); view com nome "limpo" (`clientes`). "When naming tables that will be covered by editioning views, it is preferable to name the covered table in lower case begining with an underscore".
+Convenção de naming Insum/Oracle: tabela base com underscore + lowercase (`"_clientes"`); view com nome "limpo" (`clientes`). A recomendação é nomear a tabela coberta por editioning view em minúsculas, iniciando com underscore.
 
 ### Cross-Edition Trigger
 
@@ -91,7 +105,7 @@ Templates em `assets/triggers_canonicos.sql` seção 4.
 - Public synonym
 - User/role/grant
 
-"Tables / Indexes / Mviews / Public synonyms are Non-Editionable because changes to table structures are not editionable directly". A solução para tabelas é a editioning view + cross-edition triggers.
+Tabelas, índices, materialized views e public synonyms são non-editionable porque mudanças em estrutura de tabela não são versionáveis por edition diretamente. A solução para tabelas é a editioning view + cross-edition triggers.
 
 ## Quando usar EBR
 
@@ -179,11 +193,11 @@ DROP EDITION app_v1 CASCADE;
 
 ## Limitações
 
-"Cannot be used for changes requiring table modifications (adding/dropping columns, constraints) without additional techniques like Cross-Edition Triggers or Online Table Redefinition".
+EBR sozinho não cobre mudanças que exigem alteração de tabela (adicionar/remover colunas ou constraints) — isso requer técnicas complementares como cross-edition triggers ou online table redefinition.
 
 - Tabelas não são editionable diretamente — exigem editioning view
 - DROP de coluna requer cleanup em fase posterior (não imediata)
-- Recomendado: "keeping no more than 25 editions before enacting a manual clean up cycle"
+- Recomendado: não acumular mais de ~25 editions antes de rodar um ciclo manual de limpeza
 - Sessões long-running atrasam retirada da edition antiga
 - Em CDB, scope de edition é o PDB (não cross-PDB)
 - RAC: EBR funciona em uma instance; rolling upgrades de RAC é assunto separado
@@ -223,6 +237,6 @@ ALTER USER app_owner ENABLE EDITIONS;
 ## Considerações para 26ai
 
 EBR continua funcionando em 26ai sem mudanças significativas. Pontos relevantes:
-- Em CDB (multitenant obrigatório em 26ai), scope da edition é o PDB
+- Em arquitetura CDB/PDB (a non-CDB foi desuportada já no 21c; confirmar o estado exato na documentação 26ai), o scope da edition é o PDB
 - JSON Relational Duality views podem ser cobertas por editioning views? **Provavelmente não diretamente** (são views especiais); confirmar caso a caso
 - AI Vector Search columns em tabelas: tabela base + editioning view continua sendo padrão

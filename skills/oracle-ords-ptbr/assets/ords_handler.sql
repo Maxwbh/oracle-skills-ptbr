@@ -4,14 +4,23 @@
 -- Templates para cada método HTTP, prontos para adaptar.
 -- Use quando precisar adicionar UM endpoint a um módulo já existente,
 -- sem recriar todo o módulo (ords_module.sql cobre o caso completo).
---==============================================================================
-
-
---==============================================================================
--- HANDLER 1: GET /resource/:id (item) — Source Type: Query One Row
 --
--- Retorna 1 linha como JSON automático. ORDS gera o JSON estruturado.
--- Returns 404 automaticamente se a query não encontra resultado.
+-- Constantes de source type válidas do package ORDS (não invente nomes):
+--   ORDS.source_type_collection_feed  → SELECT → coleção JSON (GET)   [collection/query]
+--   ORDS.source_type_collection_item  → SELECT 1 linha → JSON  (GET)  [collection/item]
+--   ORDS.source_type_media            → BLOB → binário          (GET) [media/blob]
+--   ORDS.source_type_plsql            → bloco PL/SQL             (POST/PUT/DELETE; GET aceito em ORDS modernas) [plsql/block]
+--   ORDS.source_type_csv_query        → SELECT → CSV            (GET)  [csv/query]
+-- NÃO existe ORDS.source_type_query_one_row nem ORDS.source_type_collection_query.
+--==============================================================================
+
+
+--==============================================================================
+-- HANDLER 1: GET /resource/:id (item) — Source Type: Collection Item
+--
+-- Constante: ORDS.source_type_collection_item (valor interno: collection/item).
+-- Retorna 1 linha como JSON ORDS Standard. ORDS gera o JSON estruturado.
+-- Retorna 404 automaticamente se a query não encontra resultado.
 --==============================================================================
 
 BEGIN
@@ -19,7 +28,7 @@ BEGIN
     p_module_name    => '<module_name>',
     p_pattern        => '<resource>/:id',
     p_method         => 'GET',
-    p_source_type    => ORDS.source_type_query_one_row,
+    p_source_type    => ORDS.source_type_collection_item,
     p_source         =>
 'SELECT id, nome, status, criado_em, atualizado_em
    FROM <table_name>
@@ -31,8 +40,9 @@ END;
 
 
 --==============================================================================
--- HANDLER 2: GET /resource (collection) — Source Type: Collection Query
+-- HANDLER 2: GET /resource (collection) — Source Type: Collection Feed
 --
+-- Constante: ORDS.source_type_collection_feed (valor interno: collection/query).
 -- Retorna lista paginada como JSON automático.
 -- ORDS adiciona links HATEOAS, contagem, e pagination.
 --==============================================================================
@@ -42,7 +52,7 @@ BEGIN
     p_module_name    => '<module_name>',
     p_pattern        => '<resource>',
     p_method         => 'GET',
-    p_source_type    => ORDS.source_type_collection_query,
+    p_source_type    => ORDS.source_type_collection_feed,
     p_items_per_page => 25,
     p_source         =>
 'SELECT id, nome, status, criado_em

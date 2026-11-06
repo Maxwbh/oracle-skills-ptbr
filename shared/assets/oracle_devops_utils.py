@@ -129,8 +129,16 @@ def split_oracle_sql(conteudo: str) -> list[str]:
     Suporta:
     - SQL terminado com ;
     - Blocos PL/SQL terminados com / em linha própria
-    - Comentários -- e /* */
+    - Comentários -- (linha inteira e inline após código) e /* */
     - BEGIN/DECLARE/CREATE OR REPLACE PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE
+
+    Limitações conhecidas (parser line-based, não tokenizer completo):
+    - Vários statements SQL na MESMA linha (ex.: "INSERT ...; UPDATE ...;")
+      não são separados — mantenha um statement por linha lógica.
+    - ';' ou '--' dentro de string em linha que também tenha aspas é
+      preservado; já o corte de comentário inline só ocorre em linhas sem
+      aspas (heurística conservadora). Para SQL com literais complexos,
+      prefira terminar cada statement em linha própria.
     """
     # Remover comentários de bloco
     conteudo = re.sub(r"/\*.*?\*/", "", conteudo, flags=re.DOTALL)
@@ -151,6 +159,17 @@ def split_oracle_sql(conteudo: str) -> list[str]:
 
         if stripped.startswith("--"):
             continue
+
+        # Comentário inline após código (fora de PL/SQL e fora de string):
+        # remove "  -- ..." do fim da linha para que o terminador ; seja
+        # detectado mesmo quando seguido de comentário na mesma linha.
+        # Heurística conservadora: só corta se não houver aspas na linha
+        # (evita falso positivo com '--' dentro de string literal).
+        if not em_plsql and "--" in stripped and "'" not in stripped and '"' not in stripped:
+            stripped = stripped.split("--", 1)[0].rstrip()
+            linha = stripped
+            if not stripped:
+                continue
 
         if PLSQL_INICIO.match(stripped):
             em_plsql = True

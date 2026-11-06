@@ -1,0 +1,138 @@
+# azure-pipelines-liquibase.yml
+# Deploy GMUD via Liquibase no Azure DevOps Pipelines, com approval gates por
+# Environment. Equivalente ao github-deploy-liquibase.yml — mesmo miolo
+# (Liquibase + changelog XML), só muda a camada de orquestração.
+#
+# COMO OS GATILHOS SE MATERIALIZAM (Aprovar / Reprovar / HML / PRD):
+#   Pipelines > Environments > crie: dev, hml, prd
+#   Em hml e prd: Approvals and checks > Approvals > adicione os aprovadores.
+#   - "Aprovar"        = aprovador libera o stage pendente do environment.
+#   - "Reprovar"       = aprovador rejeita -> stage marcado como skipped/failed.
+#   - "Enviar p/ HML"  = rodar o pipeline até o stage DeployHml (aguarda approval).
+#   - "Enviar p/ PRD"  = stage DeployPrd (aguarda approval do environment prd).
+#   O code review do CÓDIGO continua na Pull Request policy do Azure Repos.
+#
+# ESTRATÉGIA DE ENTREGA AO BANCO (escolha 1 por projeto — ver reference):
+#   A) Agente hospedado (Microsoft-hosted) conecta direto no banco.
+#   B) Self-hosted agent DENTRO da rede do banco (recomendado p/ PRD).
+#   C) Pipeline só gera o SQL (updateSQL) como artefato; DBA aplica (Git não toca o banco).
+#
+# Segredos: use Variable Groups (Library) ou Azure Key Vault, com um grupo por
+# ambiente (ex.: oracle-dev, oracle-hml, oracle-prd) contendo DB_URL/DB_USER/
+# DB_PASSWORD. NUNCA no YAML.
+
+trigger:
+  branches:
+    include: [develop]        # merge em develop -> deploy automático em dev
+
+parameters:
+  - name: ambiente
+    displayName: "Ambiente alvo (para execução manual)"
+    type: string
+    default: dev
+    values: [dev, hml, prd]
+
+variables:
+  liquibaseVersion: "4.33.0"
+  changelog: "db/changelog-master.xml"
+
+stages:
+  # ---------------------------------------------------------------------------
+  # 1) VALIDAR — sempre roda, não toca o banco. Publica o SQL previsto.
+  # ---------------------------------------------------------------------------
+  - stage: Validar
+    jobs:
+      - job: validar
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - script: |
+              wget -qO- https://package.liquibase.com/downloads/liquibase-$(liquibaseVersion).tar.gz \
+                | tar xz -C /opt liquibase || true
+              echo "##[group]Liquibase instalado"
+            displayName: "Instalar Liquibase"
+          - script: liquibase --changelog-file=$(changelog) validate
+            displayName: "Validar changelog"
+          - script: |
+              liquibase --changelog-file=$(changelog) \
+                --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
+                updateSQL > $(Build.ArtifactStagingDirectory)/deploy-previsto.sql || true
+            displayName: "Gerar SQL previsto (dry-run)"
+          - publish: $(Build.ArtifactStagingDirectory)/deploy-previsto.sql
+            artifact: deploy-previsto-sql
+
+  # ---------------------------------------------------------------------------
+  # 2) DEV — automático após Validar (environment dev sem approval).
+  # ---------------------------------------------------------------------------
+  - stage: DeployDev
+    dependsOn: Validar
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), eq('${{ parameters.ambiente }}', 'dev')))
+    jobs:
+      - deployment: deployDev
+        environment: dev          # sem approval = roda direto
+        pool:
+          vmImage: ubuntu-latest
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - script: |
+                    liquibase --changelog-file=$(changelog) \
+                      --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
+                      --contexts=dev update
+                  displayName: "Liquibase update (context dev)"
+
+  # ---------------------------------------------------------------------------
+  # 3) HML — environment hml com Approval (Enviar p/ HML).
+  # ---------------------------------------------------------------------------
+  - stage: DeployHml
+    dependsOn: Validar
+    condition: and(succeeded(), eq('${{ parameters.ambiente }}', 'hml'))
+    jobs:
+      - deployment: deployHml
+        environment: hml          # Approvals and checks = approval gate
+        pool:
+          vmImage: ubuntu-latest  # ou self-hosted (estratégia B)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - script: |
+                    liquibase --changelog-file=$(changelog) \
+                      --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
+                      --contexts=hml update
+                  displayName: "Liquibase update (context hml)"
+
+  # ---------------------------------------------------------------------------
+  # 4) PRD — environment prd com Approval (Enviar p/ PRD).
+  #     Estratégia C por padrão: gera o SQL para o DBA aplicar.
+  # ---------------------------------------------------------------------------
+  - stage: DeployPrd
+    dependsOn: Validar
+    condition: and(succeeded(), eq('${{ parameters.ambiente }}', 'prd'))
+    jobs:
+      - deployment: deployPrd
+        environment: prd
+        pool:
+          vmImage: ubuntu-latest  # troque por self-hosted na estratégia B
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                # Estratégia C: NÃO aplica; gera o script p/ o DBA.
+                - script: |
+                    liquibase --changelog-file=$(changelog) \
+                      --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
+                      --contexts=prd updateSQL > $(Build.ArtifactStagingDirectory)/gmud-prd.sql
+                  displayName: "Gerar script GMUD p/ o DBA (estratégia C)"
+                - publish: $(Build.ArtifactStagingDirectory)/gmud-prd.sql
+                  artifact: gmud-prd-sql
+                # Estratégias A/B: aplicar de fato (descomente quando a rede permitir).
+                # - script: |
+                #     liquibase --changelog-file=$(changelog) \
+                #       --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
+                #       --contexts=prd update
+                #   displayName: "Liquibase update (context prd)"
