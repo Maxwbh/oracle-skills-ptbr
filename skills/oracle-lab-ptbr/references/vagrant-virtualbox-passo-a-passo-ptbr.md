@@ -34,7 +34,7 @@ Baseado nos builds públicos de Tim Hall (github.com/oraclebase/vagrant, Apache 
 
 ### Windows
 
-1. Baixe e instale **VirtualBox** (Downloads no site virtualbox.org) e **Vagrant** (developer.hashicorp.com/vagrant). Aceite tudo como vem. A rede pisca durante a instalação do VirtualBox — é ele criando o adaptador virtual.
+1. Baixe e instale **VirtualBox** (Downloads no site virtualbox.org — a mais recente em 06/11/2026 é a **7.2.22**, de 20/10/2026; o oraclebase/vagrant não exige versão mínima) e **Vagrant** (developer.hashicorp.com/vagrant). Aceite tudo como vem. A rede pisca durante a instalação do VirtualBox — é ele criando o adaptador virtual.
 2. Feche e reabra o terminal. Confira no **PowerShell**:
    ```powershell
    VBoxManage --version
@@ -84,8 +84,31 @@ Dentro de `vagrant/database/`:
 | `ol9_19` | 19c completo em Oracle Linux 9 | Reproduzir ambiente de cliente |
 | `ol10_26_free`, `ol8_26_free` | 26ai Free em OL10 / OL8 | Preferência de SO |
 | `ol8_19`, `ol8_19_rpm` | 19c em OL8 | Cliente em OL8 |
+| `ol10_19` | 19c em **Oracle Linux 10**, com **RU 19.33** aplicado na instalação (`-applyRU`) | Cliente que vai para OL10 |
+| `f45_19`, `f45_21`, `f45_26` | Oracle em **Fedora 45** | Só curiosidade — o autor avisa: "Please don't do this for something serious"; a box é gerada localmente com Packer |
 
 Todas seguem a mesma estrutura: `Vagrantfile`, `config/`, `scripts/`, `software/`.
+
+**19c em Oracle Linux 10 (situação em 06/11/2026):**
+- A Oracle suporta o 19c em OL10 e **recomenda o RU 19.32 ou superior**, com
+  patches one-off adicionais listados na doc
+  ([Installing 19c on OL10/RHEL10](https://docs.oracle.com/en/database/oracle/oracle-database/19/rnrdm/installing-oracle-database-19c-oracle-linux-10-and-red-hat-enterprise-linux-10.html)).
+- O build `ol10_19` do oraclebase/vagrant usa o **RU 19.33** (commit de
+  23/10/2026), que segundo o autor dá **instalação limpa** de single instance e
+  RAC; o instalador ainda precisa de `CV_ASSUME_DISTID=OL9` (o build já faz)
+  ([oracle-base, 25/09/2026, atualizado](https://oracle-base.com/blog/2026/09/25/oracle-database-19c-supported-on-oracle-linux-10-ol10-but/)).
+- O README da pasta ainda cita o patch 19.27 na lista de downloads; vale o que
+  está em `config/install.env` (19.33).
+
+**Boxes e o fim do HCP Vagrant Registry (antigo Vagrant Cloud):** a HashiCorp
+encerrou a criação de boxes em **01/10/2026**, o suporte em **02/11/2026** e
+desliga o serviço em **31/12/2026**
+([HCP Vagrant EOL](https://developer.hashicorp.com/hcp/docs/vagrant/hcp-vagrant-eol)).
+Boxes publicadas lá (como `oraclebase/oracle-9`) deixam de baixar depois disso.
+Enquanto ainda baixam: faça `vagrant box add` uma vez e **guarde o arquivo
+`.box`** (fica em `~/.vagrant.d/boxes/`); para reinstalar de um arquivo local,
+`vagrant box add --name oraclebase/oracle-9 caminho/da/box.box`. O build
+`ol10_19` já usa a box `oraclelinux/10` fornecida pela Oracle.
 
 ## 4. Baixar os instaladores Oracle
 
