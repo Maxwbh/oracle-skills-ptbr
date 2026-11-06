@@ -33,6 +33,11 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 - `build.py`: `__pycache__` fora do pacote.
 - Ambientes unificados em `dev`/`hom`/`prod` em toda a suíte (inclusive Liquibase). oracle-core-ptbr 1.4.0 → 1.4.1.
 
+### Fase 2 — regras técnicas PL/SQL
+
+- oracle-plsql-ptbr 2.2.2 → 3.0.0: regra 4 (transação tem dono: rotina não comita; SAVEPOINT + ROLLBACK TO + RAISE; COMMIT/ROLLBACK só no ponto de entrada), regra 3 (erro original preservado) e regra 10 (compound só com estado entre linha e statement). Templates corrigidos e testados em container.
+- oracle-apex-ptbr 2.4.2 → 2.5.0, oracle-trivadis-ptbr 2.3.1 → 2.4.0, oracle-ords-ptbr 2.4.0 → 2.4.1: COMMIT/ROLLBACK alinhados à regra 4.
+
 ---
 
 ## [3.1.0] — 2026-05-26
