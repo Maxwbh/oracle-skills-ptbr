@@ -2,8 +2,8 @@
 name: oracle-apex-ptbr
 description: Módulo APEX da suíte Oracle PT-BR. Oracle APEX 26.1 (padrões válidos de 24.2+) — desenvolvimento e dicionário de metadados. ATIVE em Dynamic Actions, Interactive Report, Interactive Grid, Classic Report, Page Process, AJAX Callback, Validations, Authorization Schemes, pagination, LOV, APEX_APPLICATION_*, APEX_APPLICATION_PAGE_*, APEX_WORKSPACE_*, APEX_APPL_*, Workflows, Tasks, AI configs, ACL, JSON Sources, APEX_ACTIVITY_LOG. Frases — "página APEX", "region IR", "IG editável", "process no submit", "qual view APEX usar", "auditar paginação APEX". NÃO ATIVE em PL/SQL puro, ORDS endpoints, DBA operacional. Para naming use oracle-trivadis-ptbr. Templates em assets/.
 metadata:
-  version: "2.4.2"
-  release_date: "2026-09-15"
+  version: "2.5.0"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 20
   author: "Maxwell da Silva Oliveira"
@@ -25,7 +25,7 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo APEX (oracle-apex-ptbr)
 
-> **Versão:** 2.4.2 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (20 recursos nesta skill)
+> **Versão:** 2.5.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (20 recursos nesta skill)
 > **v2.4.2:** suíte com 10 skills; referência cruzada para montar APEX+ORDS local. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):

@@ -70,7 +70,7 @@ skills:
 
   - name: "oracle-plsql-ptbr"
     display_name: "Oracle PL/SQL PT-BR"
-    version: "2.2.2"
+    version: "3.0.0"
     icon: "🗄️"
     category: "database"
     description: "PL/SQL 19c — packages, procedures, LOBs, EBR e Trivadis 4.4"
@@ -79,7 +79,7 @@ skills:
 
   - name: "oracle-apex-ptbr"
     display_name: "Oracle APEX PT-BR"
-    version: "2.4.2"
+    version: "2.5.0"
     icon: "⚡"
     category: "development"
     description: "APEX (padrões de 24.2+) — development patterns e Data Dictionary completo"
@@ -88,7 +88,7 @@ skills:
 
   - name: "oracle-ords-ptbr"
     display_name: "Oracle ORDS PT-BR"
-    version: "2.4.0"
+    version: "2.4.1"
     icon: "🌐"
     category: "development"
     description: "ORDS — REST services, OAuth, AutoREST e Data Dictionary"
@@ -115,7 +115,7 @@ skills:
 
   - name: "oracle-trivadis-ptbr"
     display_name: "Oracle Trivadis PT-BR"
-    version: "2.3.1"
+    version: "2.4.0"
     icon: "📐"
     category: "development"
     description: "Trivadis Guidelines 4.4 — nomenclatura e revisão de código"

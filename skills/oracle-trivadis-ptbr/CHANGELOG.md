@@ -1,5 +1,8 @@
 # Changelog — oracle-trivadis-ptbr
 
+## [2.4.0] - 2026-11-06
+- Fix — guia: exemplo, "Padrão completo" de exceção e princípios de transação alinhados à regra 4 da oracle-plsql-ptbr (rotina não comita; SAVEPOINT + ROLLBACK TO + RAISE; dono da transação). Antes recomendava ROLLBACK total e -20999 com SQLERRM.
+
 ## [2.3.1] - 2026-09-15
 - Docs — suíte com 10 skills (oracle-lab-ptbr).
 
