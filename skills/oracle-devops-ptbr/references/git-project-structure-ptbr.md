@@ -48,7 +48,7 @@ meu-projeto-apex/
 │
 ├── apex/                               ← Aplicações APEX (export split)
 │   ├── app_100/
-│   │   ├── install.sql                 ← Entry point do deploy APEX
+│   │   ├── install.sql                 ← Import manual (o CI roda f100/install.sql)
 │   │   └── f100/                       ← Estrutura split (SQLcl/APEXExport)
 │   │       ├── application/
 │   │       │   ├── pages/
@@ -253,7 +253,7 @@ java -jar /opt/oracle/apex/utilities/oracle/apex/APEXExport.jar \
 
 ```
 apex/app_100/
-├── install.sql          ← commitar — entry point
+├── install.sql          ← commitar — import manual (rodar de dentro de f100/)
 └── f100/
     ├── application/
     │   ├── pages/
@@ -268,6 +268,8 @@ apex/app_100/
     │   └── set_environment.sql  ← commitar
     └── readable/        ← commitar se usando 24.2+ com readable format
 ```
+
+**Import no deploy:** o `deploy_full.py` roda `f100/install.sql` (gerado pelo `apex export -split`) pelo SQLcl, **com a pasta `f100/` como diretório de trabalho** — o install do export chama os componentes por caminho relativo. Antes, confere no destino que o workspace existe e que o app id não pertence a outro workspace, e define workspace/app id/parsing schema do destino com `APEX_APPLICATION_INSTALL` (`APEX_WORKSPACE`, `APEX_APP_ID`, `APEX_SCHEMA`).
 
 **Não commitar:** arquivos de export monolítico (`f100.sql`) — gera diff inutilizável.
 

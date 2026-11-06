@@ -10,7 +10,9 @@ Uso:
 
 Ordem de execução:
     1. apply_changelog.py  (migrations pendentes do banco)
-    2. export_apex.py / import APEX (se apex/app_{ID}/install.sql existir)
+    2. import APEX pelo SQLcl: apex/app_{ID}/f{ID}/install.sql (export split),
+       executado a partir dessa pasta, com workspace/app id do destino definidos
+       por APEX_APPLICATION_INSTALL; workspace e app id validados antes
     3. deploy_ords.py      (módulos ORDS)
 """
 
@@ -18,16 +20,33 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+import oracledb
+
 from oracle_devops_utils import (
-    GREEN, YELLOW, RED, CYAN, BOLD, RESET, DIM, SEP, SEP2,
-    banner, carregar_dotenv, conectar, confirmar_producao,
-    executar_arquivo_sql, log,
+    BOLD,
+    CYAN,
+    GREEN,
+    RED,
+    RESET,
+    SEP,
+    SEP2,
+    YELLOW,
+    ErroSQLcl,
+    banner,
+    carregar_dotenv,
+    conectar,
+    confirmar_producao,
+    executar_e_verificar,
+    localizar_sqlcl,
+    log,
+    obter_config_db,
 )
 
 
@@ -48,7 +67,7 @@ def rodar_script(
     log.info(f"  {CYAN}→ {' '.join(cmd[2:])}{RESET}")
 
     inicio = time.monotonic()
-    resultado = subprocess.run(cmd, text=True)
+    resultado = subprocess.run(cmd, text=True, check=False)
     duracao = time.monotonic() - inicio
 
     if resultado.returncode == 0:
@@ -59,28 +78,99 @@ def rodar_script(
         return False
 
 
-def importar_apex(
-    conn,
-    install_sql: Path,
-    env: str,
-    dry_run: bool,
-) -> bool:
-    """Importa aplicação APEX via install.sql usando oracledb."""
-    if not install_sql.exists():
-        log.info(f"  {DIM}install.sql não encontrado — pulando APEX{RESET}")
-        return True
+class ErroImportApex(RuntimeError):
+    """Pré-condição do import APEX não atendida."""
 
-    if dry_run:
-        log.info(f"  {CYAN}DRY-RUN: importaria {install_sql}{RESET}")
-        return True
 
+def localizar_export_apex(root: Path, app_id: int) -> Path:
+    """
+    Pasta do export split (apex/app_<ID>/f<ID>) com o install.sql gerado pelo
+    'apex export -split'. É a partir dela que o SQLcl roda o import: o
+    install.sql do export chama os componentes com caminho relativo.
+    """
+    pasta = root / "apex" / f"app_{app_id}" / f"f{app_id}"
+    install = pasta / "install.sql"
+    if not install.exists():
+        raise ErroImportApex(
+            f"{install.relative_to(root)} não encontrado. Gere o export split com "
+            f"'python scripts/export_apex.py --app-id {app_id}'."
+        )
+    if not (pasta / "application" / "set_environment.sql").exists():
+        raise ErroImportApex(
+            f"{pasta.relative_to(root)}/application/set_environment.sql não encontrado — "
+            "o export split parece incompleto."
+        )
+    return pasta
+
+
+def validar_destino_apex(conn, workspace: str, app_id: int) -> None:
+    """
+    Confere no banco de destino, antes do import:
+    - o APEX está acessível ao usuário de deploy;
+    - o workspace existe (e é visível ao usuário);
+    - o app id não pertence a OUTRO workspace.
+    """
     try:
-        n = executar_arquivo_sql(conn, install_sql)
-        log.info(f"  {GREEN}✓ APEX importado ({n} statement(s)){RESET}")
-        return True
-    except RuntimeError as e:
-        log.error(f"  {RED}✗ Erro no import APEX: {e}{RESET}")
-        return False
+        with conn.cursor() as cur:
+            cur.execute("SELECT workspace_id FROM apex_workspaces "
+                        "WHERE workspace = UPPER(:ws)", ws=workspace)
+            if cur.fetchone() is None:
+                raise ErroImportApex(
+                    f"Workspace '{workspace}' não encontrado no destino (ou o usuário de "
+                    "deploy não tem acesso a ele: o schema precisa estar associado ao "
+                    "workspace, ou ter APEX_ADMINISTRATOR_ROLE)."
+                )
+            cur.execute("SELECT workspace FROM apex_applications "
+                        "WHERE application_id = :id", id=app_id)
+            linha = cur.fetchone()
+    except oracledb.DatabaseError as e:
+        raise ErroImportApex(f"APEX não acessível no destino: {e}") from e
+    if linha and linha[0].upper() != workspace.upper():
+        raise ErroImportApex(
+            f"App {app_id} já existe no workspace '{linha[0]}', não em '{workspace}'. "
+            "Import abortado para não sobrescrever aplicação de outro workspace."
+        )
+
+
+def preambulo_import_apex(workspace: str, app_id: int, schema: str | None) -> list[str]:
+    """
+    Comandos executados antes do install.sql do export: define workspace, app
+    id e (opcional) parsing schema do destino via APEX_APPLICATION_INSTALL.
+    Sem isso, o import usa os IDs do ambiente de origem do export.
+    """
+    if not _RE_WORKSPACE.fullmatch(workspace):
+        raise ErroImportApex(f"Nome de workspace inválido: '{workspace}'")
+    linhas = [
+        "BEGIN",
+        f"  apex_application_install.set_workspace(p_workspace => '{workspace.upper()}');",
+        f"  apex_application_install.set_application_id(p_application_id => {int(app_id)});",
+    ]
+    if schema:
+        linhas.append(f"  apex_application_install.set_schema(p_schema => '{schema.upper()}');")
+    linhas += ["END;", "/"]
+    return linhas
+
+
+_RE_WORKSPACE = re.compile(r"[A-Za-z][A-Za-z0-9_$#]{0,254}")
+
+
+def importar_apex(conn, cfg: dict, root: Path, workspace: str, app_id: int,
+                  schema: str | None, dry_run: bool) -> None:
+    """Import do export split pelo SQLcl, a partir da pasta do app. Lança em erro."""
+    if app_id <= 0:
+        raise ErroImportApex(f"App id inválido: {app_id}")
+    if not workspace:
+        raise ErroImportApex("APEX_WORKSPACE não definido (--workspace ou variável de ambiente).")
+    pasta = localizar_export_apex(root, app_id)
+    localizar_sqlcl()  # falha cedo, com mensagem clara, se não houver SQLcl
+    preambulo = preambulo_import_apex(workspace, app_id, schema)
+    if dry_run:
+        log.info(f"  {CYAN}DRY-RUN: importaria {pasta.relative_to(root)}/install.sql "
+                 f"no workspace {workspace.upper()} como app {app_id}{RESET}")
+        return
+    validar_destino_apex(conn, workspace, app_id)
+    executar_e_verificar(conn, pasta / "install.sql", cfg, cwd=pasta, preambulo=preambulo)
+    log.info(f"  {GREEN}✓ APEX app {app_id} importado no workspace {workspace.upper()}{RESET}")
 
 
 # ─── Ponto de entrada ─────────────────────────────────────────────────────────
@@ -99,6 +189,10 @@ def main() -> None:
     parser.add_argument("--skip-ords", action="store_true", help="Pula deploy ORDS")
     parser.add_argument("--app-id", type=int,
                         default=int(os.environ.get("APEX_APP_ID", "100")))
+    parser.add_argument("--workspace", default=os.environ.get("APEX_WORKSPACE", ""),
+                        help="Workspace APEX de destino (padrão: APEX_WORKSPACE)")
+    parser.add_argument("--apex-schema", default=os.environ.get("APEX_SCHEMA") or None,
+                        help="Parsing schema no destino (padrão: APEX_SCHEMA; vazio = o do export)")
     parser.add_argument("--project-root", type=Path,
                         default=Path(__file__).parent.parent)
     args = parser.parse_args()
@@ -144,17 +238,24 @@ def main() -> None:
         log.info(f"  {YELLOW}⏭  Pulado (--skip-apex){RESET}")
         etapas_ok.append(("APEX", True))
     else:
-        install_sql = root / "apex" / f"app_{args.app_id}" / "install.sql"
-
-        if not args.dry_run:
-            conn = conectar()
-            try:
-                ok = importar_apex(conn, install_sql, args.env, args.dry_run)
-            finally:
-                conn.close()
-        else:
-            log.info(f"  {CYAN}DRY-RUN: verificando {install_sql}{RESET}")
+        conn = None
+        try:
+            if not args.dry_run:
+                cfg = obter_config_db()
+                conn = conectar(cfg)
+            else:
+                cfg = {}
+            importar_apex(conn, cfg, root, args.workspace, args.app_id,
+                          args.apex_schema, args.dry_run)
             ok = True
+        except (ErroImportApex, ErroSQLcl) as e:
+            log.error(f"  {RED}✗ Import APEX: {e}{RESET}")
+            if isinstance(e, ErroSQLcl) and e.statement:
+                log.error(f"  {RED}  statement: {e.statement[:300]}{RESET}")
+            ok = False
+        finally:
+            if conn is not None:
+                conn.close()
 
         etapas_ok.append(("APEX", ok))
         if not ok:
