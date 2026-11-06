@@ -89,7 +89,7 @@ meu-projeto-apex/
 │   ├── packages/         ← .pks (spec) e .pkb (body) separados
 │   ├── procedures/       ← .prc
 │   ├── functions/        ← .fnc
-│   ├── triggers/         ← .trg (sempre compound)
+│   ├── triggers/         ← .trg (simples ou compound — regra 10 da oracle-plsql-ptbr)
 │   └── scripts/          ← 001_projeto_tipo_objeto.sql (GMUD)
 ├── apex/
 │   └── app_100/
