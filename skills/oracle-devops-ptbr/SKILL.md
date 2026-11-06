@@ -93,7 +93,7 @@ meu-projeto-apex/
 │   └── scripts/          ← 001_projeto_tipo_objeto.sql (GMUD)
 ├── apex/
 │   └── app_100/
-│       ├── install.sql   ← entry point
+│       ├── install.sql   ← import manual (CI roda f100/install.sql)
 │       └── f100/         ← export split (SQLcl)
 ├── ords/
 │   ├── modules/
@@ -144,15 +144,15 @@ Implementado em `assets/deploy_db.py` (subdiretórios `db/constraints/`, `db/fk/
 | Arquivo | Tipo | Descrição |
 |---|---|---|
 | **Módulo compartilhado** | | |
-| `oracle_devops_utils.py` | Python | `conectar()`, `executar_arquivo_sql()`, `split_oracle_sql()`, `checksum_sha256()`, cores, banner |
+| `oracle_devops_utils.py` | Python | `conectar()` (DB_SCHEMA), `executar_script_sqlcl()` / `executar_e_verificar()` (SQLcl + `ALL_ERRORS`), `validar_arquivo_sql()` / `split_oracle_sql()` (tokenizador), `confirmar_producao()`, `checksum_sha256()` |
 | **Scripts Python — uso direto** | | |
-| `apply_changelog.py` | Python | Lê `db/changelog.yml`, aplica migrations via oracledb. CLI: `--env`, `--dry-run`, `--status` |
-| `deploy_full.py` | Python | Orquestrador: changelog → APEX → ORDS. Suporta `--skip-db/apex/ords` |
+| `apply_changelog.py` | Python | Lê `db/changelog.yml`, aplica migrations pelo SQLcl com status `EM_ANDAMENTO`/`APLICADA`/`ERRO`. CLI: `--env`, `--dry-run`, `--status`, `--retomar`, `--marcar-resolvida`, `--confirmar-prod` |
+| `deploy_full.py` | Python | Orquestrador: changelog → APEX (export split pelo SQLcl, workspace/app id validados) → ORDS. Suporta `--skip-db/apex/ords` |
 | `deploy_db.py` | Python | Deploy ordenado: sequences → types → tables → package specs → bodies → triggers |
 | `deploy_ords.py` | Python | Deploy ORDS: security → privileges → módulos. Verifica `USER_ORDS_MODULES` pós-deploy |
 | `export_db.py` | Python | Extrai DDL via `DBMS_METADATA.GET_DDL()` → `db/` (.pks/.pkb/.vw/.trg...) |
 | `export_ords.py` | Python | Export via `ORDS_EXPORT.export_schema()` — lê CLOB nativo via oracledb |
-| `export_apex.py` | Python | Export split APEX via SQLcl subprocess — backup automático, gera `install.sql` |
+| `export_apex.py` | Python | Export split APEX via SQLcl subprocess — backup automático, gera `install.sql` para import manual |
 | **Wrappers shell (compatibilidade CI/CD)** | | |
 | `apply-changelog.sh` | Shell | `exec python3 apply_changelog.py "$@"` |
 | `deploy-full.sh` | Shell | `exec python3 deploy_full.py "$@"` |
