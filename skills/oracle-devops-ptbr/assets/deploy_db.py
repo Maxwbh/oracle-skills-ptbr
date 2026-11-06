@@ -8,26 +8,42 @@ Uso:
     python deploy_db.py --env dev
     python deploy_db.py --env hom --tipo packages
 
-Executa os objetos do banco na ordem correta de dependências:
+Executa os objetos do banco pelo SQLcl, na ordem correta de dependências:
     sequences → types → tables → views → grants → synonyms →
     package specs (.pks) → package bodies (.pkb) →
     procedures → functions → triggers → scripts pontuais (db/scripts/)
+
+Todos os arquivos são pré-validados antes de qualquer execução. Cada etapa
+roda numa sessão do SQLcl (WHENEVER SQLERROR EXIT FAILURE ROLLBACK) e, ao
+final, ALL_ERRORS é consultado: objeto com erro de compilação falha o deploy.
+Requer SQLcl ('sql' no PATH ou SQLCL_BIN).
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 from pathlib import Path
 
-import oracledb
-
 sys.path.insert(0, str(Path(__file__).parent))
 from oracle_devops_utils import (
-    GREEN, YELLOW, RED, CYAN, BOLD, RESET, DIM, SEP, SEP2,
-    banner, carregar_dotenv, conectar, confirmar_producao,
-    executar_arquivo_sql, log, obter_config_db,
+    CYAN,
+    GREEN,
+    RED,
+    RESET,
+    SEP,
+    SEP2,
+    ErroSQLcl,
+    banner,
+    carregar_dotenv,
+    conectar,
+    confirmar_producao,
+    executar_lote_sqlcl,
+    log,
+    obter_config_db,
+    validar_arquivo_sql,
 )
 
 # ─── Mapeamento: tipo → (subdir, extensões) ───────────────────────────────────
@@ -58,112 +74,45 @@ ORDEM_DEPLOY = [
 ]
 
 
-def deploy_diretorio(
-    conn: oracledb.Connection,
-    db_dir: Path,
-    tipo: str,
-) -> tuple[int, int]:
-    """
-    Executa todos os arquivos SQL de um subdiretório.
-    Retorna (arquivos_ok, arquivos_erro).
-    """
+def arquivos_do_tipo(db_dir: Path, tipo: str) -> list[Path]:
+    """Arquivos de um subdiretório de db/, em ordem alfabética."""
     subdir, extensoes = TIPOS[tipo]
     diretorio = db_dir / subdir
-
     if not diretorio.exists():
-        log.info(f"  {DIM}db/{subdir}/ não encontrado — pulando{RESET}")
-        return 0, 0
-
-    arquivos = sorted(
-        f for f in diretorio.iterdir()
-        if f.is_file() and f.suffix.lower() in extensoes
-    )
-
-    if not arquivos:
-        log.info(f"  {DIM}db/{subdir}/ vazio — pulando{RESET}")
-        return 0, 0
-
-    ok = erro = 0
-    for arquivo in arquivos:
-        try:
-            n = executar_arquivo_sql(conn, arquivo)
-            log.info(f"  {GREEN}✓{RESET} {arquivo.name} ({n} statement(s))")
-            ok += 1
-        except (RuntimeError, FileNotFoundError) as e:
-            log.error(f"  {RED}✗ {arquivo.name}: {e}{RESET}")
-            erro += 1
-
-    return ok, erro
+        return []
+    return sorted(f for f in diretorio.iterdir()
+                  if f.is_file() and f.suffix.lower() in extensoes)
 
 
-def deploy_packages(
-    conn: oracledb.Connection,
-    db_dir: Path,
-) -> tuple[int, int]:
-    """
-    Deploya packages em duas passagens:
-      1. Specs (.pks) — declara assinaturas públicas
-      2. Bodies (.pkb) — implementa
-    Specs primeiro é obrigatório (body depende de spec).
-    """
+def arquivos_packages(db_dir: Path) -> list[Path]:
+    """Specs (.pks) antes dos bodies (.pkb): body depende da spec."""
     pkg_dir = db_dir / "packages"
     if not pkg_dir.exists():
-        log.info(f"  {DIM}db/packages/ não encontrado — pulando{RESET}")
-        return 0, 0
-
-    ok = erro = 0
-
-    for extensao, label in [(".pks", "Package specs"), (".pkb", "Package bodies")]:
-        arquivos = sorted(pkg_dir.glob(f"*{extensao}"))
-        if arquivos:
-            log.info(f"  {CYAN}{label}:{RESET}")
-        for arquivo in arquivos:
-            try:
-                n = executar_arquivo_sql(conn, arquivo)
-                log.info(f"  {GREEN}  ✓{RESET} {arquivo.name} ({n} statement(s))")
-                ok += 1
-            except (RuntimeError, FileNotFoundError) as e:
-                log.error(f"  {RED}  ✗ {arquivo.name}: {e}{RESET}")
-                erro += 1
-
-    return ok, erro
+        return []
+    return sorted(pkg_dir.glob("*.pks")) + sorted(pkg_dir.glob("*.pkb"))
 
 
-def deploy_scripts_pontuais(
-    conn: oracledb.Connection,
-    db_dir: Path,
-) -> tuple[int, int]:
-    """
-    Executa scripts pontuais em db/scripts/ em ordem numérica (001_, 002_...).
-    Padrão GMUD: NNN_projeto_tipo_objeto.sql
-    """
+def arquivos_scripts_pontuais(db_dir: Path) -> list[Path]:
+    """Scripts pontuais db/scripts/NNN_*.sql em ordem numérica (padrão GMUD)."""
     scripts_dir = db_dir / "scripts"
     if not scripts_dir.exists():
-        return 0, 0
+        return []
+    return sorted(f for f in scripts_dir.iterdir()
+                  if f.is_file() and f.suffix == ".sql" and re.match(r"^\d{3}_", f.name))
 
-    # Apenas arquivos que seguem o padrão NNN_*.sql
-    import re as _re
-    arquivos = sorted(
-        f for f in scripts_dir.iterdir()
-        if f.is_file() and f.suffix == ".sql"
-        and _re.match(r"^\d{3}_", f.name)
-    )
 
-    if not arquivos:
-        return 0, 0
-
-    log.info(f"  {CYAN}Scripts pontuais (db/scripts/):{RESET}")
-    ok = erro = 0
-    for arquivo in arquivos:
-        try:
-            n = executar_arquivo_sql(conn, arquivo)
-            log.info(f"  {GREEN}  ✓{RESET} {arquivo.name} ({n} statement(s))")
-            ok += 1
-        except (RuntimeError, FileNotFoundError) as e:
-            log.error(f"  {RED}  ✗ {arquivo.name}: {e}{RESET}")
-            erro += 1
-
-    return ok, erro
+def montar_plano(db_dir: Path, tipo: str) -> list[tuple[str, list[Path]]]:
+    """Etapas (rótulo, arquivos) na ordem canônica de dependências."""
+    if tipo == "all":
+        plano = [(t, arquivos_do_tipo(db_dir, t)) for t in ORDEM_DEPLOY]
+        plano.append(("packages (spec → body)", arquivos_packages(db_dir)))
+        plano.append(("scripts pontuais", arquivos_scripts_pontuais(db_dir)))
+        return plano
+    if tipo == "packages":
+        return [("packages (spec → body)", arquivos_packages(db_dir))]
+    if tipo == "scripts":
+        return [("scripts pontuais", arquivos_scripts_pontuais(db_dir))]
+    return [(tipo, arquivos_do_tipo(db_dir, tipo))]
 
 
 # ─── Ponto de entrada ─────────────────────────────────────────────────────────
@@ -191,58 +140,45 @@ def main() -> None:
     if args.env == "prod":
         confirmar_producao(args.dry_run)
 
+    plano = montar_plano(db_dir, args.tipo)
+    todos = [a for _, arquivos in plano for a in arquivos]
+
+    # Pré-validação de TODOS os arquivos antes de tocar no banco.
+    problemas = [p for a in todos for p in validar_arquivo_sql(a)]
+    for rotulo, arquivos in plano:
+        if arquivos:
+            log.info(f"  {CYAN}{rotulo}{RESET}: {len(arquivos)} arquivo(s)")
+    if problemas:
+        for p in problemas:
+            log.error(f"  {RED}✗ {p}{RESET}")
+        sys.exit(1)
+
     if args.dry_run:
-        log.info("DRY-RUN: listando arquivos que seriam executados...")
-        for tipo, (subdir, exts) in TIPOS.items():
-            d = db_dir / subdir
-            if d.exists():
-                files = [f for f in sorted(d.iterdir()) if f.suffix in exts]
-                if files:
-                    log.info(f"  db/{subdir}/: {len(files)} arquivo(s)")
+        log.info(f"\n{CYAN}DRY-RUN: {len(todos)} arquivo(s) validados, nada executado.{RESET}")
         return
 
-    conn = conectar()
-    total_ok = total_erro = 0
-
+    cfg = obter_config_db()
+    conn = conectar(cfg)
     try:
-        if args.tipo == "all":
-            for tipo in ORDEM_DEPLOY:
-                log.info(f"\n{SEP}")
-                log.info(f"  {CYAN}{tipo.upper()}{RESET}")
-                ok, erro = deploy_diretorio(conn, db_dir, tipo)
-                total_ok += ok
-                total_erro += erro
-
+        for rotulo, arquivos in plano:
+            if not arquivos:
+                continue
             log.info(f"\n{SEP}")
-            log.info(f"  {CYAN}PACKAGES (spec → body){RESET}")
-            ok, erro = deploy_packages(conn, db_dir)
-            total_ok += ok
-            total_erro += erro
-
-            log.info(f"\n{SEP}")
-            log.info(f"  {CYAN}SCRIPTS PONTUAIS{RESET}")
-            ok, erro = deploy_scripts_pontuais(conn, db_dir)
-            total_ok += ok
-            total_erro += erro
-
-        elif args.tipo == "packages":
-            ok, erro = deploy_packages(conn, db_dir)
-            total_ok, total_erro = ok, erro
-        elif args.tipo == "scripts":
-            ok, erro = deploy_scripts_pontuais(conn, db_dir)
-            total_ok, total_erro = ok, erro
-        else:
-            ok, erro = deploy_diretorio(conn, db_dir, args.tipo)
-            total_ok, total_erro = ok, erro
-
+            log.info(f"  {CYAN}{rotulo.upper()}{RESET}")
+            try:
+                executar_lote_sqlcl(conn, arquivos, cfg, base=db_dir)
+            except ErroSQLcl as e:
+                log.error(f"  {RED}✗ {e}{RESET}")
+                if e.statement:
+                    log.error(f"  {RED}  statement: {e.statement[:300]}{RESET}")
+                log.error(f"\n{RED}⛔ Deploy interrompido em '{rotulo}'.{RESET}")
+                sys.exit(1)
+            log.info(f"  {GREEN}✓ {len(arquivos)} arquivo(s){RESET}")
     finally:
         conn.close()
 
     log.info(f"\n{SEP2}")
-    log.info(f"  {GREEN}✅ Sucesso : {total_ok} arquivo(s){RESET}")
-    if total_erro:
-        log.info(f"  {RED}❌ Erros   : {total_erro} arquivo(s){RESET}")
-        sys.exit(1)
+    log.info(f"  {GREEN}✅ Sucesso : {len(todos)} arquivo(s){RESET}")
     log.info(SEP2)
 
 
