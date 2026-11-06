@@ -240,3 +240,9 @@ def test_crlf():
         "SELECT 1 FROM dual",
         "SELECT 2 FROM dual",
     ]
+
+
+def test_validar_arquivo_nao_utf8(tmp_path):
+    arq = tmp_path / "latin1.sql"
+    arq.write_bytes("SELECT 'ação' FROM dual;\n".encode("latin-1"))
+    assert "não é UTF-8" in u.validar_arquivo_sql(arq)[0]

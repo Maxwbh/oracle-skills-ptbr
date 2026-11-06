@@ -188,7 +188,7 @@ def main() -> None:
     parser.add_argument("--skip-apex", action="store_true", help="Pula import APEX")
     parser.add_argument("--skip-ords", action="store_true", help="Pula deploy ORDS")
     parser.add_argument("--app-id", type=int,
-                        default=int(os.environ.get("APEX_APP_ID", "100")))
+                        default=int(os.environ.get("APEX_APP_ID") or "100"))
     parser.add_argument("--workspace", default=os.environ.get("APEX_WORKSPACE", ""),
                         help="Workspace APEX de destino (padrão: APEX_WORKSPACE)")
     parser.add_argument("--apex-schema", default=os.environ.get("APEX_SCHEMA") or None,

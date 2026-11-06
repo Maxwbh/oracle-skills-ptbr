@@ -105,3 +105,18 @@ def test_retomar_id_sem_pendencia_eh_recusado(projeto, monkeypatch):
 
 def test_mensagem_longa_eh_cortada_para_caber_em_varchar2_4000():
     assert len(ac._cortar("é" * 5000).encode("utf-8")) <= 4000
+
+
+def test_validar_offline_nao_conecta_e_aponta_problemas(projeto, monkeypatch):
+    (projeto / "db" / "002.sql").write_bytes("INSERT INTO t VALUES ('ação');\n".encode("latin-1"))
+    with (projeto / "db" / "changelog.yml").open("a") as f:
+        f.write("  - {id: '002', arquivo: 002.sql, tipo: dml, descricao: latin1}\n")
+        f.write("  - {id: '003', arquivo: nao_existe.sql, tipo: dml, descricao: sumiu}\n")
+    monkeypatch.setattr(ac, "conectar", lambda cfg: pytest.fail("não pode conectar"))
+    monkeypatch.setattr(ac, "obter_config_db", lambda: pytest.fail("não pode ler DB_*"))
+    assert ac.main(["--validar", "--env", "prod", "--project-root", str(projeto)]) == 1
+
+
+def test_validar_offline_ok(projeto, monkeypatch):
+    monkeypatch.setattr(ac, "conectar", lambda cfg: pytest.fail("não pode conectar"))
+    assert ac.main(["--validar", "--project-root", str(projeto)]) == 0
