@@ -2,7 +2,7 @@
 
 **Skills Claude para Oracle — Stack Completa em Português**
 
-7 Skills do Claude cobrindo toda a stack Oracle (PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines e DevOps/CI-CD), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 24.2 + ORDS.
+10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 24.2 + ORDS.
 
 ---
 
@@ -16,15 +16,18 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 
 ## Skills disponíveis
 
-| Skill | Versão | Escopo | Tamanho |
+| Skill | Versão | Escopo | Recursos |
 |---|---|---|---|
-| `oracle-plsql-ptbr` | 2.0.0 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 35K |
-| `oracle-apex-ptbr` | 2.0.0 | APEX 24.2 development + Data Dictionary completo | 36K |
-| `oracle-ords-ptbr` | 2.0.0 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 19K |
-| `oracle-dba-ptbr` | 2.0.0 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 24K |
-| `oracle-tuning-ptbr` | 2.0.0 | Performance tuning, AWR, ASH, explain plan, indexes | 17K |
-| `oracle-trivadis-ptbr` | 2.0.0 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 7K |
-| `oracle-devops-ptbr` | 3.1.0 | Git, CI/CD, changelog Oracle, deploy Python + oracledb | 47K |
+| `oracle-core-ptbr` | 1.4.0 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
+| `oracle-plsql-ptbr` | 2.2.2 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
+| `oracle-apex-ptbr` | 2.4.2 | APEX (padrões de 24.2+) development + Data Dictionary completo | 20 |
+| `oracle-ords-ptbr` | 2.4.0 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
+| `oracle-dba-ptbr` | 2.3.2 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
+| `oracle-tuning-ptbr` | 2.6.2 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
+| `oracle-trivadis-ptbr` | 2.3.1 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
+| `oracle-devops-ptbr` | 3.6.2 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 30 |
+| `oracle-lab-ptbr` | 1.0.2 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
+| `oracle-26ai-ptbr` | 1.0.2 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
 
 ---
 
@@ -40,6 +43,7 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 
 ```bash
 # Baixar todos os .skill e instalar um por um
+dist/oracle-core-ptbr.skill
 dist/oracle-plsql-ptbr.skill
 dist/oracle-apex-ptbr.skill
 dist/oracle-ords-ptbr.skill
@@ -47,11 +51,21 @@ dist/oracle-dba-ptbr.skill
 dist/oracle-tuning-ptbr.skill
 dist/oracle-trivadis-ptbr.skill
 dist/oracle-devops-ptbr.skill
+dist/oracle-lab-ptbr.skill
+dist/oracle-26ai-ptbr.skill
 ```
 
 ---
 
 ## Quando cada skill é ativada
+
+### oracle-core-ptbr
+Qual skill Oracle usar · visão geral da suíte · convenções gerais de projeto · começar projeto Oracle/APEX do zero
+
+```
+"Qual skill Oracle eu uso pra isso?"
+"Qual o padrão do projeto Oracle de vocês?"
+```
 
 ### oracle-plsql-ptbr
 `BULK COLLECT` · `FORALL` · `NOCOPY` · `EXECUTE IMMEDIATE` · `MERGE INTO` · compound trigger · EBR · CLOB/BLOB · Logger · package · procedure · function
@@ -117,6 +131,22 @@ Estrutura Git · changelog Oracle (`db/changelog.yml` + `db_changelog`) · scrip
 "Script de deploy com changelog versionado"
 "Export do APEX para Git em modo split"
 "Deploy via usuário DBA em schema diferente"
+```
+
+### oracle-lab-ptbr
+Instalar Oracle na própria máquina · Vagrant + VirtualBox · container Free · APEX/ORDS locais · ORA-12541 / ORA-12514 / ORA-01017 de quem está começando
+
+```
+"Como instalo um Oracle pra testar?"
+"Não consigo conectar no banco da VM"
+```
+
+### oracle-26ai-ptbr
+Só quando a versão-alvo declarada for 23ai/26ai · migração 19c → 26ai · backports 19.28 · BOOLEAN em SQL · Domains · JSON duality views
+
+```
+"Estou no 26ai, isso muda?"
+"Dá pra usar isso no 19c?"
 ```
 
 ---
@@ -190,22 +220,31 @@ oracle-skills-ptbr/
 ├── CHANGELOG.md
 ├── LICENSE
 ├── .gitignore
+├── build.py                   # propaga shared/ e empacota dist/
+├── marketplace.yml
+├── shared/assets/             # fonte única (ex.: oracle_devops_utils.py)
 ├── skills/                    # código-fonte (para contribuições)
+│   ├── oracle-core-ptbr/
 │   ├── oracle-plsql-ptbr/
 │   ├── oracle-apex-ptbr/
 │   ├── oracle-ords-ptbr/
 │   ├── oracle-dba-ptbr/
 │   ├── oracle-tuning-ptbr/
 │   ├── oracle-trivadis-ptbr/
-│   └── oracle-devops-ptbr/
+│   ├── oracle-devops-ptbr/
+│   ├── oracle-lab-ptbr/
+│   └── oracle-26ai-ptbr/
 └── dist/                      # pacotes prontos para instalar
+    ├── oracle-core-ptbr.skill
     ├── oracle-plsql-ptbr.skill
     ├── oracle-apex-ptbr.skill
     ├── oracle-ords-ptbr.skill
     ├── oracle-dba-ptbr.skill
     ├── oracle-tuning-ptbr.skill
     ├── oracle-trivadis-ptbr.skill
-    └── oracle-devops-ptbr.skill
+    ├── oracle-devops-ptbr.skill
+    ├── oracle-lab-ptbr.skill
+    └── oracle-26ai-ptbr.skill
 ```
 
 ---
@@ -219,11 +258,11 @@ unzip oracle-skills-ptbr-v3.1.0-git.zip
 cd oracle-skills-ptbr
 git init
 git add .
-git commit -m "feat: oracle-skills-ptbr v3.1.0 — 7 skills stack Oracle completa"
+git commit -m "feat: oracle-skills-ptbr v3.1.0 — 10 skills stack Oracle completa"
 git remote add origin https://github.com/maxwbh/oracle-skills-ptbr.git
 git push -u origin main
 
-git tag -a v3.1.0 -m "7 skills + devops Python oracledb v3.1.0"
+git tag -a v3.1.0 -m "10 skills + devops Python oracledb v3.1.0"
 git push origin v3.1.0
 ```
 
