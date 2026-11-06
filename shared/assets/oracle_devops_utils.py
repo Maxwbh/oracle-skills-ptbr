@@ -13,6 +13,7 @@ import logging
 import os
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -121,133 +122,242 @@ def schema_efetivo(conn: oracledb.Connection) -> str:
 
 
 # ─── Parser de arquivo SQL Oracle ─────────────────────────────────────────────
+#
+# Scripts (DDL, PL/SQL, install.sql do APEX) são EXECUTADOS pelo SQLcl
+# (ver executar_script_sqlcl). O parser abaixo serve para:
+#   - pré-validar o arquivo antes de chamar o SQLcl (literal/comentário não
+#     fechado, último comando sem terminador — que o SQLcl ignoraria em
+#     silêncio);
+#   - dividir em statements quando algum código precisar executar SQL pelo
+#     python-oracledb, rejeitando comandos de cliente de forma explícita.
+#
+# É um tokenizador de verdade (sem regex sobre o texto inteiro): reconhece
+# literais '...' (com '' escapado), q'[...]' / nq'[...]', identificadores
+# "...", comentários -- e /* */. Nada dentro de literal é alterado.
 
-def split_oracle_sql(conteudo: str) -> list[str]:
+class ErroParserSQL(ValueError):
+    """Arquivo SQL que não pode ser dividido/executado com segurança."""
+
+
+@dataclass
+class ComandoSQL:
+    texto: str
+    tipo: str          # 'sql' | 'plsql' | 'cliente'
+    linha: int         # linha (1-based) onde o comando começa
+    terminado: bool    # tinha ';' ou '/' (ou é comando de cliente)
+
+
+# Primeira palavra de comandos SQL*Plus/SQLcl que não são SQL.
+_PALAVRAS_CLIENTE = frozenset("""
+    ACCEPT ALIAS APEX BREAK BTITLE CD CLEAR COL COLUMN COMPUTE CONN CONNECT
+    COPY CTAS DDL DEF DEFINE DESC DESCRIBE DISC DISCONNECT EDIT EXEC EXECUTE
+    EXIT FORMAT GET HISTORY HOST INFO LB LIQUIBASE LOAD OERR PAUSE PRINT PRO
+    PROMPT QUIT REM REMARK REPEAT SAVE SCRIPT SET SHO SHOW SODA SPO SPOOL
+    START STORE TIMING TTITLE UNDEF UNDEFINE VAR VARIABLE WHENEVER
+""".split())
+
+# "SET <x>" que é SQL de verdade, não comando de cliente.
+_SET_SQL = frozenset({"TRANSACTION", "ROLE", "CONSTRAINT", "CONSTRAINTS"})
+
+# Comandos que o SQL*Plus/SQLcl trata como bloco PL/SQL (terminam só com '/').
+_RE_PLSQL = re.compile(
+    r"(BEGIN|DECLARE)\b"
+    r"|CREATE\s+(OR\s+REPLACE\s+)?((NON)?EDITIONABLE\s+)?"
+    r"(PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE|LIBRARY|JAVA)\b"
+    r"|CREATE\s+(OR\s+REPLACE\s+)?AND\s+(COMPILE|RESOLVE)\s+JAVA\b"
+    r"|WITH\s+(FUNCTION|PROCEDURE)\b",
+    re.IGNORECASE,
+)
+
+_Q_FECHA = {"[": "]", "{": "}", "<": ">", "(": ")"}
+
+
+def _eh_comando_cliente(linha: str) -> bool:
+    s = linha.strip()
+    if not s:
+        return False
+    if s[0] in "@!":
+        return True
+    partes = s.split(None, 2)
+    palavra = partes[0].upper().rstrip(";")
+    if palavra == "SET":
+        return not (len(partes) > 1 and partes[1].upper().rstrip(";") in _SET_SQL)
+    return palavra in _PALAVRAS_CLIENTE
+
+
+def _eh_ident(c: str) -> bool:
+    return c.isalnum() or c in "_$#"
+
+
+def analisar_sql(conteudo: str) -> list[ComandoSQL]:
     """
-    Divide um arquivo SQL Oracle em statements individuais executáveis.
+    Tokeniza um script SQL*Plus/SQLcl e devolve a lista de comandos, na ordem.
 
-    Suporta:
-    - SQL terminado com ;
-    - Blocos PL/SQL terminados com / em linha própria
-    - Comentários -- (linha inteira e inline após código) e /* */
-    - BEGIN/DECLARE/CREATE OR REPLACE PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE
+    Regras (as mesmas do SQL*Plus/SQLcl):
+    - SQL termina em ';' fora de literal/comentário, ou em '/' sozinho na linha;
+    - PL/SQL (BEGIN, DECLARE, CREATE PACKAGE/PROCEDURE/FUNCTION/TRIGGER/TYPE...)
+      termina só em '/' sozinho na linha; o ';' final (END;) é preservado;
+    - comando de cliente (SET, PROMPT, WHENEVER, @, @@, ...) ocupa a linha
+      inteira e nunca é anexado ao statement seguinte;
+    - comentários dentro de um statement são preservados (vão para o fonte do
+      PL/SQL); comentários entre statements são descartados.
 
-    Limitações conhecidas (parser line-based, não tokenizer completo):
-    - Vários statements SQL na MESMA linha (ex.: "INSERT ...; UPDATE ...;")
-      não são separados — mantenha um statement por linha lógica.
-    - ';' ou '--' dentro de string em linha que também tenha aspas é
-      preservado; já o corte de comentário inline só ocorre em linhas sem
-      aspas (heurística conservadora). Para SQL com literais complexos,
-      prefira terminar cada statement em linha própria.
+    Lança ErroParserSQL para literal, identificador ou comentário não fechado.
     """
-    # Remover comentários de bloco
-    conteudo = re.sub(r"/\*.*?\*/", "", conteudo, flags=re.DOTALL)
+    t = conteudo.replace("\r\n", "\n").replace("\r", "\n")
+    n = len(t)
+    comandos: list[ComandoSQL] = []
 
-    PLSQL_INICIO = re.compile(
-        r"^\s*(BEGIN|DECLARE"
-        r"|CREATE\s+OR\s+REPLACE\s+(PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE)"
-        r"|CREATE\s+(PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE))\b",
-        re.IGNORECASE,
-    )
+    NORMAL, LIT, QLIT, IDENT, BLOCO = range(5)
+    estado = NORMAL
+    q_fecha = ""
+    abertura = 0           # posição onde abriu literal/comentário (para erro)
+    ini: Optional[int] = None
+    tipo = ""
+    linha_ini = 0
 
-    statements: list[str] = []
-    buffer: list[str] = []
-    em_plsql = False
+    def nlinha(pos: int) -> int:
+        return t.count("\n", 0, pos) + 1
 
-    for linha in conteudo.splitlines():
-        stripped = linha.strip()
+    def emitir(fim: int, terminado: bool) -> None:
+        nonlocal ini, tipo
+        texto = t[ini:fim].rstrip()
+        if texto:
+            comandos.append(ComandoSQL(texto, tipo, linha_ini, terminado))
+        ini, tipo = None, ""
 
-        if stripped.startswith("--"):
-            continue
-
-        # Comentário inline após código (fora de PL/SQL e fora de string):
-        # remove "  -- ..." do fim da linha para que o terminador ; seja
-        # detectado mesmo quando seguido de comentário na mesma linha.
-        # Heurística conservadora: só corta se não houver aspas na linha
-        # (evita falso positivo com '--' dentro de string literal).
-        if not em_plsql and "--" in stripped and "'" not in stripped and '"' not in stripped:
-            stripped = stripped.split("--", 1)[0].rstrip()
-            linha = stripped
-            if not stripped:
+    i = 0
+    while i < n:
+        # Tratamento por linha: '/' sozinho e comandos de cliente.
+        if estado == NORMAL and (i == 0 or t[i - 1] == "\n"):
+            fim_linha = t.find("\n", i)
+            fim_linha = n if fim_linha == -1 else fim_linha
+            linha = t[i:fim_linha]
+            if linha.strip() == "/":
+                if ini is not None:
+                    emitir(i, terminado=True)
+                i = fim_linha + 1
+                continue
+            if ini is None and _eh_comando_cliente(linha):
+                comandos.append(ComandoSQL(linha.strip(), "cliente", nlinha(i), True))
+                i = fim_linha + 1
                 continue
 
-        if PLSQL_INICIO.match(stripped):
-            em_plsql = True
+        c = t[i]
+        prox = t[i + 1] if i + 1 < n else ""
 
-        # Terminador PL/SQL: / sozinho na linha
-        if stripped == "/":
-            stmt = "\n".join(buffer).strip().rstrip(";")
-            if stmt:
-                statements.append(stmt)
-            buffer.clear()
-            em_plsql = False
+        if estado == BLOCO:
+            if c == "*" and prox == "/":
+                estado = NORMAL
+                i += 2
+            else:
+                i += 1
+            continue
+        if estado == LIT:
+            if c == "'":
+                if prox == "'":
+                    i += 2
+                    continue
+                estado = NORMAL
+            i += 1
+            continue
+        if estado == QLIT:
+            if c == q_fecha and prox == "'":
+                estado = NORMAL
+                i += 2
+            else:
+                i += 1
+            continue
+        if estado == IDENT:
+            if c == '"':
+                estado = NORMAL
+            i += 1
             continue
 
-        # SQL puro terminado com ;
-        if not em_plsql and stripped.endswith(";"):
-            buffer.append(linha)
-            stmt = "\n".join(buffer).strip().rstrip(";")
-            if stmt:
-                statements.append(stmt)
-            buffer.clear()
+        # estado NORMAL
+        if c == "-" and prox == "-":
+            fim_linha = t.find("\n", i)
+            i = n if fim_linha == -1 else fim_linha
+            continue
+        if c == "/" and prox == "*":
+            estado, abertura = BLOCO, i
+            i += 2
+            continue
+        if c.isspace():
+            i += 1
             continue
 
-        buffer.append(linha)
+        if ini is None:
+            ini, linha_ini = i, nlinha(i)
+            tipo = "plsql" if _RE_PLSQL.match(t, i) else "sql"
 
-    # Capturar último statement sem terminador
-    if buffer:
-        stmt = "\n".join(buffer).strip().rstrip(";")
-        if stmt:
-            statements.append(stmt)
+        if c in "qQ" and prox == "'" and i + 2 < n:
+            anterior = t[i - 1] if i > 0 else ""
+            antes2 = t[i - 2] if i > 1 else ""
+            if not _eh_ident(anterior) or (anterior in "nN" and not _eh_ident(antes2)):
+                q_fecha = _Q_FECHA.get(t[i + 2], t[i + 2])
+                estado, abertura = QLIT, i
+                i += 3
+                continue
+        if c == "'":
+            estado, abertura = LIT, i
+        elif c == '"':
+            estado, abertura = IDENT, i
+        elif c == ";" and tipo == "sql":
+            emitir(i, terminado=True)
+        i += 1
 
-    return [s for s in statements if s.strip()]
+    if estado != NORMAL:
+        oque = {LIT: "literal", QLIT: "literal q'...'", IDENT: 'identificador "..."',
+                BLOCO: "comentário /* */"}[estado]
+        raise ErroParserSQL(f"linha {nlinha(abertura)}: {oque} não fechado")
+
+    if ini is not None:
+        emitir(n, terminado=False)
+
+    return comandos
 
 
-# ─── Execução de arquivo SQL ──────────────────────────────────────────────────
-
-def executar_arquivo_sql(
-    conn: oracledb.Connection,
-    arquivo: Path,
-    *,
-    autocommit: bool = True,
-    verbose: bool = False,
-) -> int:
+def split_oracle_sql(conteudo: str, *, permitir_cliente: bool = False) -> list[str]:
     """
-    Executa todos os statements de um arquivo SQL Oracle.
-    Retorna o número de statements executados.
-    Faz rollback e lança RuntimeError em caso de erro.
+    Divide um script em statements executáveis pelo python-oracledb.
+
+    - SQL sai sem o ';' final; PL/SQL sai com o 'END;' intacto.
+    - Comando de cliente (SET, PROMPT, WHENEVER, @, @@...) lança
+      ErroParserSQL, a menos que permitir_cliente=True (aí é descartado).
+      Script com comando de cliente deve rodar pelo SQLcl.
+    - Último comando sem ';' ou '/' lança ErroParserSQL: o SQLcl não o
+      executaria, e executar só no Python mascararia a diferença.
     """
-    if not arquivo.exists():
-        raise FileNotFoundError(f"Arquivo SQL não encontrado: {arquivo}")
+    statements: list[str] = []
+    for cmd in analisar_sql(conteudo):
+        if cmd.tipo == "cliente":
+            if permitir_cliente:
+                continue
+            raise ErroParserSQL(
+                f"linha {cmd.linha}: comando de cliente '{cmd.texto[:40]}' não é SQL — "
+                "rode este arquivo pelo SQLcl (executar_script_sqlcl)"
+            )
+        if not cmd.terminado:
+            raise ErroParserSQL(
+                f"linha {cmd.linha}: comando sem terminador ("
+                + ("'/' em linha própria" if cmd.tipo == "plsql" else "';' ou '/'")
+                + ") — o SQLcl não o executaria"
+            )
+        statements.append(cmd.texto)
+    return statements
 
-    conteudo = arquivo.read_text(encoding="utf-8")
-    statements = split_oracle_sql(conteudo)
 
-    if not statements:
-        if verbose:
-            log.warning(f"  {YELLOW}Nenhum statement em {arquivo.name}{RESET}")
-        return 0
-
-    with conn.cursor() as cur:
-        for i, stmt in enumerate(statements, start=1):
-            if verbose:
-                preview = stmt.splitlines()[0][:80]
-                log.info(f"    [{i}/{len(statements)}] {DIM}{preview}...{RESET}")
-            try:
-                cur.execute(stmt)
-            except oracledb.DatabaseError as e:
-                conn.rollback()
-                preview = stmt[:300].replace("\n", " ")
-                raise RuntimeError(
-                    f"Erro Oracle ao executar statement {i}/{len(statements)}:\n"
-                    f"  {preview}\n"
-                    f"  Erro: {e}"
-                ) from e
-
-    if autocommit:
-        conn.commit()
-
-    return len(statements)
+def validar_arquivo_sql(arquivo: Path) -> list[str]:
+    """
+    Pré-validação de um script antes de enviá-lo ao SQLcl.
+    Retorna lista de problemas (vazia = OK). Comandos de cliente são aceitos.
+    """
+    try:
+        split_oracle_sql(arquivo.read_text(encoding="utf-8"), permitir_cliente=True)
+    except ErroParserSQL as e:
+        return [f"{arquivo.name}: {e}"]
+    return []
 
 
 # ─── Utilitários ──────────────────────────────────────────────────────────────
