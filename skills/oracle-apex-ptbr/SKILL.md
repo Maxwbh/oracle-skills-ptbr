@@ -84,13 +84,23 @@ Oracle APEX 26.1 (padrões válidos de 24.2+) — padrões de desenvolvimento e 
 - **APEX não comita:** processos PL/SQL dentro de APEX não fazem COMMIT — o framework gerencia.
 - **Patch level antes de orientar uma instância:** ao gerar código ou orientação para uma instância APEX **existente**, pergunte (ou peça para rodar `apex_verificar_patch_seguranca.sql`) a versão completa com patch set — ex.: 24.2.**22**. Se estiver em **24.1.0–24.1.21, 24.2.0–24.2.20 ou 26.1.0–26.1.4**, alerte primeiro: **CVE-2026-101521**, CVSS 9.8, tomada do APEX **sem autenticação via HTTPS** (Oracle CPU out/2026). O advisory não nomeia a versão que corrige: oriente aplicar o Patch Set Bundle mais recente da versão e conferir o documento CPU359 da Oracle Support.
 - **APEX_DICTIONARY:** ponto de entrada para descoberta de qualquer view de metadados APEX.
-- **Consciência de versão:** features divergem entre 24.1, 24.2 e 26.1. Antes de gerar código que dependa de versão (IA no app, APEXlang, Select One/Many, Slots, Workflow/Working Copy, session state BOOLEAN, Universal Theme Iris), confirme a versão-alvo — ver regra abaixo. Consulte `references/apex-version-matrix-ptbr.md` para o que é exclusivo de cada release.
+- **Consciência de versão:** features divergem entre 24.1, 24.2, 26.1 e 26.2. Antes de gerar código que dependa de versão (IA no app, APEXlang, Select One/Many, Slots, Workflow/Working Copy, session state BOOLEAN, Universal Theme Iris), confirme a versão-alvo — ver regra abaixo. Consulte `references/apex-version-matrix-ptbr.md` para o que é exclusivo de cada release.
 
 ## Distinção de versão (24 vs 26)
 
-A versão atual é o **APEX 26.1** (lançado em mai/2026); **24.2** segue suportado
-até jul/2027 e **24.1** até dez/2026. Resumo do que é exclusivo (detalhe e
-verificação em `references/apex-version-matrix-ptbr.md`):
+A versão atual é o **APEX 26.2** (GA em 06/10/2026; exige **ORDS 26.3.0+** e
+**SQLcl 26.3.0+**; banco 19c com RU 19.18+ ou 26ai 23.26.0+). A **26.1**
+(14/05/2026) segue suportada e a **24.2** é a **baseline suportada** da suíte —
+sempre no patch set mais recente (24.2.22 em 04/11/2026; ver alerta de
+segurança acima). Datas de fim de suporte: a verificar. Resumo do que é
+exclusivo (detalhe, fontes e 26.2 em `references/apex-version-matrix-ptbr.md`):
+
+**Novo no 26.2:** APEXlang com import por arquivo (SQLcl/VS Code, só dev),
+traduções e subscription mapping no APEXlang, APIs `APEX_APPLICATION_ADMIN`
+de lock e Working Copy, IA com reasoning effort, colunas por linguagem natural
+no IR e navigation targets, Deep Data Security (banco 23.26.3+). **Removido no
+26.2:** REST Workshop do SQL Workshop — APIs REST pelo SQL Developer Web; os
+serviços REST existentes continuam funcionando.
 
 | Exclusivo de 26.1 | Introduzido em 24.2 | Introduzido em 24.1 |
 |---|---|---|
@@ -105,7 +115,7 @@ Processing/Execution Chain (23.1). IR, IG, Classic Report, Dynamic Actions,
 
 **Regra — perguntar a versão-alvo:** se o pedido envolver uma feature
 versão-dependente e a versão **não estiver clara na conversa**, faça UMA pergunta
-curta ("Para qual versão do APEX — 24.1, 24.2 ou 26.1 — e, se for o caso, qual
+curta ("Para qual versão do APEX — 24.2, 26.1 ou 26.2, com patch set — e, se for o caso, qual
 banco?") antes de gerar o código. Se a versão já foi informada (ex.: "estou no
 26.1"), não pergunte de novo — apenas sinalize a dependência de versão quando
 relevante.
