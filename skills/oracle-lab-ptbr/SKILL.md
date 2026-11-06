@@ -31,6 +31,8 @@ metadata:
 
 Suíte completa (10 skills — conjunto único): ver `oracle-core-ptbr`.
 
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+
 Ajuda um **desenvolvedor sem experiência de DBA** a ter um Oracle rodando na própria máquina e a usá-lo de outros aparelhos da rede de casa. As demais skills assumem um banco existente; esta é a que o coloca de pé.
 
 **Desenvolvido por:** Maxwell da Silva Oliveira — [M&S do Brasil LTDA](https://msbrasil.inf.br)

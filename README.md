@@ -151,6 +151,12 @@ Só quando a versão-alvo declarada for 23ai/26ai · migração 19c → 26ai · 
 
 ---
 
+## Skill irmã (repositório separado)
+
+[`oracle-26ai-helper-ptbr`](https://github.com/Maxwbh/oracle-26ai-helper-ptbr) — aprofundamento em Oracle AI Database 26ai: **Vector Search, JSON Relational Duality e RAFT**. Roteamento: Vector / Duality / RAFT → `oracle-26ai-helper-ptbr`; sintaxe nova e migração 19c→26ai → `oracle-26ai-ptbr`.
+
+---
+
 ## Referências cruzadas entre skills
 
 ```
