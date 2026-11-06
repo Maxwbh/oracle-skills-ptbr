@@ -2,7 +2,7 @@
 name: oracle-core-ptbr
 description: "Assistente central da suíte Oracle PT-BR (M&S do Brasil): roteamento entre os 9 módulos técnicos, convenções transversais (naming PT-BR + Trivadis 4.4, SQL antes de PL/SQL, APEX não comita, GMUD e promoção entre ambientes) e cenários multidisciplinares. ATIVE em dúvidas sobre qual skill Oracle usar, visão geral da suíte Oracle, convenções gerais de projeto Oracle, começar projeto Oracle/APEX do zero, 'como vocês organizam o código Oracle', 'qual o padrão do projeto'. Use com oracle-plsql-ptbr, oracle-trivadis-ptbr, oracle-apex-ptbr, oracle-ords-ptbr, oracle-dba-ptbr, oracle-tuning-ptbr, oracle-devops-ptbr , oracle-26ai-ptbr (só quando a versão-alvo for 23ai/26ai) e oracle-lab-ptbr (instalar/montar ambiente local) para cobertura técnica completa. NÃO ATIVE quando a demanda já é claramente de um módulo específico (código PL/SQL, página APEX, endpoint ORDS, sessão travada, query lenta, pipeline) — nesse caso ative o módulo direto."
 metadata:
-  version: "1.4.1"
+  version: "1.5.0"
   release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
@@ -14,8 +14,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Core (oracle-core-ptbr)
 
-> **Versão:** 1.4.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
-> **v1.3.1:** convenção de padrão de código registra que Trivadis 4.4 é a versão final (projeto arquivado em fev/2026) e aponta o dbLinter como catálogo vivo. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.5.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
+> **v1.5.0:** quadro de versões suportadas (19c com Premier até 31/12/2029 e Extended até 31/12/2032; APEX 24.2–26.2; ORDS/SQLcl 26.3.1) e roteamento para oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
 
 Skill central da suíte Oracle PT-BR. Não contém templates próprios: define **como a suíte funciona como conjunto**, roteia demandas para o módulo certo e concentra as convenções que valem para todos.
 

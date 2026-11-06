@@ -2,10 +2,10 @@
 name: oracle-apex-ptbr
 description: Módulo APEX da suíte Oracle PT-BR. Oracle APEX 26.2 (padrões válidos de 24.2+) — desenvolvimento e dicionário de metadados. ATIVE em Dynamic Actions, Interactive Report, Interactive Grid, Classic Report, Page Process, AJAX Callback, Validations, Authorization Schemes, pagination, LOV, APEX_APPLICATION_*, APEX_APPLICATION_PAGE_*, APEX_WORKSPACE_*, APEX_APPL_*, Workflows, Tasks, AI configs, ACL, JSON Sources, APEX_ACTIVITY_LOG. Frases — "página APEX", "region IR", "IG editável", "process no submit", "qual view APEX usar", "auditar paginação APEX". NÃO ATIVE em PL/SQL puro, ORDS endpoints, DBA operacional. Para naming use oracle-trivadis-ptbr. Templates em assets/.
 metadata:
-  version: "2.5.0"
+  version: "2.6.0"
   release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
-  suite_size: 20
+  suite_size: 21
   author: "Maxwell da Silva Oliveira"
   contact: "contato@msbrasil.inf.br"
   organization: "M&S do Brasil LTDA"
@@ -25,8 +25,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo APEX (oracle-apex-ptbr)
 
-> **Versão:** 2.5.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (20 recursos nesta skill)
-> **v2.4.2:** suíte com 10 skills; referência cruzada para montar APEX+ORDS local. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.6.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (21 recursos nesta skill)
+> **v2.6.0:** APEX 26.2 (GA 06/10/2026): matriz, requisitos (ORDS 26.3.0+, SQLcl 26.3.0+), APEXlang, REST Workshop removido, IA e Deep Data Security; alerta da CVE-2026-101521. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares

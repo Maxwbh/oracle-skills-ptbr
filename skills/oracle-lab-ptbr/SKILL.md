@@ -2,8 +2,8 @@
 name: oracle-lab-ptbr
 description: "Módulo de instalação e ambiente local da suíte Oracle PT-BR, para desenvolvedor sem experiência de DBA. Montar Oracle 19c ou 26ai na própria máquina (Windows, Linux, Mac) via VM Vagrant+VirtualBox (padrão), container Docker/Podman, OVA ou RPM, com APEX e ORDS opcionais, e acessar esse banco de outros aparelhos da rede de casa. ATIVE em instalar Oracle na minha máquina, montar ambiente de desenvolvimento, subir banco local, vagrant up, VirtualBox, Oracle Free, XE, APEX local, ORDS local, quanto de RAM preciso, liberar porta 1521, e nos erros de quem está começando — ORA-12541, ORA-12514, ORA-01017, VM não sobe, conflito Hyper-V/WSL2, host-only fora da faixa, APEX em branco. Frases — 'como instalo isso aqui', 'não consigo conectar no banco', 'preciso de um banco pra testar'. NÃO ATIVE em banco de cliente ou produção (é oracle-dba-ptbr), nem em código, página APEX, endpoint ORDS ou pipeline."
 metadata:
-  version: "1.0.2"
-  release_date: "2026-09-15"
+  version: "1.1.0"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 8
   author: "Maxwell da Silva Oliveira"
@@ -26,8 +26,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Lab/Instalação (oracle-lab-ptbr)
 
-> **Versão:** 1.0.2 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (8 recursos nesta skill)
-> **v1.0.2:** tabela "Áreas cobertas" no SKILL.md: os 3 references e os 4 assets não eram citados, então future-Claude não sabia que existiam. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.1.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (8 recursos nesta skill)
+> **v1.1.0:** 19c em Oracle Linux 10 (RU 19.33), fim do HCP Vagrant Registry (31/12/2026), Fedora 45 e VirtualBox 7.2.22. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único): ver `oracle-core-ptbr`.
 

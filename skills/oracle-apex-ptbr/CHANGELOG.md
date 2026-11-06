@@ -1,5 +1,12 @@
 # Changelog — oracle-apex-ptbr
 
+## [2.6.0] - 2026-11-06
+- Feature — APEX 26.2 (GA 06/10/2026) na matriz de versões: requisitos (ORDS 26.3.0+, SQLcl 26.3.0+, 19c RU 19.18+ ou 26ai 23.26.0+), schema APEX_260200, APEXlang com import por arquivo (só SQLcl/VS Code, só dev), traduções e subscription mapping, APIs APEX_APPLICATION_ADMIN de lock e Working Copy, REST Workshop removido (→ SQL Developer Web; serviços existentes continuam), IA (reasoning effort, provedores, colunas por linguagem natural no IR, navigation targets), Deep Data Security (23.26.3+). Fontes com data de consulta (06/11/2026).
+- Feature — segurança: CVE-2026-101521 (CVSS 9.8, sem autenticação, afetadas 24.1.0–24.1.21, 24.2.0–24.2.20, 26.1.0–26.1.4) e CVE-2026-66010; novo asset `apex_verificar_patch_seguranca.sql` (testado com APEX_RELEASE simulada) e regra de checar o patch level antes de orientar uma instância. `suite_size` 20 → 21.
+- Fix — 24.2 como baseline suportada com aviso de patch (24.2.22); datas de fim de suporte que a skill afirmava não foram confirmadas → "a verificar".
+- Fix — dicionário: explica o schema versionado; a query de exemplo usava colunas não documentadas de APEX_RELEASE; APEXlang deixa de ser "impacto futuro".
+- Docs — roteamento para oracle-26ai-helper-ptbr.
+
 ## [2.5.0] - 2026-11-06
 - Fix — COMMIT/ROLLBACK alinhados à regra 4 da oracle-plsql-ptbr e ao "APEX não comita": autenticação customizada com contador de tentativas e log de acesso em AUTONOMOUS_TRANSACTION; page processes sem COMMIT; AJAX callbacks que capturam o erro usam SAVEPOINT + ROLLBACK TO; apex_item_legacy.sql afirmava que o page process precisava de COMMIT explícito.
 - Fix — IG: FORALL ... INDICES OF (lista vazia não quebra).

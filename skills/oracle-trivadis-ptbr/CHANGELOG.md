@@ -1,5 +1,8 @@
 # Changelog — oracle-trivadis-ptbr
 
+## [2.4.1] - 2026-11-06
+- Docs — roteamento para a skill irmã oracle-26ai-helper-ptbr; lista da suíte com APEX 24.2–26.2.
+
 ## [2.4.0] - 2026-11-06
 - Fix — guia: exemplo, "Padrão completo" de exceção e princípios de transação alinhados à regra 4 da oracle-plsql-ptbr (rotina não comita; SAVEPOINT + ROLLBACK TO + RAISE; dono da transação). Antes recomendava ROLLBACK total e -20999 com SQLERRM.
 
