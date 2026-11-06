@@ -128,6 +128,8 @@ def main() -> None:
     parser.add_argument("--project-root", type=Path,
                         default=Path(__file__).parent.parent)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--confirmar-prod", action="store_true",
+                        help="Confirma deploy em produção sem prompt (obrigatório fora de TTY/CI)")
     args = parser.parse_args()
 
     root = args.project_root.resolve()
@@ -138,7 +140,7 @@ def main() -> None:
     banner("deploy_db.py — Deploy de objetos do banco", args.env, args.dry_run)
 
     if args.env == "prod":
-        confirmar_producao(args.dry_run)
+        confirmar_producao(args.dry_run, confirmado=args.confirmar_prod)
 
     plano = montar_plano(db_dir, args.tipo)
     todos = [a for _, arquivos in plano for a in arquivos]
