@@ -110,6 +110,17 @@ def test_extrair_erro_formato_de_arquivo():
     assert u.extrair_erro_sqlcl(saida) == ("INSERT INTO y VALUES (1)", "ORA-00942: nao existe")
 
 
+def test_extrair_erro_formato_error_at_line():
+    # Formato usado pelo SQLcl em erro de CREATE TRIGGER, por exemplo.
+    saida = ("Sequence S created.\n\nRollback\nCREATE OR REPLACE TRIGGER tr_x\n*\n"
+             "ERROR at line 1:\nORA-32795: cannot insert into a generated always identity column\n"
+             "Help: https://docs.oracle.com/error-help/db/ora-32795/\n\n")
+    stmt, erro = u.extrair_erro_sqlcl(saida)
+    assert stmt == "CREATE OR REPLACE TRIGGER tr_x"
+    assert erro.startswith("ORA-32795")
+    assert u.resumo_erro("Rollback\nORA-1: x") == "ORA-1: x"
+
+
 def test_sqlcl_ausente_falha_com_mensagem_clara(script, monkeypatch):
     monkeypatch.delenv("SQLCL_BIN", raising=False)
     monkeypatch.setattr(u.shutil, "which", lambda _: None)
