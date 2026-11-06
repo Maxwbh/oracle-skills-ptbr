@@ -364,23 +364,34 @@ DB_PASS=senha_real_aqui
 
 ## 9. CI/CD — GitHub Actions
 
-Veja `assets/github-deploy.yml` para o workflow completo. Resumo do fluxo:
+Veja `assets/github-deploy.yml` (copiar para `.github/workflows/deploy.yml`). Fluxo:
 
 ```
-Push para develop → Deploy em DEV
-  └── Validação SQL (sintaxe)
-  └── Deploy objetos DB (deploy-db.sh)
-  └── Import APEX (SQLcl)
-  └── Deploy ORDS modules (deploy-ords.sh)
-  └── Smoke tests (curl nos endpoints ORDS)
-
-Push para hom → Deploy em HOM
-  └── Mesmo fluxo + testes de integração (Newman)
-
-Push para main → Deploy em PROD (manual approval)
-  └── Mesmo fluxo + aprovação humana obrigatória
-  └── Tag automática de versão
+resolve   → ambiente pelo input (workflow_dispatch) ou pelo branch:
+            develop → dev · hom → hom · main → prod   (sem segredos nos outputs)
+validate  → offline, sem banco: nomenclatura GMUD, changelog.yml e todos os
+            .sql (UTF-8, literais/comentários fechados, terminadores)
+deploy    → environment: <dev|hom|prod>   ← em prod, aguarda os "Required reviewers"
+            └── deploy_full.py: changelog → APEX → ORDS (SQLcl + ALL_ERRORS)
+            └── apply_changelog.py --status, healthcheck, Newman (opcionais)
+tag-release → só prod, depois do deploy
 ```
+
+**GitHub Environments** (Settings → Environments): `dev`, `hom`, `prod`.
+
+| Onde | O quê |
+|---|---|
+| `prod` → Required reviewers | Aprovação humana obrigatória (é ela que libera o job `deploy`) |
+| `prod` → Deployment branches | Recomendado: só `main` |
+| Environment secret (cada ambiente) | `DB_PASS` |
+| Environment variables (cada ambiente) | `DB_HOST`, `DB_PORT`, `DB_SERVICE`, `DB_USER`, `DB_SCHEMA`, `APEX_WORKSPACE`, `APEX_APP_ID`, `APEX_SCHEMA`, `ORDS_HEALTHCHECK_URL`, `ORDS_URL` |
+
+Regras que o workflow segue:
+- **Um job de deploy por execução** — cada job que referencia o Environment `prod` pede aprovação de novo; banco, APEX e ORDS rodam no mesmo job.
+- Secrets de Environment só existem em jobs com `environment:`; nunca passe segredo por `outputs` de job (o GitHub descarta output que contém segredo).
+- Em prod o script recebe `--confirmar-prod`: a confirmação é a aprovação do Environment. Os scripts nunca chamam `input()` em CI.
+- Expressões do Actions não têm `upper()`/`lower()`; o segredo por ambiente vem do Environment (`secrets.DB_PASS`), não de `format('DB_PASS_{0}', ...)`.
+- Validado com `actionlint` (+ `shellcheck` nos blocos `run:`).
 
 ---
 

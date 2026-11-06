@@ -167,13 +167,13 @@ Implementado em `assets/deploy_db.py` (subdiretórios `db/constraints/`, `db/fk/
 | `create-changelog-table.sql` | SQL | DDL idempotente da tabela `db_changelog` |
 | `module_template.sql` | SQL | Template completo de módulo ORDS (module + templates + handlers + privileges) |
 | `gitignore-oracle.txt` | Config | Copiar como `.gitignore` na raiz do projeto |
-| `github-deploy.yml` | CI/CD | Workflow GitHub Actions (fluxo legado) — branch → ambiente, aprovação prod, smoke tests |
+| `github-deploy.yml` | CI/CD | GitHub Actions (fluxo Python) — Environments `dev`/`hom`/`prod`, `DB_PASS` por ambiente, aprovação obrigatória em prod, validação offline, deploy pelo SQLcl |
 | **Liquibase e CI-agnóstico (recomendado)** | | |
 | `setup_devops.py` | Python | Assistente interativo (ou `--ci git|azure|manual --liquibase sim|não`) que gera o esqueleto do combo escolhido, sem conectar no banco |
 | `gmud_liquibase.py` | Python | Gera `changelog-master.xml` a partir das releases e invoca liquibase/SQLcl/script |
 | `changelog-master.xml` | Liquibase | `databaseChangeLog` mestre — inclui os changelogs de release |
 | `changelog-release-exemplo.xml` | Liquibase | Exemplo de release com `changeSet`, `sqlFile`, `runOnChange`, `context`, `rollback`, `tagDatabase` |
-| `github-deploy-liquibase.yml` | CI/CD | GitHub Actions com Environments protegidos dev/hml/prd como approval gates |
+| `github-deploy-liquibase.yml` | CI/CD | GitHub Actions com Environments protegidos dev/hml/prd como approval gates; credenciais via `LIQUIBASE_COMMAND_*` |
 | `azure-pipelines-liquibase.yml` | CI/CD | Azure DevOps — stages dev/hml/prd com deployment jobs + Approvals and checks |
 
 ## Referências cruzadas
