@@ -5,6 +5,25 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [Não lançado] — revisão 2026-11 (branch `revisao/2026-11`)
+
+> Versão da coleção a definir antes da tag.
+
+### Passo 0 — sincronização da versão instalada → repo
+
+- Repo passa de 7 para **10 skills**: entram `oracle-core-ptbr` 1.4.0, `oracle-lab-ptbr` 1.0.2 e `oracle-26ai-ptbr` 1.0.2.
+- Skills existentes trazidas para a versão em uso (todas com `release_date` 2026-09-15):
+  plsql 2.0.0 → 2.2.2 · apex 2.0.0 → 2.4.2 · ords 2.0.0 → 2.4.0 · dba 2.0.0 → 2.3.2 ·
+  tuning 2.0.0 → 2.6.2 · trivadis 2.0.0 → 2.3.1 · devops 3.1.0 → 3.6.2.
+- `CHANGELOG.md` por skill; `metadata.changelog` saiu do frontmatter (histórico migrado).
+- `metadata.suite_size` em todas as skills, conferido contra o pacote gerado.
+- `oracle_devops_utils.py`: versão instalada vira a fonte única em `shared/assets/`; cópia duplicada em `skills/oracle-devops-ptbr/assets/` removida (o build propaga).
+- `build.py`: `manifest.yml` deixa de ir para o `.skill`.
+- Removidos nomes de clientes reais que vieram da versão instalada (lab, core, matriz APEX).
+- README, `docs/index.html` e `marketplace.yml` com as 10 skills e versões reais.
+
+---
+
 ## [3.1.0] — 2026-05-26
 
 ### oracle-devops-ptbr v3.1.0
