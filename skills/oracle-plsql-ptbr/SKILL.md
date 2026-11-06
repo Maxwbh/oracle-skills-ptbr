@@ -64,7 +64,7 @@ PL/SQL Oracle 19c seguindo Trivadis Guidelines 4.4. Foco em código correto, seg
 - EXECUTE IMMEDIATE com bind variables (SQL dinâmico)
 - MERGE INTO como substituto de loop SELECT/INSERT/UPDATE
 - LOBs: leitura em chunks, Base64, SHA-256, DBMS_LOB
-- Compound trigger (auditoria, surrogate keys, cross-edition)
+- Triggers: simples `FOR EACH ROW` (auditoria de colunas, surrogate key legada), compound (estado entre linha e statement, mutating table, auditoria em lote), cross-edition (EBR)
 - EBR: editioning views, cross-edition triggers, deploy zero downtime
 - Logger (OraOpenSource): log_error, log_warn, log_info, log_permanent
 - Qualquer menção a AUTONOMOUS_TRANSACTION, PRAGMA, DBMS_ERRLOG
@@ -78,14 +78,14 @@ PL/SQL Oracle 19c seguindo Trivadis Guidelines 4.4. Foco em código correto, seg
 0. **SQL puro antes de PL/SQL.** Se MERGE, INSERT SELECT ou UPDATE com CASE resolve — use. PL/SQL só quando há lógica de negócio por linha, chamadas externas ou coordenação complexa.
 1. **Bind variables sempre.** Em EXECUTE IMMEDIATE use `USING`. Identificadores dinâmicos → `DBMS_ASSERT.simple_sql_name`.
 2. **Bulk em loops.** `BULK COLLECT` + `FORALL`. Com `LIMIT` para volumes > 100k. `DBMS_ERRLOG` quando cabe DML único.
-3. **Exception com contexto.** `lc_nome_unidade CONSTANT VARCHAR2(60)` em toda procedure pública. Re-raise via `raise_application_error`.
-4. **ROLLBACK explícito** antes do re-raise em handlers com DML. Caller decide o commit.
+3. **Exception com contexto, sem perder o erro original.** `lc_nome_unidade CONSTANT VARCHAR2(60)` em toda procedure pública. Erro de negócio conhecido → `raise_application_error(-20xxx, msg)` mapeado em exceção nomeada. Erro inesperado → log com backtrace + `RAISE` (nunca trocar por `-20999` com `SQLERRM`: perde código e pilha). Para acrescentar contexto, `raise_application_error(..., TRUE)`.
+4. **Transação tem dono.** Rotina reutilizável **não faz COMMIT nem ROLLBACK total**: abre `SAVEPOINT` no início e, no handler, faz `ROLLBACK TO` (desfaz só o próprio trabalho) e propaga a exceção (`RAISE`). `COMMIT`/`ROLLBACK` total só no **ponto de entrada dono da transação** — job do scheduler, handler ORDS, script de carga — e documentado no cabeçalho dele. No APEX, o dono é o próprio APEX (o process não comita). Única exceção: log em `PRAGMA AUTONOMOUS_TRANSACTION` (o commit é da transação autônoma). Ver `exception_template.sql` e `package_body.sql` (`processar_registro` × `processar_pendentes`).
 5. **Logger em vez de DBMS_OUTPUT** em produção.
 6. **Privilégios mínimos.** Schema owner faz DDL; app user faz DML.
 7. **Auditabilidade.** `criado_em`, `criado_por`, `atualizado_em`, `atualizado_por` em tabelas de domínio.
 8. **NOCOPY para LOB/collection grande** em IN OUT/OUT.
 9. **Triggers não contêm regra de negócio.** Auditoria, surrogate key, cross-edition EBR.
-10. **Sempre compound trigger** quando trigger é necessário.
+10. **Compound trigger quando há estado entre linha e statement** — evitar mutating table (coletar na linha, consultar no AFTER STATEMENT), auditoria em lote, processamento em bulk. Para o caso só-linha (colunas de auditoria, surrogate key legada), **trigger simples `FOR EACH ROW` continua válida** e é mais legível. Nunca compartilhe estado entre triggers via variável global de package.
 11. **EBR para zero downtime.** Editioning views + editions + cross-edition triggers.
 
 ## Fluxo de uso
