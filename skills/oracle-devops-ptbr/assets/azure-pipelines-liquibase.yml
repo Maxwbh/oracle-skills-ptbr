@@ -8,22 +8,31 @@
 #   Em hml e prd: Approvals and checks > Approvals > adicione os aprovadores.
 #   - "Aprovar"        = aprovador libera o stage pendente do environment.
 #   - "Reprovar"       = aprovador rejeita -> stage marcado como skipped/failed.
-#   - "Enviar p/ HML"  = rodar o pipeline até o stage DeployHml (aguarda approval).
-#   - "Enviar p/ PRD"  = stage DeployPrd (aguarda approval do environment prd).
+#   - "Enviar p/ HML"  = rodar o pipeline manualmente com ambiente=hml (aguarda approval).
+#   - "Enviar p/ PRD"  = rodar manualmente com ambiente=prd (aguarda approval do prd).
 #   O code review do CÓDIGO continua na Pull Request policy do Azure Repos.
 #
 # ESTRATÉGIA DE ENTREGA AO BANCO (escolha 1 por projeto — ver reference):
 #   A) Agente hospedado (Microsoft-hosted) conecta direto no banco.
 #   B) Self-hosted agent DENTRO da rede do banco (recomendado p/ PRD).
-#   C) Pipeline só gera o SQL (updateSQL) como artefato; DBA aplica (Git não toca o banco).
+#   C) Pipeline só gera o SQL (update-sql) como artefato; DBA aplica (Git não toca o banco).
 #
-# Segredos: use Variable Groups (Library) ou Azure Key Vault, com um grupo por
-# ambiente (ex.: oracle-dev, oracle-hml, oracle-prd) contendo DB_URL/DB_USER/
-# DB_PASSWORD. NUNCA no YAML.
+# Segredos: Variable Groups (Library) — um por ambiente: oracle-dev, oracle-hml,
+# oracle-prd — com DB_URL, DB_USER e DB_PASSWORD (marcada como secret), ou
+# vinculados ao Azure Key Vault. NUNCA no YAML. Cada job de deploy referencia
+# SÓ o grupo do seu ambiente. Variável secreta não vira variável de ambiente
+# sozinha: é mapeada explicitamente em 'env:' para LIQUIBASE_COMMAND_* —
+# a senha nunca vai na linha de comando.
+#
+# Cada job roda num agente novo: o Liquibase é instalado em cada um.
+# Liquibase 4.33.0 (Community) já traz o driver Oracle (ojdbc8); a partir do
+# 5.0 a Community não traz drivers ('liquibase lpm add ...').
 
 trigger:
   branches:
     include: [develop]        # merge em develop -> deploy automático em dev
+
+pr: none                      # PR não faz deploy (a validação de PR é outro pipeline)
 
 parameters:
   - name: ambiente
@@ -34,11 +43,12 @@ parameters:
 
 variables:
   liquibaseVersion: "4.33.0"
-  changelog: "db/changelog-master.xml"
+  LIQUIBASE_COMMAND_CHANGELOG_FILE: "db/changelog-master.xml"
 
 stages:
   # ---------------------------------------------------------------------------
-  # 1) VALIDAR — sempre roda, não toca o banco. Publica o SQL previsto.
+  # 1) VALIDAR — offline, não toca o banco (o 'liquibase validate' exige
+  #    conexão e roda dentro de cada deploy).
   # ---------------------------------------------------------------------------
   - stage: Validar
     jobs:
@@ -46,64 +56,95 @@ stages:
         pool:
           vmImage: ubuntu-latest
         steps:
-          - script: |
-              wget -qO- https://package.liquibase.com/downloads/liquibase-$(liquibaseVersion).tar.gz \
-                | tar xz -C /opt liquibase || true
-              echo "##[group]Liquibase instalado"
-            displayName: "Instalar Liquibase"
-          - script: liquibase --changelog-file=$(changelog) validate
-            displayName: "Validar changelog"
-          - script: |
-              liquibase --changelog-file=$(changelog) \
-                --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
-                updateSQL > $(Build.ArtifactStagingDirectory)/deploy-previsto.sql || true
-            displayName: "Gerar SQL previsto (dry-run)"
-          - publish: $(Build.ArtifactStagingDirectory)/deploy-previsto.sql
-            artifact: deploy-previsto-sql
+          - checkout: self
+          - script: python3 scripts/gmud_liquibase.py verificar --root db
+            displayName: "XML bem-formado e arquivos referenciados existem"
 
   # ---------------------------------------------------------------------------
-  # 2) DEV — automático após Validar (environment dev sem approval).
+  # 2) DEV — automático no push em develop, ou manual com ambiente=dev.
   # ---------------------------------------------------------------------------
   - stage: DeployDev
     dependsOn: Validar
-    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), eq('${{ parameters.ambiente }}', 'dev')))
+    condition: >-
+      and(succeeded(),
+          or(and(ne(variables['Build.Reason'], 'Manual'),
+                 eq(variables['Build.SourceBranch'], 'refs/heads/develop')),
+             and(eq(variables['Build.Reason'], 'Manual'),
+                 eq('${{ parameters.ambiente }}', 'dev'))))
     jobs:
       - deployment: deployDev
         environment: dev          # sem approval = roda direto
         pool:
           vmImage: ubuntu-latest
+        variables:
+          - group: oracle-dev
         strategy:
           runOnce:
             deploy:
               steps:
                 - checkout: self
                 - script: |
-                    liquibase --changelog-file=$(changelog) \
-                      --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
-                      --contexts=dev update
-                  displayName: "Liquibase update (context dev)"
+                    set -euo pipefail
+                    curl -fsSL -o "$(Agent.TempDirectory)/liquibase.tar.gz" \
+                      "https://github.com/liquibase/liquibase/releases/download/v$(liquibaseVersion)/liquibase-$(liquibaseVersion).tar.gz"
+                    mkdir -p "$(Agent.TempDirectory)/liquibase"
+                    tar xzf "$(Agent.TempDirectory)/liquibase.tar.gz" -C "$(Agent.TempDirectory)/liquibase"
+                    echo "##vso[task.prependpath]$(Agent.TempDirectory)/liquibase"
+                  displayName: "Instalar Liquibase $(liquibaseVersion)"
+                - script: |
+                    set -euo pipefail
+                    liquibase validate
+                    liquibase --contexts=dev update-sql > "$(Build.ArtifactStagingDirectory)/deploy-previsto-dev.sql"
+                    liquibase --contexts=dev update
+                  displayName: "Liquibase validate + update-sql + update (context dev)"
+                  env:
+                    LIQUIBASE_COMMAND_URL: $(DB_URL)
+                    LIQUIBASE_COMMAND_USERNAME: $(DB_USER)
+                    LIQUIBASE_COMMAND_PASSWORD: $(DB_PASSWORD)
+                - publish: $(Build.ArtifactStagingDirectory)/deploy-previsto-dev.sql
+                  artifact: deploy-previsto-dev
 
   # ---------------------------------------------------------------------------
   # 3) HML — environment hml com Approval (Enviar p/ HML).
   # ---------------------------------------------------------------------------
   - stage: DeployHml
     dependsOn: Validar
-    condition: and(succeeded(), eq('${{ parameters.ambiente }}', 'hml'))
+    condition: >-
+      and(succeeded(),
+          eq(variables['Build.Reason'], 'Manual'),
+          eq('${{ parameters.ambiente }}', 'hml'))
     jobs:
       - deployment: deployHml
         environment: hml          # Approvals and checks = approval gate
         pool:
           vmImage: ubuntu-latest  # ou self-hosted (estratégia B)
+        variables:
+          - group: oracle-hml
         strategy:
           runOnce:
             deploy:
               steps:
                 - checkout: self
                 - script: |
-                    liquibase --changelog-file=$(changelog) \
-                      --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
-                      --contexts=hml update
-                  displayName: "Liquibase update (context hml)"
+                    set -euo pipefail
+                    curl -fsSL -o "$(Agent.TempDirectory)/liquibase.tar.gz" \
+                      "https://github.com/liquibase/liquibase/releases/download/v$(liquibaseVersion)/liquibase-$(liquibaseVersion).tar.gz"
+                    mkdir -p "$(Agent.TempDirectory)/liquibase"
+                    tar xzf "$(Agent.TempDirectory)/liquibase.tar.gz" -C "$(Agent.TempDirectory)/liquibase"
+                    echo "##vso[task.prependpath]$(Agent.TempDirectory)/liquibase"
+                  displayName: "Instalar Liquibase $(liquibaseVersion)"
+                - script: |
+                    set -euo pipefail
+                    liquibase validate
+                    liquibase --contexts=hml update-sql > "$(Build.ArtifactStagingDirectory)/deploy-previsto-hml.sql"
+                    liquibase --contexts=hml update
+                  displayName: "Liquibase validate + update-sql + update (context hml)"
+                  env:
+                    LIQUIBASE_COMMAND_URL: $(DB_URL)
+                    LIQUIBASE_COMMAND_USERNAME: $(DB_USER)
+                    LIQUIBASE_COMMAND_PASSWORD: $(DB_PASSWORD)
+                - publish: $(Build.ArtifactStagingDirectory)/deploy-previsto-hml.sql
+                  artifact: deploy-previsto-hml
 
   # ---------------------------------------------------------------------------
   # 4) PRD — environment prd com Approval (Enviar p/ PRD).
@@ -111,28 +152,46 @@ stages:
   # ---------------------------------------------------------------------------
   - stage: DeployPrd
     dependsOn: Validar
-    condition: and(succeeded(), eq('${{ parameters.ambiente }}', 'prd'))
+    condition: >-
+      and(succeeded(),
+          eq(variables['Build.Reason'], 'Manual'),
+          eq('${{ parameters.ambiente }}', 'prd'))
     jobs:
       - deployment: deployPrd
         environment: prd
         pool:
           vmImage: ubuntu-latest  # troque por self-hosted na estratégia B
+        variables:
+          - group: oracle-prd
         strategy:
           runOnce:
             deploy:
               steps:
                 - checkout: self
+                - script: |
+                    set -euo pipefail
+                    curl -fsSL -o "$(Agent.TempDirectory)/liquibase.tar.gz" \
+                      "https://github.com/liquibase/liquibase/releases/download/v$(liquibaseVersion)/liquibase-$(liquibaseVersion).tar.gz"
+                    mkdir -p "$(Agent.TempDirectory)/liquibase"
+                    tar xzf "$(Agent.TempDirectory)/liquibase.tar.gz" -C "$(Agent.TempDirectory)/liquibase"
+                    echo "##vso[task.prependpath]$(Agent.TempDirectory)/liquibase"
+                  displayName: "Instalar Liquibase $(liquibaseVersion)"
                 # Estratégia C: NÃO aplica; gera o script p/ o DBA.
                 - script: |
-                    liquibase --changelog-file=$(changelog) \
-                      --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
-                      --contexts=prd updateSQL > $(Build.ArtifactStagingDirectory)/gmud-prd.sql
-                  displayName: "Gerar script GMUD p/ o DBA (estratégia C)"
+                    set -euo pipefail
+                    liquibase validate
+                    liquibase --contexts=prd update-sql > "$(Build.ArtifactStagingDirectory)/gmud-prd.sql"
+                  displayName: "Validar e gerar script GMUD p/ o DBA (estratégia C)"
+                  env:
+                    LIQUIBASE_COMMAND_URL: $(DB_URL)
+                    LIQUIBASE_COMMAND_USERNAME: $(DB_USER)
+                    LIQUIBASE_COMMAND_PASSWORD: $(DB_PASSWORD)
                 - publish: $(Build.ArtifactStagingDirectory)/gmud-prd.sql
                   artifact: gmud-prd-sql
                 # Estratégias A/B: aplicar de fato (descomente quando a rede permitir).
-                # - script: |
-                #     liquibase --changelog-file=$(changelog) \
-                #       --url="$(DB_URL)" --username="$(DB_USER)" --password="$(DB_PASSWORD)" \
-                #       --contexts=prd update
+                # - script: liquibase --contexts=prd update
                 #   displayName: "Liquibase update (context prd)"
+                #   env:
+                #     LIQUIBASE_COMMAND_URL: $(DB_URL)
+                #     LIQUIBASE_COMMAND_USERNAME: $(DB_USER)
+                #     LIQUIBASE_COMMAND_PASSWORD: $(DB_PASSWORD)

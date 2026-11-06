@@ -100,6 +100,17 @@ Configuração no GitHub (uma vez por repositório):
 3. Em cada environment, cadastre os **Secrets** de conexão (`DB_URL`,
    `DB_USER`, `DB_PASSWORD`) — assim cada ambiente tem credencial isolada e o
    segredo de produção nunca fica acessível ao job de dev.
+   Secrets de Environment só existem nos jobs que declaram `environment:` —
+   por isso o job `validar` (sem environment) faz só a verificação offline, e
+   o `liquibase validate` (que **exige conexão**) roda dentro de cada deploy.
+4. As credenciais chegam ao Liquibase por `LIQUIBASE_COMMAND_URL`,
+   `LIQUIBASE_COMMAND_USERNAME` e `LIQUIBASE_COMMAND_PASSWORD` — nunca em
+   `--password=` na linha de comando (fica em `ps` e no log).
+5. O Liquibase é instalado com `liquibase/setup-liquibase@v3`
+   (`liquibase/liquibase-github-action` executa uma operação e exige o input
+   `operation`; não instala o CLI no PATH). O 4.33.0 Community já traz o
+   driver Oracle (ojdbc8); do 5.0 em diante a Community não traz drivers
+   (instalar com `liquibase lpm add ...`).
 
 Workflow pronto: `assets/github-deploy-liquibase.yml`.
 
@@ -220,14 +231,17 @@ dispara o Liquibase ou o SQLcl:
 
 ```bash
 python gmud_liquibase.py gerar    --root db                 # monta o master.xml
-python gmud_liquibase.py validar  --root db                 # valida (sem banco)
+python gmud_liquibase.py verificar --root db                # XML e arquivos (sem banco)
+python gmud_liquibase.py validar  --root db                 # liquibase validate (exige conexão)
 python gmud_liquibase.py prever   --root db --env hml        # updateSQL (dry-run)
 python gmud_liquibase.py aplicar  --root db --env hml        # update
 python gmud_liquibase.py rollback --root db --env hml --tag 2026.01-gmud-001
 ```
 
 Conexão por variáveis de ambiente (`DB_URL`/`DB_USER`/`DB_PASSWORD`), nunca no
-código. `--runner` escolhe `liquibase` (binário), `sqlcl` (Liquibase embutido no
+código; repassadas ao Liquibase como `LIQUIBASE_COMMAND_*`. `aplicar --env prd`
+pede confirmação só em terminal interativo; em CI exige `--yes` (dado após a
+aprovação do Environment). `--runner` escolhe `liquibase` (binário), `sqlcl` (Liquibase embutido no
 SQLcl da Oracle) ou `script` (só gera o SQL para o DBA — estratégia C).
 
 ## Portabilidade: GitHub Actions ou Azure Pipelines
