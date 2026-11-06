@@ -8,6 +8,7 @@
 - Breaking — `confirmar_producao()`: em CI (`CI=true`) ou sem TTY nunca chama `input()`; exige `--confirmar-prod` ou `CONFIRMO_PROD=1` (sai com 2). Cancelamento interativo sai com 1.
 - Fix — `deploy_full.py`: import do APEX pelo SQLcl a partir de `apex/app_<ID>/f<ID>` (export split), com workspace/app id validados antes e definidos via `APEX_APPLICATION_INSTALL`; mensagem clara sem SQLcl. `export_apex.py`: o `install.sql` gerado não importava a aplicação (só chamava `set_environment.sql`).
 - Fix — `github-deploy.yml`: sem `upper()`; GitHub Environments dev/hom/prod com `DB_PASS` por ambiente e aprovação obrigatória em prod; sem segredos em outputs; validação offline real; `scripts/requirements-devops.txt` como caminho único. actionlint limpo.
+- Breaking — ambientes unificados em `dev`/`hom`/`prod` também no fluxo Liquibase (Environments, Variable Groups `oracle-dev/hom/prod`, contexts do changelog XML, `gmud_liquibase.py --env`). Changelogs existentes com `context="hml,prd"` precisam ser renomeados. `setup_devops.py` sugeria `apply_changelog.py --env hml`, que não existe.
 - Fix — `github-deploy-liquibase.yml` e `azure-pipelines-liquibase.yml`: instalação real do Liquibase (`setup-liquibase@v3` / em cada job do Azure), `validate` só com conexão (dentro dos deploys), credenciais por `LIQUIBASE_COMMAND_*`, sem `|| true`. `gmud_liquibase.py`: senha saía no log; nova ação `verificar` (offline); `aplicar --env prd` sem `input()` em CI.
 
 ## [3.6.2] - 2026-09-15

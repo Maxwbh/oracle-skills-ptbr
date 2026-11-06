@@ -18,7 +18,7 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 
 | Skill | Versão | Escopo | Recursos |
 |---|---|---|---|
-| `oracle-core-ptbr` | 1.4.0 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
+| `oracle-core-ptbr` | 1.4.1 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
 | `oracle-plsql-ptbr` | 2.2.2 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
 | `oracle-apex-ptbr` | 2.4.2 | APEX (padrões de 24.2+) development + Data Dictionary completo | 20 |
 | `oracle-ords-ptbr` | 2.4.0 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |

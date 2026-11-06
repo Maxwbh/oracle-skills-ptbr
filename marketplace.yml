@@ -61,7 +61,7 @@ collection:
 skills:
   - name: "oracle-core-ptbr"
     display_name: "Oracle Core PT-BR"
-    version: "1.4.0"
+    version: "1.4.1"
     icon: "🧭"
     category: "database"
     description: "Assistente central — roteamento entre módulos e convenções transversais"

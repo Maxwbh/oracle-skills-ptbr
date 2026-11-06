@@ -110,8 +110,8 @@ Setup gerado por setup_devops.py.
 {passos}
 
 ## Entrega ao banco (estratégias)
-- A) runner/agent hospedado conecta direto (dev/hml).
-- B) runner/agent self-hosted na rede do banco (recomendado p/ prd).
+- A) runner/agent hospedado conecta direto (dev/hom).
+- B) runner/agent self-hosted na rede do banco (recomendado p/ prod).
 - C) pipeline só gera o SQL (updateSQL/dry-run); DBA aplica (Git não toca o banco).
 
 Detalhes em references/liquibase-cicd-gmud-ptbr.md.
@@ -121,23 +121,23 @@ Detalhes em references/liquibase-cicd-gmud-ptbr.md.
 def gerar_readme(dest: Path, ci: str, liquibase: bool, entrega: str) -> None:
     if liquibase:
         if ci == "git":
-            passos = ("1. Crie os Environments dev/hml/prd no GitHub (reviewers em hml/prd).\n"
+            passos = ("1. Crie os Environments dev/hom/prod no GitHub (reviewers em hom/prod).\n"
                       "2. Cadastre DB_URL/DB_USER/DB_PASSWORD como Environment Secrets.\n"
                       "3. Edite db/releases/.../changelog.xml e adicione seus .sql GMUD.\n"
                       "4. Rode o workflow (Actions) escolhendo o ambiente.")
         elif ci == "azure":
-            passos = ("1. Crie os Environments dev/hml/prd em Pipelines > Environments.\n"
-                      "2. Approvals and checks > Approvals em hml/prd.\n"
-                      "3. Variable Groups oracle-dev/hml/prd com DB_URL/DB_USER/DB_PASSWORD.\n"
+            passos = ("1. Crie os Environments dev/hom/prod em Pipelines > Environments.\n"
+                      "2. Approvals and checks > Approvals em hom/prod.\n"
+                      "3. Variable Groups oracle-dev/hom/prod com DB_URL/DB_USER/DB_PASSWORD.\n"
                       "4. Crie o pipeline a partir de azure-pipelines.yml.")
         else:  # manual
             passos = ("1. Edite db/releases/.../changelog.xml com seus .sql GMUD.\n"
-                      "2. Gere o script: python db/gmud_liquibase.py prever --root db --env hml\n"
-                      "3. DBA aplica via SQLcl: lb update -changelog db/changelog-master.xml -context hml")
+                      "2. Gere o script: python db/gmud_liquibase.py prever --root db --env hom\n"
+                      "3. DBA aplica via SQLcl: lb update -changelog db/changelog-master.xml -context hom")
     else:
         passos = ("1. Ajuste db/changelog.yml com os scripts na ordem.\n"
                   "2. Crie a tabela de controle: db/create-changelog-table.sql\n"
-                  "3. Aplique: python db/apply_changelog.py --env hml\n"
+                  "3. Aplique: python db/apply_changelog.py --env hom\n"
                   "   (fluxo LEGADO; considere migrar para Liquibase)")
     txt = README.format(
         ci={"git": "GitHub Actions", "azure": "Azure Pipelines", "manual": "Manual (DBA)"}[ci],
