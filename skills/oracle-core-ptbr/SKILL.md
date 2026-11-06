@@ -31,6 +31,8 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+
 ## Contexto da suíte
 
 - **Stack alvo:** Oracle Database **19c** (padrão) · APEX 24.2/26.1 · ORDS · SQLcl. 23ai/26ai só com versão declarada — ver `oracle-26ai-ptbr`; na dúvida, 19c
@@ -49,7 +51,8 @@ Suíte completa (10 skills — conjunto único):
 | "sessão travada", "quem tá bloqueando", "matar sessão", "recuperar dado deletado", "objetos inválidos", "tablespace cheio", "tenho licença de Diagnostics Pack?", "agendar gather stats" | **oracle-dba-ptbr** |
 | "query lenta", "qual índice criar", "explain plan", "hard parse", "stats desatualizadas", "result cache", "analisar AWR/ASH desse SQL" | **oracle-tuning-ptbr** |
 | "estruturar projeto no Git", "pipeline", "changelog Liquibase", "export APEX pra Git", "nomenclatura GMUD", "enviar pra homologação" | **oracle-devops-ptbr** |
-| "estou no 26ai", "isso existe no 26ai?", "migrar do 19c pro 26", "dá pra usar no 19c?", "IF NOT EXISTS", "BOOLEAN nativo", "QUALIFY", "duality view" | **oracle-26ai-ptbr** |
+| "estou no 26ai", "isso existe no 26ai?", "migrar do 19c pro 26", "dá pra usar no 19c?", "IF NOT EXISTS", "BOOLEAN nativo", "QUALIFY" | **oracle-26ai-ptbr** |
+| "busca vetorial", "VECTOR", "RAG no banco", "duality view", "RAFT", "Globally Distributed Database" | **oracle-26ai-helper-ptbr** (skill irmã, fora da suíte) |
 | "como instalo o Oracle aqui", "vagrant up", "VirtualBox", "preciso de um banco pra testar", "não conecto no meu banco local", "acessar do notebook da sala" | **oracle-lab-ptbr** |
 
 ## Cenários multidisciplinares — ordem de carregamento
