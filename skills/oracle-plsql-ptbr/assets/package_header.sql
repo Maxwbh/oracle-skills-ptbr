@@ -63,11 +63,24 @@ CREATE OR REPLACE PACKAGE <nome_pacote>_pkg AS
    *
    * @raises e_nao_encontrado   Se o registro não existe
    * @raises e_estado_invalido  Se o registro está em estado incompatível
+   *
+   * Transação: NÃO comita. Em erro, desfaz só o próprio trabalho
+   * (ROLLBACK TO SAVEPOINT) e propaga a exceção original. Quem chama decide
+   * COMMIT/ROLLBACK.
    */
   PROCEDURE processar_registro (
     p_id            IN NUMBER,
     p_forcar_update IN VARCHAR2 DEFAULT 'N'
   );
+
+  /**
+   * Processa os registros pendentes/ativos (até gc_max_registros).
+   *
+   * Ponto de entrada (ex.: job do DBMS_SCHEDULER) e DONO DA TRANSAÇÃO:
+   * comita a cada registro processado; um registro com erro é desfeito e
+   * registrado, sem impedir os demais.
+   */
+  PROCEDURE processar_pendentes;
 
   /**
    * Retorna o status atual do registro.
