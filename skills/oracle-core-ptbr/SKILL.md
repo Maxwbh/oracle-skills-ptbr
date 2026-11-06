@@ -98,4 +98,4 @@ python3 /mnt/skills/user/theme-factory-ptbr/scripts/aplicar_tema.py --tema msbra
 
 O tema é **provisório e declarado como tal**: herda o Tech Innovation do catálogo porque a M&S do Brasil ainda não tem paleta oficial. Não o apresente a cliente como "identidade visual da M&S". Quando a paleta existir, acrescente `colors`/`fonts`/`semantic` ao arquivo — roles, presets e contrastes são re-derivados.
 
-Material de **cliente final** (IMESC, Nexdom, Zitrus e outros) usa o tema do cliente quando existir; na ausência, escolha pelo contexto com `aplicar_tema.py --escolher "<pedido>"`, não o tema da M&S.
+Material de **cliente final** usa o tema do cliente quando existir; na ausência, escolha pelo contexto com `aplicar_tema.py --escolher "<pedido>"`, não o tema da M&S.

@@ -70,7 +70,7 @@ Se a pessoa não sabe responder, o padrão é **VM Vagrant + VirtualBox com 26ai
 
 | Use | Quando |
 |---|---|
-| **19c** | Vai reproduzir o ambiente de um cliente (IMESC, Nexdom, SC Saúde). É o que roda em produção. Exige download do e-delivery (arquivo grande, login Oracle) |
+| **19c** | Vai reproduzir o ambiente de um cliente. É o que roda em produção. Exige download do e-delivery (arquivo grande, login Oracle) |
 | **26ai Free** | Laboratório, estudo, testar sintaxe nova. Download livre, instalação por RPM, sem custo de licença. Limites da edição Free: 2 CPU, 2 GB de RAM, 12 GB de dados |
 
 Regra da suíte: **código nasce 19c**. O 26ai Free serve para experimentar o que vem depois — ver `oracle-26ai-ptbr`.
@@ -142,7 +142,7 @@ O detalhamento (host-only × bridge × redirecionamento de portas, IP fixo no ro
 
 1. **Snapshot antes de qualquer experimento.** É a diferença entre desfazer em 30 segundos e reinstalar em 3 horas.
 2. **Ambiente descartável.** Se quebrou e não é óbvio, `vagrant destroy` + `vagrant up` é resposta legítima — não é fracasso.
-3. **Nada de dado real de cliente no lab.** Dados de IMESC, Nexdom e afins não saem do ambiente do cliente; para testar, usar massa gerada ou anonimizada (LGPD).
+3. **Nada de dado real de cliente no lab.** Dados de cliente não saem do ambiente do cliente; para testar, usar massa gerada ou anonimizada (LGPD).
 4. **Um caminho por vez.** Não misturar container e VM na mesma explicação; a pessoa se perde e as portas colidem.
 5. **Desligar direito:** `vagrant halt` (ou `shutdown immediate` antes). Fechar a janela da VM no tacape corrompe o banco.
 6. **O lab não é produção.** Nada que se aprende aqui sobre senha, firewall ou `chmod 777` vale para o cliente.

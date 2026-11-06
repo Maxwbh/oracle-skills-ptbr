@@ -173,5 +173,5 @@ de gerar código** quando o pedido envolver:
 - Universal Theme/estilo (Iris é padrão só no 26.1).
 
 Se a versão-alvo já estiver clara na conversa (ex.: o usuário disse "estou no
-26.1" ou a app é a MEMORA em 26.1), **não pergunte de novo** — use o que já foi
+26.1" ou a app do cliente já foi descrita como 26.1), **não pergunte de novo** — use o que já foi
 informado e apenas sinalize a dependência de versão quando relevante.

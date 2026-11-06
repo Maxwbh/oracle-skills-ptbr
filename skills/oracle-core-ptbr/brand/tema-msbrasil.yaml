@@ -31,5 +31,5 @@ notes: |
   Provisório e declarado como tal: as cores são as do tema Tech Innovation, não uma identidade
   M&S. Não apresente como "identidade visual da M&S" para cliente sem avisar. Substitua assim
   que houver paleta oficial — basta acrescentar `colors`/`fonts`/`semantic` neste arquivo.
-  Para material de cliente final (IMESC, Nexdom, Zitrus e outros), use o tema do cliente quando
+  Para material de cliente final, use o tema do cliente quando
   existir; na ausência, escolha pelo contexto (theme-factory `pick_theme`), não este.
