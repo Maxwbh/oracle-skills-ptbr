@@ -12,6 +12,10 @@
 --   ORDS.source_type_plsql            → bloco PL/SQL             (POST/PUT/DELETE; GET aceito em ORDS modernas) [plsql/block]
 --   ORDS.source_type_csv_query        → SELECT → CSV            (GET)  [csv/query]
 -- NÃO existe ORDS.source_type_query_one_row nem ORDS.source_type_collection_query.
+--
+-- Transação: o handler PL/SQL é o PONTO DE ENTRADA do request e o dono da
+-- transação — COMMIT/ROLLBACK ficam nele. Os packages que ele chama não
+-- comitam nem fazem ROLLBACK total (regra 4 da oracle-plsql-ptbr).
 --==============================================================================
 
 
