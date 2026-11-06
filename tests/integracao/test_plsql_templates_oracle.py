@@ -149,3 +149,78 @@ def test_surrogate_key_legada(triggers):
         cur.execute("INSERT INTO pagamentos_legado (id_fatura, valor) VALUES (1, 5)")
         cur.execute("SELECT id_pagamento FROM pagamentos_legado")
         assert cur.fetchone()[0] is not None
+
+
+# ─── logger_integration.sql (rotina reutilizável com Logger) ─────────────────
+# Stub mínimo do Logger (OraOpenSource): só as assinaturas usadas no template.
+LOGGER_STUB = """
+CREATE OR REPLACE PACKAGE logger AS
+  TYPE rec_param IS RECORD (name VARCHAR2(255), val VARCHAR2(4000));
+  TYPE tab_param IS TABLE OF rec_param INDEX BY BINARY_INTEGER;
+  PROCEDURE log(p_text IN VARCHAR2, p_scope IN VARCHAR2 DEFAULT NULL,
+                p_extra IN CLOB DEFAULT NULL, p_params IN tab_param DEFAULT CAST(NULL AS tab_param));
+  PROCEDURE log_information(p_text IN VARCHAR2, p_scope IN VARCHAR2 DEFAULT NULL,
+                p_extra IN CLOB DEFAULT NULL, p_params IN tab_param DEFAULT CAST(NULL AS tab_param));
+  PROCEDURE log_warn(p_text IN VARCHAR2, p_scope IN VARCHAR2 DEFAULT NULL,
+                p_extra IN CLOB DEFAULT NULL, p_params IN tab_param DEFAULT CAST(NULL AS tab_param));
+  PROCEDURE log_error(p_text IN VARCHAR2, p_scope IN VARCHAR2 DEFAULT NULL,
+                p_extra IN CLOB DEFAULT NULL, p_params IN tab_param DEFAULT CAST(NULL AS tab_param));
+  PROCEDURE append_param(p_params IN OUT NOCOPY tab_param, p_name IN VARCHAR2, p_val IN VARCHAR2);
+END logger;
+/
+CREATE OR REPLACE PACKAGE BODY logger AS
+  PROCEDURE log(p_text IN VARCHAR2, p_scope IN VARCHAR2 DEFAULT NULL,
+                p_extra IN CLOB DEFAULT NULL, p_params IN tab_param DEFAULT CAST(NULL AS tab_param)) IS
+  BEGIN NULL; END;
+  PROCEDURE log_information(p_text IN VARCHAR2, p_scope IN VARCHAR2 DEFAULT NULL,
+                p_extra IN CLOB DEFAULT NULL, p_params IN tab_param DEFAULT CAST(NULL AS tab_param)) IS
+  BEGIN NULL; END;
+  PROCEDURE log_warn(p_text IN VARCHAR2, p_scope IN VARCHAR2 DEFAULT NULL,
+                p_extra IN CLOB DEFAULT NULL, p_params IN tab_param DEFAULT CAST(NULL AS tab_param)) IS
+  BEGIN NULL; END;
+  PROCEDURE log_error(p_text IN VARCHAR2, p_scope IN VARCHAR2 DEFAULT NULL,
+                p_extra IN CLOB DEFAULT NULL, p_params IN tab_param DEFAULT CAST(NULL AS tab_param)) IS
+  BEGIN NULL; END;
+  PROCEDURE append_param(p_params IN OUT NOCOPY tab_param, p_name IN VARCHAR2, p_val IN VARCHAR2) IS
+  BEGIN NULL; END;
+END logger;
+/
+CREATE OR REPLACE PACKAGE pagamento_pkg AS
+  PROCEDURE processar_pagamento(p_id_fatura IN NUMBER, p_valor IN NUMBER);
+END pagamento_pkg;
+/
+"""
+
+
+@pytest.fixture
+def pagamento(tmp_path, conn_teste):
+    with conn_teste.cursor() as cur:
+        cur.execute("CREATE TABLE faturas (id NUMBER PRIMARY KEY, status VARCHAR2(10), "
+                    "pago_em DATE, valor_pago NUMBER)")
+        cur.execute("CREATE TABLE marcador (id NUMBER)")
+        cur.executemany("INSERT INTO faturas (id, status) VALUES (:1, :2)",
+                        [(1, "ABERTA"), (2, "PAGO")])
+    conn_teste.commit()
+    texto = (ASSETS / "logger_integration.sql").read_text(encoding="utf-8")
+    corpo = next(c.texto for c in u.analisar_sql(texto)
+                 if c.texto.upper().startswith("CREATE OR REPLACE PACKAGE BODY PAGAMENTO_PKG"))
+    _instalar(tmp_path, conn_teste, "logger_pagamento.sql", LOGGER_STUB + corpo + "\n/\n")
+    return conn_teste
+
+
+def test_logger_integration_rotina_nao_comita(pagamento):
+    with pagamento.cursor() as cur:
+        cur.callproc("pagamento_pkg.processar_pagamento", [1, 100])
+        pagamento.rollback()
+        cur.execute("SELECT status FROM faturas WHERE id = 1")
+        assert cur.fetchone()[0] == "ABERTA"
+
+
+def test_logger_integration_preserva_erro_e_trabalho_do_chamador(pagamento):
+    with pagamento.cursor() as cur:
+        cur.execute("INSERT INTO marcador VALUES (1)")
+        with pytest.raises(oracledb.DatabaseError) as exc:
+            cur.callproc("pagamento_pkg.processar_pagamento", [2, 100])   # já paga
+        assert exc.value.args[0].code == 20100      # não virou -20999
+        cur.execute("SELECT COUNT(*) FROM marcador")
+        assert cur.fetchone()[0] == 1               # sem ROLLBACK total
