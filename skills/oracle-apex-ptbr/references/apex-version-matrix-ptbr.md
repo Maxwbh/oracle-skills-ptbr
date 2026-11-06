@@ -175,3 +175,24 @@ de gerar código** quando o pedido envolver:
 Se a versão-alvo já estiver clara na conversa (ex.: o usuário disse "estou no
 26.1" ou a app do cliente já foi descrita como 26.1), **não pergunte de novo** — use o que já foi
 informado e apenas sinalize a dependência de versão quando relevante.
+
+---
+
+## Segurança — CPU de outubro/2026 (consultado em 06/11/2026)
+
+Fontes: [Oracle CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) (Rev 1 em 20/10/2026; [Text Form](https://www.oracle.com/security-alerts/cpuoct2026verbose.html#APEX)) e [CVE List — CVE-2026-101521](https://github.com/CVEProject/cvelistV5).
+
+| CVE | CVSS 3.1 | Ataque | Versões afetadas (texto do advisory) |
+|---|---|---|---|
+| **CVE-2026-101521** | **9.8** (CRITICAL) — `AV:N/AC:L/PR:N/UI:N` | sem autenticação, via HTTPS; "can result in takeover of Oracle APEX" | 24.1.0–24.1.21, 24.2.0–24.2.20, 26.1.0–26.1.4 |
+| CVE-2026-66010 | 6.1 — exige interação do usuário | componente General (DOMPurify), via HTTP | 24.1.0–24.1.19, 24.2.0–24.2.18, 26.1.0–26.1.2 |
+
+**O que fazer:** aplicar o **Patch Set Bundle mais recente** da versão em uso. Nas páginas de download, em 04/11/2026, eram: **24.1.23**, **24.2.22**, **26.1.6** e **26.2.1** — todos fora das faixas afetadas acima. Verificar a instância com `assets/apex_verificar_patch_seguranca.sql`.
+
+**A verificar (não está no advisory):**
+- qual é a **primeira versão corrigida** de cada linha (24.1.22? 24.2.21? 26.1.5?) — o CPU lista só as faixas afetadas e remete ao documento CPU359 da Oracle Support;
+- se a **26.2** é afetada — ela não aparece na lista de afetadas, mas não há frase explícita;
+- se `APEX_RELEASE.VERSION_NO` reflete o patch set aplicado — a view não é descrita na documentação consultada; confirme também em *Help > About* do App Builder.
+
+O mesmo CPU traz **35 CVEs do ORDS** (faixa geral 24.2.0–26.2.2) — ver `oracle-ords-ptbr`.
+
