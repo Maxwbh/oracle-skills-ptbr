@@ -2,17 +2,23 @@
 # Dependências Python para scripts DevOps Oracle
 # M&S do Brasil LTDA — contato@msbrasil.inf.br
 #
+# Local no projeto: scripts/requirements-devops.txt (único caminho — o
+# workflow github-deploy.yml e os wrappers .sh usam este).
+#
+# Pré-requisito fora do pip: SQLcl ('sql' no PATH ou SQLCL_BIN) — os scripts
+# SQL são executados por ele.
+#
 # Instalar:
-#   pip install -r requirements-devops.txt --break-system-packages
+#   pip install -r scripts/requirements-devops.txt --break-system-packages
 #
 # Em ambientes virtuais (recomendado localmente):
 #   python -m venv .venv
 #   source .venv/bin/activate   # Linux/macOS
 #   .venv\Scripts\activate      # Windows
-#   pip install -r requirements-devops.txt
+#   pip install -r scripts/requirements-devops.txt
 #
 # Em GitHub Actions (Ubuntu):
-#   pip install -r requirements-devops.txt
+#   pip install -r scripts/requirements-devops.txt
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Oracle Database driver — Thin Mode (sem Oracle Client)

@@ -22,3 +22,10 @@ Thumbs.db
 *.tmp
 build/
 tmp/
+
+# Nomes de clientes proibidos adicionais (nunca versionar) — usado pelo build.py --check
+.clientes-proibidos.txt
+
+# Testes
+.pytest_cache/
+.ruff_cache/

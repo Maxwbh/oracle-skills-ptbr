@@ -62,11 +62,11 @@
     </changeSet>
 
     <!--
-      4) Carga de dados que SÓ deve ir para HML e PRD (não em dev de teste).
-      context restringe o ambiente; só roda com -context hml ou -context prd.
+      4) Carga de dados que SÓ deve ir para HOM e PROD (não em dev de teste).
+      context restringe o ambiente; só roda com -context hom ou -context prod.
     -->
     <changeSet id="2026.01-004-seed-dominios" author="maxwbh" labels="gmud-001"
-               context="hml,prd">
+               context="hom,prod">
         <comment>Popula tabelas de domínio</comment>
         <sqlFile path="004_projeto_dml_dominios.sql"
                  relativeToChangelogFile="true"/>
