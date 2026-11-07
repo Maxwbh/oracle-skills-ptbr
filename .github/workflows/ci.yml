@@ -44,7 +44,11 @@ jobs:
         env:
           # Nomes de clientes extras, sem publicá-los no repositório (opcional).
           CLIENTES_PROIBIDOS: ${{ secrets.CLIENTES_PROIBIDOS }}
-        run: python build.py --check
+        run: |
+          if [[ -z "$CLIENTES_PROIBIDOS" ]]; then
+            echo "::warning::Secret CLIENTES_PROIBIDOS não configurado — trava de clientes reais inativa"
+          fi
+          python build.py --check
 
   testes:
     name: pytest
