@@ -5,9 +5,10 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
-## [Não lançado] — revisão 2026-11 (branch `revisao/2026-11`)
+## [4.0.0] — 2026-11-07
 
-> Versão da coleção a definir antes da tag.
+Revisão consolidada 2026-11 (Passo 0 + Fases 1–4). **Breaking:** DevOps exige SQLcl e muda o `db_changelog`; regras 3, 4 e 10 do PL/SQL mudam de sentido; contexts do Liquibase passam a `dev`/`hom`/`prod`.
+
 
 ### Passo 0 — sincronização da versão instalada → repo
 
@@ -47,6 +48,16 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 - Roteamento para a skill irmã oracle-26ai-helper-ptbr.
 - Lab (19c em OL10 com RU 19.33, fim do HCP Vagrant Registry), DBA (suporte do 19c, TLS 1.3/FIPS 140-3/PQC no RU 19.32) e tuning (baseline SPM ignorado no 19.32).
 - Versões: apex 2.6.0, ords 2.5.0, core 1.5.0, dba 2.4.0, lab 1.1.0, tuning 2.7.0, 26ai 1.1.0, devops 4.1.0, plsql 3.0.1, trivadis 2.4.1.
+
+### Fase 4 — critérios de release
+
+- `build.py --check` com validação própria, sem depender de `/mnt/skills`: YAML do frontmatter, `name` = pasta, `description` ≤ 1024, `version`, `suite_size` = contagem real, CHANGELOG da skill = versão, `marketplace.yml` consistente.
+- Trava de clientes reais em todos os arquivos de texto das skills (antes só `.md`), com nomes extras via secret/arquivo não versionado.
+- `ci.yml` em todo PR (build, pytest, ruff, shellcheck, actionlint); `integracao.yml` manual com Oracle Free; `release.yml` só publica com o CI verde e gera a tabela de skills do `marketplace.yml`.
+- `requirements-dev.txt` e `pyproject.toml` (ruff) fixam as ferramentas.
+- oracle-devops-ptbr 4.1.0 → 4.1.1 (`export_db.py` com `DB_SCHEMA`; lint).
+- Versão da coleção **4.0.0** (`marketplace.yml`).
+- `dist/` com os pacotes `.skill` da 4.0.0 (instalação direta no Claude) e `build.py --check-dist` no CI para não deixar a pasta desatualizada.
 
 ---
 
