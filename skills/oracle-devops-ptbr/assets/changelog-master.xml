@@ -10,10 +10,10 @@
   Aplicar (CLI Liquibase):
     liquibase changelog-file=changelog-master.xml update
   ou, no SQLcl da Oracle:
-    lb update -changelog changelog-master.xml -context hml
+    lb update -changelog changelog-master.xml -context hom
 
-  Controle de ambiente por CONTEXT (dev | hml | prd). Ex.: um changeset com
-  context="prd" so roda quando o context prd e passado. Sem context, roda sempre.
+  Controle de ambiente por CONTEXT (dev | hom | prod). Ex.: um changeset com
+  context="prod" so roda quando o context prod e passado. Sem context, roda sempre.
 -->
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"

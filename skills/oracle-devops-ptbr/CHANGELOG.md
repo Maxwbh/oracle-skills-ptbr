@@ -1,5 +1,27 @@
 # Changelog — oracle-devops-ptbr
 
+## [4.1.1] - 2026-11-07
+- Fix — `export_db.py`: sem `--schema`, usava `DB_USER` mesmo com `DB_SCHEMA` definido; agora `DB_SCHEMA` tem precedência (mesma regra do `oracle_devops_utils`).
+- Fix — lint dos `export_*.py` (imports, f-strings, `check=False` explícito no `subprocess.run`) para o ruff do CI.
+
+## [4.1.0] - 2026-11-06
+- Feature — `codescan_gate.py`: gate de CI com SQLcl CodeScan (SQL, PL/SQL e APEXlang `.apx`, regras de .apx desde o SQLcl 26.3.0); falha se houver achado (o `codescan` sai com 0 mesmo com violações); exceções em `codescan.json`. Job `validate` do `github-deploy.yml` instala Java 21 + SQLcl e roda o gate. `suite_size` 30 → 31.
+- Docs — APEXlang no pipeline: promoção entre ambientes com a aplicação inteira; import por arquivo do APEX 26.2 é só SQLcl/VS Code e só dev.
+- Docs — roteamento para oracle-26ai-helper-ptbr; escopo APEX 24.2–26.2.
+
+## [4.0.0] - 2026-11-06
+- Breaking — scripts SQL (DDL, PL/SQL, migrations, install.sql do APEX) passam a ser executados pelo SQLcl (`sql -S /nolog`, `WHENEVER SQLERROR/OSERROR EXIT FAILURE ROLLBACK`, código de saída checado); SQLcl vira pré-requisito. `executar_arquivo_sql()` removido. Após cada script, `ALL_ERRORS` (owner = CURRENT_SCHEMA) é consultado e erro de compilação falha o deploy.
+- Fix — parser `split_oracle_sql` reescrito como tokenizador: `END;` preservado em PL/SQL, `/* */`/`--`/`;`/`/` dentro de literal (inclusive `q'[...]'`) intactos, comandos de cliente (SET, PROMPT, WHENEVER, @, @@) rejeitados explicitamente, comando sem terminador vira erro. Novos `analisar_sql()` e `validar_arquivo_sql()` (pré-validação, inclusive UTF-8).
+- Fix — `DB_SCHEMA` não era lido por `obter_config_db()`: o `ALTER SESSION SET CURRENT_SCHEMA` nunca rodava. Identificadores validados antes de ir para SQL dinâmico.
+- Breaking — `db_changelog` ganha `status` (EM_ANDAMENTO/APLICADA/ERRO), `mensagem_erro` e `statement_erro`; tabela antiga atualizada automaticamente (linhas antigas = APLICADA). Migration em ERRO/EM_ANDAMENTO bloqueia novas execuções; novas opções `--retomar <id>`, `--marcar-resolvida <id>` e `--validar` (offline). Reference com migrations pequenas, pré-validação, compensação e retomada segura.
+- Breaking — `confirmar_producao()`: em CI (`CI=true`) ou sem TTY nunca chama `input()`; exige `--confirmar-prod` ou `CONFIRMO_PROD=1` (sai com 2). Cancelamento interativo sai com 1.
+- Fix — `deploy_full.py`: import do APEX pelo SQLcl a partir de `apex/app_<ID>/f<ID>` (export split), com workspace/app id validados antes e definidos via `APEX_APPLICATION_INSTALL`; mensagem clara sem SQLcl. `export_apex.py`: o `install.sql` gerado não importava a aplicação (só chamava `set_environment.sql`).
+- Fix — `github-deploy.yml`: sem `upper()`; GitHub Environments dev/hom/prod com `DB_PASS` por ambiente e aprovação obrigatória em prod; sem segredos em outputs; validação offline real; `scripts/requirements-devops.txt` como caminho único. actionlint limpo.
+- Breaking — ambientes unificados em `dev`/`hom`/`prod` também no fluxo Liquibase (Environments, Variable Groups `oracle-dev/hom/prod`, contexts do changelog XML, `gmud_liquibase.py --env`). Changelogs existentes com `context="hml,prd"` precisam ser renomeados. `setup_devops.py` sugeria `apply_changelog.py --env hml`, que não existe.
+- Docs — estrutura do projeto não diz mais "triggers sempre compound" (regra 10 da oracle-plsql-ptbr).
+- Fix — extrator de erro do SQLcl reconhece também o formato `ERROR at line N:` (ex.: CREATE TRIGGER); o resumo usa a linha ORA-/PLS-.
+- Fix — `github-deploy-liquibase.yml` e `azure-pipelines-liquibase.yml`: instalação real do Liquibase (`setup-liquibase@v3` / em cada job do Azure), `validate` só com conexão (dentro dos deploys), credenciais por `LIQUIBASE_COMMAND_*`, sem `|| true`. `gmud_liquibase.py`: senha saía no log; nova ação `verificar` (offline); `aplicar --env prd` sem `input()` em CI.
+
 ## [3.6.2] - 2026-09-15
 - Docs — suíte com 10 skills; referência cruzada para o lab local como ambiente de teste do pipeline.
 

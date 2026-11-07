@@ -1,289 +1,254 @@
 # .github/workflows/deploy.yml
-# CI/CD — Deploy Oracle/APEX/ORDS
+# CI/CD — Deploy Oracle/APEX/ORDS com GitHub Environments
 # M&S do Brasil LTDA — contato@msbrasil.inf.br
 #
-# Triggers:
-#   push para develop → deploy em DEV (automático)
-#   push para hom     → deploy em HOM (automático)
-#   push para main    → deploy em PROD (requer aprovação manual)
+# Gatilhos:
+#   push em develop → dev   (automático)
+#   push em hom     → hom   (automático)
+#   push em main    → prod  (aguarda aprovação no Environment 'prod')
+#   workflow_dispatch       (escolha manual do ambiente)
 #
-# Secrets necessários no GitHub (Settings → Secrets → Actions):
-#   DB_HOST_DEV, DB_HOST_HOM, DB_HOST_PROD
-#   DB_PORT, DB_SERVICE_DEV, DB_SERVICE_HOM, DB_SERVICE_PROD
-#   DB_USER, DB_PASS_DEV, DB_PASS_HOM, DB_PASS_PROD
-#   APEX_WORKSPACE, APEX_APP_ID
+# CONFIGURAÇÃO (Settings → Environments): crie dev, hom e prod.
+#   Em prod: "Required reviewers" (aprovação obrigatória) e, se possível,
+#   "Deployment branches" = main. Cada Environment tem os SEUS valores:
+#
+#   Secret (Environment secrets):
+#     DB_PASS           senha do usuário de deploy — uma por ambiente
+#   Variables (Environment variables):
+#     DB_HOST, DB_PORT (padrão 1521), DB_SERVICE, DB_USER
+#     DB_SCHEMA         schema alvo, se diferente de DB_USER (opcional)
+#     APEX_WORKSPACE, APEX_APP_ID, APEX_SCHEMA (opcional; sem APEX_APP_ID o APEX é pulado)
+#     ORDS_HEALTHCHECK_URL  URL pública que deve responder 2xx após o deploy (opcional)
+#     ORDS_URL          base dos testes Newman (opcional)
+#   Se a política da empresa tratar host/serviço/usuário como sigilosos,
+#   mova-os para Environment secrets e troque 'vars.' por 'secrets.' abaixo.
+#
+# Aprovação: o job 'deploy' referencia o Environment; em prod ele só começa
+# depois da aprovação, e por isso o script recebe --confirmar-prod (o
+# script nunca pede confirmação interativa em CI).
+#
+# Dependências do projeto: scripts/ (assets da skill oracle-devops-ptbr) e
+# scripts/requirements-devops.txt.
 # ─────────────────────────────────────────────────────────────────────────────
 
 name: Deploy Oracle/APEX/ORDS
 
 on:
   push:
-    branches:
-      - develop
-      - hom
-      - main
+    branches: [develop, hom, main]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Ambiente de deploy'
+        description: "Ambiente de deploy"
         required: true
-        default: 'dev'
+        default: dev
         type: choice
         options: [dev, hom, prod]
 
-# Impede deploys paralelos no mesmo ambiente
+permissions:
+  contents: read
+
+# Um deploy por ambiente de cada vez; nunca cancela um deploy em andamento.
 concurrency:
-  group: deploy-${{ github.ref_name }}
+  group: deploy-${{ inputs.environment || github.ref_name }}
   cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.12"
+  # Fixe uma versão do SQLcl para builds reproduzíveis (ex.: sqlcl-<versão>.zip).
+  SQLCL_URL: https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
 
 jobs:
 
-  # ─── Resolução de ambiente ─────────────────────────────────────────────────
+  # ─── Resolução do ambiente (sem segredos nos outputs) ─────────────────────
 
-  setup:
-    name: Configurar ambiente
+  resolve:
+    name: Resolver ambiente
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.env.outputs.environment }}
-      db_host: ${{ steps.env.outputs.db_host }}
-      db_service: ${{ steps.env.outputs.db_service }}
     steps:
-      - name: Resolver ambiente pelo branch
+      - name: Ambiente pelo input ou pelo branch
         id: env
+        env:
+          INPUT_ENV: ${{ inputs.environment }}
+          BRANCH: ${{ github.ref_name }}
         run: |
-          BRANCH="${{ github.ref_name }}"
-          if [[ "$BRANCH" == "main" ]]; then
-            echo "environment=prod"   >> $GITHUB_OUTPUT
-            echo "db_host=${{ secrets.DB_HOST_PROD }}"    >> $GITHUB_OUTPUT
-            echo "db_service=${{ secrets.DB_SERVICE_PROD }}" >> $GITHUB_OUTPUT
-          elif [[ "$BRANCH" == "hom" ]]; then
-            echo "environment=hom"   >> $GITHUB_OUTPUT
-            echo "db_host=${{ secrets.DB_HOST_HOM }}"     >> $GITHUB_OUTPUT
-            echo "db_service=${{ secrets.DB_SERVICE_HOM }}"  >> $GITHUB_OUTPUT
+          if [[ -n "$INPUT_ENV" ]]; then
+            ambiente="$INPUT_ENV"
           else
-            echo "environment=dev"   >> $GITHUB_OUTPUT
-            echo "db_host=${{ secrets.DB_HOST_DEV }}"     >> $GITHUB_OUTPUT
-            echo "db_service=${{ secrets.DB_SERVICE_DEV }}"  >> $GITHUB_OUTPUT
+            case "$BRANCH" in
+              main)    ambiente=prod ;;
+              hom)     ambiente=hom ;;
+              develop) ambiente=dev ;;
+              *) echo "Branch '$BRANCH' não mapeado para ambiente"; exit 1 ;;
+            esac
           fi
+          echo "environment=${ambiente}" >> "$GITHUB_OUTPUT"
+          echo "Ambiente: ${ambiente}"
 
-  # ─── Validação de SQL ─────────────────────────────────────────────────────
+  # ─── Validação offline (não toca no banco) ────────────────────────────────
 
   validate:
     name: Validar SQL
     runs-on: ubuntu-latest
-    needs: setup
+    needs: resolve
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Verificar encoding UTF-8
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Instalar dependências Python
+        run: pip install -r scripts/requirements-devops.txt
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Instalar SQLcl
         run: |
-          echo "Verificando encoding dos arquivos SQL..."
-          find db/ ords/ -name "*.sql" -o -name "*.pks" -o -name "*.pkb" | \
-          while read -r f; do
-            if ! file "$f" | grep -qE "(UTF-8|ASCII)"; then
-              echo "AVISO: encoding suspeito em $f — $(file "$f")"
-            fi
+          curl -fsSL -o "$RUNNER_TEMP/sqlcl.zip" "$SQLCL_URL"
+          unzip -q "$RUNNER_TEMP/sqlcl.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/sqlcl/bin" >> "$GITHUB_PATH"
+
+      # SQLcl 26.3.0+: regras para SQL/PL/SQL e APEXlang (.apx). Exceções
+      # aceitas ficam em codescan.json (lista "ignore", com "reason").
+      - name: CodeScan (SQL, PL/SQL e APEXlang)
+        run: |
+          settings=()
+          if [[ -f codescan.json ]]; then settings=(--settings codescan.json); fi
+          python scripts/codescan_gate.py db apex ords "${settings[@]}" \
+            --relatorio codescan-relatorio.md
+
+      - name: Publicar relatório do CodeScan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codescan-relatorio
+          path: codescan-relatorio.md
+          if-no-files-found: ignore
+
+      - name: Nomenclatura GMUD (db/scripts/NNN_nome.sql)
+        run: |
+          shopt -s nullglob
+          invalidos=()
+          for f in db/scripts/*.sql; do
+            [[ "$(basename "$f")" =~ ^[0-9]{3}_[A-Za-z0-9_]+\.sql$ ]] || invalidos+=("$f")
           done
-          echo "✓ Verificação de encoding concluída"
-
-      - name: Verificar padrão GMUD (scripts pontuais)
-        run: |
-          echo "Verificando nomenclatura de scripts em db/scripts/..."
-          if ls db/scripts/*.sql 2>/dev/null | grep -qvP '^\d{3}_\w+\.sql$'; then
-            echo "ERRO: Scripts em db/scripts/ devem seguir o padrão NNN_nome.sql"
-            ls db/scripts/*.sql | grep -vP '^\d{3}_\w+\.sql$'
+          if (( ${#invalidos[@]} )); then
+            printf 'ERRO: fora do padrão NNN_nome.sql: %s\n' "${invalidos[@]}"
             exit 1
           fi
           echo "✓ Nomenclatura GMUD validada"
 
-  # ─── Aprovação para produção ───────────────────────────────────────────────
-
-  approve-prod:
-    name: Aprovação produção
-    runs-on: ubuntu-latest
-    needs: [setup, validate]
-    if: needs.setup.outputs.environment == 'prod'
-    environment:
-      name: producao  # Configurar em Settings → Environments → Required reviewers
-    steps:
-      - name: Aprovação concedida
-        run: echo "Deploy em produção aprovado por ${{ github.actor }}"
-
-  # ─── Deploy do banco ───────────────────────────────────────────────────────
-
-  deploy-db:
-    name: Deploy banco (${{ needs.setup.outputs.environment }})
-    runs-on: ubuntu-latest
-    needs: [setup, validate, approve-prod]
-    if: always() && needs.validate.result == 'success' && (needs.approve-prod.result == 'success' || needs.approve-prod.result == 'skipped')
-    environment:
-      name: ${{ needs.setup.outputs.environment }}
-    env:
-      DB_HOST: ${{ needs.setup.outputs.db_host }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_SERVICE: ${{ needs.setup.outputs.db_service }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASS: ${{ secrets[format('DB_PASS_{0}', upper(needs.setup.outputs.environment))] }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Instalar SQLcl
+      - name: Changelog e arquivos SQL (UTF-8, literais, terminadores)
         run: |
-          wget -q https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
-          unzip -q sqlcl-latest.zip -d /opt/sqlcl
-          echo "/opt/sqlcl/sqlcl/bin" >> $GITHUB_PATH
-
-      - name: Instalar dependências Python
-        run: pip install -r requirements-devops.txt
-
-      - name: Aplicar changelog do banco
-        run: |
-          python scripts/apply_changelog.py \
-            --env ${{ needs.setup.outputs.environment }} \
-            --project-root ${{ github.workspace }}
-
-  # ─── Deploy APEX ──────────────────────────────────────────────────────────
-
-  deploy-apex:
-    name: Deploy APEX (${{ needs.setup.outputs.environment }})
-    runs-on: ubuntu-latest
-    needs: [setup, deploy-db]
-    env:
-      DB_HOST: ${{ needs.setup.outputs.db_host }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_SERVICE: ${{ needs.setup.outputs.db_service }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASS: ${{ secrets[format('DB_PASS_{0}', upper(needs.setup.outputs.environment))] }}
-      APEX_WORKSPACE: ${{ secrets.APEX_WORKSPACE }}
-      APEX_APP_ID: ${{ secrets.APEX_APP_ID }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Instalar SQLcl
-        run: |
-          wget -q https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
-          unzip -q sqlcl-latest.zip -d /opt/sqlcl
-          echo "/opt/sqlcl/sqlcl/bin" >> $GITHUB_PATH
-
-      - name: Instalar dependências Python
-        run: pip install -r requirements-devops.txt
-
-      - name: Import APEX
-        run: |
-          INSTALL="apex/app_${APEX_APP_ID}/install.sql"
-          if [[ -f "$INSTALL" ]]; then
-            sql /nolog << EOF
-          WHENEVER SQLERROR EXIT SQL.SQLCODE
-          connect ${DB_USER}/${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_SERVICE}
-          @${INSTALL}
-          exit
-          EOF
-          else
-            echo "install.sql não encontrado, pulando APEX"
+          if [[ -f db/changelog.yml ]]; then
+            python scripts/apply_changelog.py --validar --project-root "$GITHUB_WORKSPACE"
+          fi
+          python scripts/deploy_db.py --dry-run --project-root "$GITHUB_WORKSPACE"
+          if [[ -d ords ]]; then
+            python scripts/deploy_ords.py --dry-run --project-root "$GITHUB_WORKSPACE"
           fi
 
-  # ─── Deploy ORDS ──────────────────────────────────────────────────────────
+  # ─── Deploy: banco → APEX → ORDS (um job, uma aprovação) ──────────────────
 
-  deploy-ords:
-    name: Deploy ORDS (${{ needs.setup.outputs.environment }})
+  deploy:
+    name: Deploy (${{ needs.resolve.outputs.environment }})
     runs-on: ubuntu-latest
-    needs: [setup, deploy-apex]
+    needs: [resolve, validate]
+    environment:
+      name: ${{ needs.resolve.outputs.environment }}
     env:
-      DB_HOST: ${{ needs.setup.outputs.db_host }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_SERVICE: ${{ needs.setup.outputs.db_service }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASS: ${{ secrets[format('DB_PASS_{0}', upper(needs.setup.outputs.environment))] }}
-
+      ENVIRONMENT: ${{ needs.resolve.outputs.environment }}
+      DB_HOST: ${{ vars.DB_HOST }}
+      DB_PORT: ${{ vars.DB_PORT || '1521' }}
+      DB_SERVICE: ${{ vars.DB_SERVICE }}
+      DB_USER: ${{ vars.DB_USER }}
+      DB_SCHEMA: ${{ vars.DB_SCHEMA }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      APEX_WORKSPACE: ${{ vars.APEX_WORKSPACE }}
+      APEX_APP_ID: ${{ vars.APEX_APP_ID }}
+      APEX_SCHEMA: ${{ vars.APEX_SCHEMA }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
 
       - name: Instalar SQLcl
         run: |
-          wget -q https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
-          unzip -q sqlcl-latest.zip -d /opt/sqlcl
-          echo "/opt/sqlcl/sqlcl/bin" >> $GITHUB_PATH
+          curl -fsSL -o "$RUNNER_TEMP/sqlcl.zip" "$SQLCL_URL"
+          unzip -q "$RUNNER_TEMP/sqlcl.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/sqlcl/bin" >> "$GITHUB_PATH"
 
       - name: Instalar dependências Python
         run: pip install -r scripts/requirements-devops.txt
 
-      - name: Deploy módulos ORDS
+      - name: Deploy completo (changelog → APEX → ORDS)
         run: |
-          python scripts/deploy_ords.py \
-            --env ${{ needs.setup.outputs.environment }} \
-            --project-root ${{ github.workspace }}
+          args=(--env "$ENVIRONMENT" --project-root "$GITHUB_WORKSPACE")
+          # Em prod este job só roda depois da aprovação do Environment.
+          if [[ "$ENVIRONMENT" == "prod" ]]; then args+=(--confirmar-prod); fi
+          if [[ -z "$APEX_APP_ID" || ! -d "apex/app_${APEX_APP_ID}" ]]; then args+=(--skip-apex); fi
+          if [[ ! -d ords ]]; then args+=(--skip-ords); fi
+          python scripts/deploy_full.py "${args[@]}"
 
-  # ─── Testes pós-deploy ────────────────────────────────────────────────────
+      - name: Estado do changelog
+        if: always()
+        run: python scripts/apply_changelog.py --status --env "$ENVIRONMENT" --project-root "$GITHUB_WORKSPACE"
 
-  smoke-test:
-    name: Smoke tests (${{ needs.setup.outputs.environment }})
-    runs-on: ubuntu-latest
-    needs: [setup, deploy-ords]
-    # Verifica estado do changelog após deploy
-    env:
-      ORDS_URL: ${{ secrets.ORDS_URL }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Instalar dependências Python
-        run: pip install -r scripts/requirements-devops.txt
-
-      - name: Verificar changelog aplicado
+      - name: Smoke test (healthcheck)
+        env:
+          HEALTHCHECK_URL: ${{ vars.ORDS_HEALTHCHECK_URL }}
         run: |
-          python scripts/apply_changelog.py \
-            --env ${{ needs.setup.outputs.environment }} \
-            --status \
-            --project-root ${{ github.workspace }}
-
-      - name: Smoke test ORDS (healthcheck)
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${ORDS_URL}/_/db-api/stable/database/status")
-          if [[ "$STATUS" != "200" ]]; then
-            echo "ERRO: ORDS não responde corretamente — HTTP ${STATUS}"
-            exit 1
+          if [[ -z "$HEALTHCHECK_URL" ]]; then
+            echo "ORDS_HEALTHCHECK_URL não definida — pulando"
+            exit 0
           fi
-          echo "✓ ORDS respondendo (HTTP 200)"
+          curl -fsS -o /dev/null --retry 3 --retry-delay 5 "$HEALTHCHECK_URL"
+          echo "✓ Healthcheck respondeu 2xx"
 
-      - name: Testes Newman (se existirem)
+      - name: Testes de API (Newman, se existirem)
+        env:
+          ORDS_URL: ${{ vars.ORDS_URL }}
         run: |
-          if [[ -f "tests/api/collection.json" ]]; then
-            npm install -g newman
-            newman run tests/api/collection.json \
-              --env-var "baseUrl=${ORDS_URL}" \
-              --reporters cli,junit \
-              --reporter-junit-export tests/api/reports/newman-report.xml
-          else
-            echo "Sem collection Newman, pulando testes de API"
+          if [[ ! -f tests/api/collection.json ]]; then
+            echo "Sem collection Newman — pulando"
+            exit 0
           fi
+          npm install -g newman
+          newman run tests/api/collection.json \
+            --env-var "baseUrl=${ORDS_URL}" \
+            --reporters cli,junit \
+            --reporter-junit-export tests/api/reports/newman-report.xml
 
   # ─── Tag de versão (somente prod) ─────────────────────────────────────────
 
   tag-release:
     name: Tag de release
     runs-on: ubuntu-latest
-    needs: [setup, smoke-test]
-    if: needs.setup.outputs.environment == 'prod'
+    needs: [resolve, deploy]
+    if: needs.resolve.outputs.environment == 'prod'
     permissions:
       contents: write
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Criar tag de versão
         run: |
-          VERSION="v$(date '+%Y.%m.%d')-$(git rev-parse --short HEAD)"
+          versao="v$(date '+%Y.%m.%d')-$(git rev-parse --short HEAD)"
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git tag -a "${VERSION}" -m "Release automática — deploy prod $(date '+%Y-%m-%d %H:%M')"
-          git push origin "${VERSION}"
-          echo "✓ Tag criada: ${VERSION}"
+          git tag -a "$versao" -m "Release automática — deploy prod $(date '+%Y-%m-%d %H:%M')"
+          git push origin "$versao"
+          echo "✓ Tag criada: $versao"

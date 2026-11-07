@@ -2,8 +2,8 @@
 name: oracle-core-ptbr
 description: "Assistente central da suíte Oracle PT-BR (M&S do Brasil): roteamento entre os 9 módulos técnicos, convenções transversais (naming PT-BR + Trivadis 4.4, SQL antes de PL/SQL, APEX não comita, GMUD e promoção entre ambientes) e cenários multidisciplinares. ATIVE em dúvidas sobre qual skill Oracle usar, visão geral da suíte Oracle, convenções gerais de projeto Oracle, começar projeto Oracle/APEX do zero, 'como vocês organizam o código Oracle', 'qual o padrão do projeto'. Use com oracle-plsql-ptbr, oracle-trivadis-ptbr, oracle-apex-ptbr, oracle-ords-ptbr, oracle-dba-ptbr, oracle-tuning-ptbr, oracle-devops-ptbr , oracle-26ai-ptbr (só quando a versão-alvo for 23ai/26ai) e oracle-lab-ptbr (instalar/montar ambiente local) para cobertura técnica completa. NÃO ATIVE quando a demanda já é claramente de um módulo específico (código PL/SQL, página APEX, endpoint ORDS, sessão travada, query lenta, pipeline) — nesse caso ative o módulo direto."
 metadata:
-  version: "1.4.0"
-  release_date: "2026-09-15"
+  version: "1.5.0"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
   author: "Maxwell da Silva Oliveira"
@@ -14,8 +14,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Core (oracle-core-ptbr)
 
-> **Versão:** 1.3.1 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (1 recurso nesta skill — roteamento puro + CHANGELOG.md)
-> **v1.3.1:** convenção de padrão de código registra que Trivadis 4.4 é a versão final (projeto arquivado em fev/2026) e aponta o dbLinter como catálogo vivo. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.5.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
+> **v1.5.0:** quadro de versões suportadas (19c com Premier até 31/12/2029 e Extended até 31/12/2032; APEX 24.2–26.2; ORDS/SQLcl 26.3.1) e roteamento para oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
 
 Skill central da suíte Oracle PT-BR. Não contém templates próprios: define **como a suíte funciona como conjunto**, roteia demandas para o módulo certo e concentra as convenções que valem para todos.
 
@@ -23,7 +23,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — esta skill: roteamento, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 26.1: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
@@ -31,12 +31,29 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+
 ## Contexto da suíte
 
-- **Stack alvo:** Oracle Database **19c** (padrão) · APEX 24.2/26.1 · ORDS · SQLcl. 23ai/26ai só com versão declarada — ver `oracle-26ai-ptbr`; na dúvida, 19c
+- **Stack alvo:** Oracle Database **19c** (padrão) · APEX **24.2 (baseline) a 26.2** · ORDS · SQLcl. 23ai/26ai só com versão declarada — ver `oracle-26ai-ptbr`; na dúvida, 19c
+
+### Versões suportadas (06/11/2026)
+
+| Item | Situação em 06/11/2026 | Fonte |
+|---|---|---|
+| **Oracle Database 19c** | Long Term Support Release · **Premier até 31/12/2029 · Extended até 31/12/2032** · RU mais recente com página de novidades: **19.33** · upgrade **direto 19c → 26ai** (detalhe em `oracle-26ai-ptbr`) | [Lifetime Support Policy](https://www.oracle.com/us/assets/lifetime-support-technology-069183.pdf) (02/10/2026), [26ai Upgrade Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/upgrd/oracle-database-releases-that-support-direct-upgrade.html), [RU 19.33](https://docs.oracle.com/en/database/oracle/oracle-database/19/newft/ru-19-33.html) |
+| Oracle AI Database 26ai | Long Term Support Release · Premier até dez/2031 | Lifetime Support Policy |
+| **APEX 26.2** | **atual** — GA 06/10/2026 · exige **ORDS 26.3.0+**, **SQLcl 26.3.0+**, banco **19c RU 19.18+** ou **26ai 23.26.0+** · upgrade direto a partir do 18.1 · patch 26.2.1 | [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html), [downloads](https://www.oracle.com/tools/downloads/apex-downloads) |
+| APEX 26.1 | GA 14/05/2026 · ORDS 26.1.1+ · patch 26.1.6 | [downloads 26.1](https://www.oracle.com/tools/downloads/apex-261-downloads) |
+| **APEX 24.2** | **baseline suportada da suíte** · patch set mais recente **24.2.22** (04/11/2026) · ⚠ 24.2.0–24.2.20 na faixa da **CVE-2026-101521** (CVSS 9.8) | [downloads 24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) |
+| ORDS | **26.3.1** (04/11/2026) é a mais recente · 26.4 planejada ("Winter 2026", Tomcat 10/WebLogic 15) | [ORDS changelog](https://www.oracle.com/tools/ords/ords-changelog.html) |
+| SQLcl | **26.3.1** (03/11/2026) · CodeScan com regras para APEXlang desde 26.3.0 | [SQLcl changelog](https://www.oracle.com/tools/sqlcl/sqlcl-changelog.html) |
+
+**A verificar:** datas de fim de suporte do APEX (24.2, 26.1, 26.2); data de lançamento do RU 19.33; primeira versão corrigida da CVE-2026-101521.
+
 - **Idioma:** identificadores de domínio e comentários em **PT-BR**; keywords SQL/PL/SQL, pacotes Oracle nativos, funções built-in, hints e prefixos Trivadis em **inglês**
 - **Padrão de código:** Trivadis PL/SQL & SQL Guidelines **4.4** (versão final — o projeto foi arquivado em fev/2026; catálogo vivo é o dbLinter, ver `oracle-trivadis-ptbr`)
-- **Deploy:** Git → pipeline (Azure DevOps/GitHub Actions) → ambientes dev → hml → main; Git **nunca** conecta direto em produção
+- **Deploy:** Git → pipeline (Azure DevOps/GitHub Actions) → ambientes dev → hom → prod (branches develop → hom → main); Git **nunca** conecta direto em produção
 
 ## Roteamento — sintoma → módulo
 
@@ -49,7 +66,8 @@ Suíte completa (10 skills — conjunto único):
 | "sessão travada", "quem tá bloqueando", "matar sessão", "recuperar dado deletado", "objetos inválidos", "tablespace cheio", "tenho licença de Diagnostics Pack?", "agendar gather stats" | **oracle-dba-ptbr** |
 | "query lenta", "qual índice criar", "explain plan", "hard parse", "stats desatualizadas", "result cache", "analisar AWR/ASH desse SQL" | **oracle-tuning-ptbr** |
 | "estruturar projeto no Git", "pipeline", "changelog Liquibase", "export APEX pra Git", "nomenclatura GMUD", "enviar pra homologação" | **oracle-devops-ptbr** |
-| "estou no 26ai", "isso existe no 26ai?", "migrar do 19c pro 26", "dá pra usar no 19c?", "IF NOT EXISTS", "BOOLEAN nativo", "QUALIFY", "duality view" | **oracle-26ai-ptbr** |
+| "estou no 26ai", "isso existe no 26ai?", "migrar do 19c pro 26", "dá pra usar no 19c?", "IF NOT EXISTS", "BOOLEAN nativo", "QUALIFY" | **oracle-26ai-ptbr** |
+| "busca vetorial", "VECTOR", "RAG no banco", "duality view", "RAFT", "Globally Distributed Database" | **oracle-26ai-helper-ptbr** (skill irmã, fora da suíte) |
 | "como instalo o Oracle aqui", "vagrant up", "VirtualBox", "preciso de um banco pra testar", "não conecto no meu banco local", "acessar do notebook da sala" | **oracle-lab-ptbr** |
 
 ## Cenários multidisciplinares — ordem de carregamento
@@ -79,7 +97,7 @@ Valem em **todos** os módulos; cada um detalha as suas.
 5. **Auditabilidade.** `criado_em/criado_por/atualizado_em/atualizado_por` + soft delete (`ativo`, `excluido_em`).
 6. **Privilégio mínimo.** Owner faz DDL, app user faz DML; nunca DBA para usuário de aplicação.
 7. **Operações de risco pedem confirmação.** KILL SESSION, REBUILD sem ONLINE, GATHER_STATS em pico, TRUNCATE — sempre alertar antes. Tabela completa: `oracle-dba-ptbr`.
-8. **Deploy versionado.** Todo objeto passa por Git + pipeline com GMUD nomeada (`001_projeto_ddl_objeto.sql`); promoção dev→hml→main com aprovação. Detalhes: `oracle-devops-ptbr`.
+8. **Deploy versionado.** Todo objeto passa por Git + pipeline com GMUD nomeada (`001_projeto_ddl_objeto.sql`); promoção dev → hom → prod com aprovação. Detalhes: `oracle-devops-ptbr`.
 9. **19c por padrão.** Sintaxe 23ai/26ai só com versão-alvo declarada, marcada `-- 26ai` no código; módulos 19c apenas citam a alternativa. Detalhes: `oracle-26ai-ptbr`.
 
 ## Manutenção da suíte

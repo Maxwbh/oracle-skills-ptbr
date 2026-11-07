@@ -28,8 +28,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from oracle_devops_utils import (
-    GREEN, YELLOW, RED, CYAN, BOLD, RESET, DIM, SEP2,
-    banner, carregar_dotenv, log,
+    CYAN,
+    DIM,
+    GREEN,
+    RED,
+    RESET,
+    SEP2,
+    banner,
+    carregar_dotenv,
+    log,
 )
 
 
@@ -72,38 +79,43 @@ def montar_script_sqlcl(
 
 
 def gerar_install_sql(apex_dir: Path, app_id: int, workspace: str) -> None:
-    """Gera o install.sql se não existir."""
+    """
+    Gera apex/app_<ID>/install.sql — entry point para import MANUAL pelo SQLcl.
+
+    O deploy_full.py não usa este arquivo: ele roda f<ID>/install.sql (gerado
+    pelo próprio 'apex export -split') a partir da pasta f<ID>, com workspace
+    e app id do destino definidos via APEX_APPLICATION_INSTALL.
+    """
     install = apex_dir / "install.sql"
     if install.exists():
         log.info(f"  {DIM}install.sql já existe — mantendo{RESET}")
         return
 
     conteudo = textwrap.dedent(f"""\
-        -- install.sql — Entry point de import do APEX App {app_id}
+        -- install.sql — import manual do APEX App {app_id}
         -- Gerado por export_apex.py — M&S do Brasil LTDA
+        --
+        -- Rode A PARTIR DA PASTA f{app_id} (o install.sql do export usa caminhos
+        -- relativos a ela):
+        --   cd apex/app_{app_id}/f{app_id}
+        --   sql usuario@//host:1521/servico @../install.sql
+        -- No CI/CD use: python scripts/deploy_full.py --env <amb>
         -- {'─' * 60}
 
-        DEFINE APP_ID      = {app_id}
-        DEFINE WORKSPACE   = {workspace}
+        SET DEFINE OFF
+        WHENEVER SQLERROR EXIT FAILURE ROLLBACK
+        WHENEVER OSERROR EXIT FAILURE ROLLBACK
 
-        DECLARE
-          l_wid NUMBER;
         BEGIN
-          SELECT workspace_id INTO l_wid
-            FROM apex_workspaces
-           WHERE workspace = '&WORKSPACE.';
-          APEX_UTIL.set_workspace(p_workspace => '&WORKSPACE.');
-          DBMS_OUTPUT.put_line('Workspace: ' || '&WORKSPACE.');
-        EXCEPTION
-          WHEN NO_DATA_FOUND THEN
-            RAISE_APPLICATION_ERROR(-20001, 'Workspace não encontrado: &WORKSPACE.');
+          apex_application_install.set_workspace(p_workspace => '{workspace.upper()}');
+          apex_application_install.set_application_id(p_application_id => {app_id});
         END;
         /
 
-        @f{app_id}/application/set_environment.sql
+        @install.sql
 
         PROMPT
-        PROMPT APEX App {app_id} importado com sucesso.
+        PROMPT APEX App {app_id} importado no workspace {workspace.upper()}.
         PROMPT
     """)
     install.write_text(conteudo, encoding="utf-8")
@@ -176,6 +188,7 @@ def main() -> None:
         capture_output=True,
         text=True,
         timeout=300,
+        check=False,
     )
 
     if resultado.returncode != 0:
