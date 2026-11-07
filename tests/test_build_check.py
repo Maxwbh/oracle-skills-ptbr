@@ -15,6 +15,7 @@ def build(tmp_path, monkeypatch):
     spec.loader.exec_module(mod)
     monkeypatch.setattr(mod, "SKILLS", tmp_path / "skills")
     monkeypatch.setattr(mod, "SHARED", tmp_path / "shared")
+    monkeypatch.setattr(mod, "ROOT", tmp_path)       # isola de um .clientes-proibidos.txt local
     monkeypatch.delenv("CLIENTES_PROIBIDOS", raising=False)
     return mod
 
@@ -85,9 +86,23 @@ def test_suite_size_conta_shared_propagado_e_ignora_manifest_e_cache(build, tmp_
     assert build.verificar(d) == []
 
 
-def test_cliente_real_em_qualquer_arquivo_de_texto(build, tmp_path):
-    d = _skill(tmp_path, arquivos={"assets/a.sql": "-- ambiente do IMESC\nSELECT 1 FROM dual;\n"})
+def test_cliente_real_em_qualquer_arquivo_de_texto(build, tmp_path, monkeypatch):
+    # Nomes fictícios: a lista real só existe no secret/arquivo local.
+    monkeypatch.setenv("CLIENTES_PROIBIDOS", "Cliente Fictício")
+    d = _skill(tmp_path, arquivos={"assets/a.sql": "-- ambiente do CLIENTE FICTICIO\nSELECT 1 FROM dual;\n"})
     assert any("cliente real" in p for p in build.verificar(d))
+
+
+def test_sem_lista_configurada_a_trava_fica_inativa(build, tmp_path, monkeypatch):
+    d = _skill(tmp_path, arquivos={"assets/a.sql": "-- ambiente do Cliente Fictício\n"})
+    assert build.verificar(d) == []
+    assert build.clientes_proibidos() == []
+
+
+def test_lista_por_arquivo_local(build, tmp_path):
+    (tmp_path / ".clientes-proibidos.txt").write_text("# comentário\nOutro Cliente\n")
+    d = _skill(tmp_path, arquivos={"references/r.md": "Projeto do outro cliente.\n"})
+    assert any("Outro Cliente" in p for p in build.verificar(d))
 
 
 def test_cliente_extra_por_variavel_de_ambiente(build, tmp_path, monkeypatch):
