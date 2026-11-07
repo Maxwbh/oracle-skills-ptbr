@@ -4,7 +4,7 @@
 
 10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 26.2 (versão padrão; compatível com 24.2+) + ORDS 26.3+.
 
-**Versão da coleção: 4.2.0** — histórico em [CHANGELOG.md](./CHANGELOG.md) · pacotes em [Releases](https://github.com/maxwbh/oracle-skills-ptbr/releases/latest) e em [`dist/`](./dist/)
+**Versão da coleção: 4.2.1** — histórico em [CHANGELOG.md](./CHANGELOG.md) · pacotes em [Releases](https://github.com/maxwbh/oracle-skills-ptbr/releases/latest) e em [`dist/`](./dist/)
 
 ---
 
@@ -20,14 +20,14 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 
 | Skill | Versão | Escopo | Recursos |
 |---|---|---|---|
-| `oracle-core-ptbr` | 1.6.0 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
+| `oracle-core-ptbr` | 1.6.1 | Assistente central — roteamento, precedência entre skills e convenções transversais | 2 |
 | `oracle-plsql-ptbr` | 3.0.3 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
-| `oracle-apex-ptbr` | 2.7.0 | APEX 26.2 (padrão; compatível com 24.2+) development + Data Dictionary completo | 21 |
+| `oracle-apex-ptbr` | 2.7.0 | APEX development + Data Dictionary completo; gera para 26.2 quando a versão não é informada (compatível com 24.2+) | 21 |
 | `oracle-ords-ptbr` | 2.5.2 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
 | `oracle-dba-ptbr` | 2.4.2 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
-| `oracle-tuning-ptbr` | 2.7.2 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
+| `oracle-tuning-ptbr` | 2.8.0 | Performance tuning: explain plan, índices, estatísticas; AWR/ASH só com Diagnostics Pack; recursos de EE sinalizados | 7 |
 | `oracle-trivadis-ptbr` | 2.4.3 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
-| `oracle-devops-ptbr` | 4.1.3 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 31 |
+| `oracle-devops-ptbr` | 4.1.3 | Git, CI/CD, changelog Oracle, Liquibase, deploy pelo SQLcl (obrigatório) + Python/oracledb | 31 |
 | `oracle-lab-ptbr` | 1.2.1 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
 | `oracle-26ai-ptbr` | 1.1.2 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
 
@@ -40,6 +40,11 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 1. Baixe os arquivos `.skill` da pasta [`dist/`](./dist/) ou da [última release](https://github.com/maxwbh/oracle-skills-ptbr/releases/latest) (com `checksums.sha256`)
 2. No Claude.ai → **Settings** → **Skills** → arraste ou clique em **Upload**
 3. Repita para cada skill desejada
+
+### Atualizando da 4.2.0
+
+- **oracle-tuning-ptbr 2.8.0:** recomendações de Enterprise Edition (Diagnostics/Tuning Pack, parallel, online index rebuild, Result Cache, bitmap) passam a ser sinalizadas; em SE2 a skill pergunta a edição antes.
+- **oracle-core-ptbr 1.6.1:** ordem de precedência entre skills documentada.
 
 ### Atualizando da 4.1
 
@@ -75,7 +80,7 @@ dist/oracle-26ai-ptbr.skill
 ## Quando cada skill é ativada
 
 ### oracle-core-ptbr
-Qual skill Oracle usar · visão geral da suíte · convenções gerais de projeto · começar projeto Oracle/APEX do zero
+Qual skill Oracle usar · visão geral da suíte · convenções gerais de projeto · começar projeto Oracle/APEX do zero · precedência quando duas skills se aplicam (instrução declarada > padrão da suíte; licença e segurança primeiro; regra mais restritiva vence)
 
 ```
 "Qual skill Oracle eu uso pra isso?"
@@ -92,6 +97,8 @@ Qual skill Oracle usar · visão geral da suíte · convenções gerais de proje
 ```
 
 ### oracle-apex-ptbr
+> Gera código para **APEX 26.2 quando você não informa a versão** — isso não descreve o seu ambiente. Diga "estou no 24.2" para receber código daquela versão.
+
 APEX · Dynamic Action · Interactive Report · Interactive Grid · Page Process · AJAX Callback · `APEX_APPLICATION_*` · `APEX_WORKSPACE_*` · Workflows · AI configs · JSON Sources
 
 ```
@@ -120,7 +127,7 @@ ORDS · `define_module` · `define_handler` · AutoREST · OAuth · `ORDS_SECURI
 ```
 
 ### oracle-tuning-ptbr
-explain plan · `V$SQL` · `V$SQLAREA` · AWR em tempo real · ASH · index · hard parse · `DBMS_STATS` · cardinality · hints
+explain plan · `DBMS_XPLAN` · `V$SQL` / `V$SESSION` (estado atual) · AWR (histórico, `DBA_HIST_*`) e ASH — ambos exigem Diagnostics Pack · index · hard parse · `DBMS_STATS` · cardinality · hints · recursos de EE sinalizados
 
 ```
 "Essa query está fazendo full scan, como otimizar?"

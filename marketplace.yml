@@ -12,7 +12,7 @@ collection:
     Performance Tuning, Trivadis Guidelines 4.4, DevOps com Python + oracledb,
     ambiente local (lab) e novidades 23ai/26ai.
     Desenvolvido para equipes brasileiras que trabalham com Oracle Database.
-  version: "4.2.0"
+  version: "4.2.1"
   language: "pt-BR"
   category: "database"
   tags:
@@ -61,10 +61,10 @@ collection:
 skills:
   - name: "oracle-core-ptbr"
     display_name: "Oracle Core PT-BR"
-    version: "1.6.0"
+    version: "1.6.1"
     icon: "🧭"
     category: "database"
-    description: "Assistente central — roteamento entre módulos e convenções transversais"
+    description: "Assistente central — roteamento, precedência entre skills e convenções transversais"
     tags: ["oracle", "roteamento", "convencoes", "gmud"]
     file: "dist/oracle-core-ptbr.skill"
 
@@ -106,10 +106,10 @@ skills:
 
   - name: "oracle-tuning-ptbr"
     display_name: "Oracle Tuning PT-BR"
-    version: "2.7.2"
+    version: "2.8.0"
     icon: "🚀"
     category: "database"
-    description: "Performance tuning — explain plan, AWR, ASH e index strategy"
+    description: "Performance tuning — explain plan, índices e estatísticas; AWR/ASH com Diagnostics Pack"
     tags: ["oracle", "tuning", "performance", "explain-plan", "awr"]
     file: "dist/oracle-tuning-ptbr.skill"
 
@@ -127,7 +127,7 @@ skills:
     version: "4.1.3"
     icon: "⚙️"
     category: "devops"
-    description: "Git, CI/CD, changelog Oracle, deploy Python + oracledb Thin Mode"
+    description: "Git, CI/CD, changelog Oracle, deploy pelo SQLcl + Python/oracledb Thin"
     tags: ["oracle", "devops", "cicd", "git", "python", "oracledb"]
     file: "dist/oracle-devops-ptbr.skill"
 
