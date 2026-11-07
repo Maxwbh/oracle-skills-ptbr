@@ -28,8 +28,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from oracle_devops_utils import (
-    GREEN, YELLOW, RED, CYAN, BOLD, RESET, DIM, SEP2,
-    banner, carregar_dotenv, log,
+    CYAN,
+    DIM,
+    GREEN,
+    RED,
+    RESET,
+    SEP2,
+    banner,
+    carregar_dotenv,
+    log,
 )
 
 
@@ -181,6 +188,7 @@ def main() -> None:
         capture_output=True,
         text=True,
         timeout=300,
+        check=False,
     )
 
     if resultado.returncode != 0:

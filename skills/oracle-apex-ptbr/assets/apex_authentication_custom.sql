@@ -44,6 +44,44 @@ CREATE OR REPLACE PACKAGE BODY auth_pkg AS
   gc_nome_pacote CONSTANT VARCHAR2(30) := 'AUTH_PKG';
 
   ----------------------------------------------------------------------------
+  -- Transação: o login roda dentro do request do APEX, que é o dono da
+  -- transação — o código do scheme não comita (regra 4 da oracle-plsql-ptbr).
+  -- Contador de tentativas e log de acesso PRECISAM persistir mesmo quando o
+  -- login falha e o request é desfeito: por isso ficam em rotinas
+  -- AUTONOMOUS_TRANSACTION (o COMMIT é da transação autônoma, não do APEX).
+  ----------------------------------------------------------------------------
+  PROCEDURE registrar_tentativa_login (
+    p_username IN VARCHAR2,
+    p_sucesso  IN BOOLEAN
+  ) IS
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  BEGIN
+    IF p_sucesso THEN
+      UPDATE usuarios
+         SET tentativas_falhas = 0,
+             ultimo_login      = SYSTIMESTAMP
+       WHERE UPPER(login) = UPPER(p_username);
+    ELSE
+      UPDATE usuarios
+         SET tentativas_falhas = tentativas_falhas + 1
+       WHERE UPPER(login) = UPPER(p_username);
+    END IF;
+    COMMIT;
+  END registrar_tentativa_login;
+
+  PROCEDURE registrar_acesso (
+    p_id_usuario IN NUMBER,
+    p_evento     IN VARCHAR2,
+    p_ip         IN VARCHAR2 DEFAULT NULL
+  ) IS
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  BEGIN
+    INSERT INTO log_acessos (id_usuario, evento, ip, ts)
+    VALUES (p_id_usuario, p_evento, p_ip, SYSTIMESTAMP);
+    COMMIT;
+  END registrar_acesso;
+
+  ----------------------------------------------------------------------------
   FUNCTION validar_credenciais (
     p_username IN VARCHAR2,
     p_password IN VARCHAR2
@@ -78,19 +116,12 @@ CREATE OR REPLACE PACKAGE BODY auth_pkg AS
     ));
 
     IF l_hash_recebido = l_hash_armazenado THEN
-      -- Sucesso: zera tentativas, registra último login
-      UPDATE usuarios
-         SET tentativas_falhas = 0,
-             ultimo_login = SYSTIMESTAMP
-       WHERE UPPER(login) = UPPER(p_username);
-      COMMIT;
+      -- Sucesso: zera tentativas, registra último login (transação autônoma)
+      registrar_tentativa_login(p_username, p_sucesso => TRUE);
       RETURN TRUE;
     ELSE
-      -- Falha: incrementa contador
-      UPDATE usuarios
-         SET tentativas_falhas = tentativas_falhas + 1
-       WHERE UPPER(login) = UPPER(p_username);
-      COMMIT;
+      -- Falha: incrementa contador — precisa persistir mesmo com login negado
+      registrar_tentativa_login(p_username, p_sucesso => FALSE);
       RETURN FALSE;
     END IF;
 
@@ -130,12 +161,8 @@ CREATE OR REPLACE PACKAGE BODY auth_pkg AS
     -- CLIENT_IDENTIFIER para audit em V$SESSION, VPD policy, Logger context
     DBMS_SESSION.set_identifier(l_username);
 
-    -- Auditoria de login
-    INSERT INTO log_acessos (id_usuario, evento, ip, ts)
-    VALUES (l_id_usuario, 'LOGIN',
-            OWA_UTIL.get_cgi_env('REMOTE_ADDR'),
-            SYSTIMESTAMP);
-    COMMIT;
+    -- Auditoria de login (transação autônoma; sem COMMIT no request do APEX)
+    registrar_acesso(l_id_usuario, 'LOGIN', OWA_UTIL.get_cgi_env('REMOTE_ADDR'));
   END post_authenticate;
 
   ----------------------------------------------------------------------------
@@ -143,13 +170,7 @@ CREATE OR REPLACE PACKAGE BODY auth_pkg AS
   ----------------------------------------------------------------------------
   PROCEDURE pre_logout IS
   BEGIN
-    INSERT INTO log_acessos (
-      id_usuario, evento, ts
-    ) VALUES (
-      APEX_UTIL.get_session_state('G_ID_USUARIO'),
-      'LOGOUT', SYSTIMESTAMP
-    );
-    COMMIT;
+    registrar_acesso(APEX_UTIL.get_session_state('G_ID_USUARIO'), 'LOGOUT');
   END pre_logout;
 
   ----------------------------------------------------------------------------

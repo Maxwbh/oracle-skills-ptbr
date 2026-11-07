@@ -117,7 +117,8 @@ BEGIN
 
   END LOOP;
 
-  COMMIT;
+  -- Sem COMMIT: o APEX é o dono da transação do request e a fecha ao final
+  -- do processamento da página (convenção "APEX não comita" da suíte).
 
   APEX_APPLICATION.g_print_success_message :=
     l_ids.COUNT || ' linhas atualizadas';
@@ -187,9 +188,10 @@ ANTI-PATTERN 3: Acessar g_fNN sem checar bounds
   l_valor := APEX_APPLICATION.g_f04(i);  -- ORA-22160 se não existe
   → use l_valor.EXISTS(i) ou g_f04.COUNT
 
-ANTI-PATTERN 4: Esquecer COMMIT
-  -- Page Process default não comita; Tabular Form precisa de COMMIT explícito
-  -- OU configurar o Process como "Process Tabular Form" (auto-commit)
+ANTI-PATTERN 4: COMMIT explícito no Page Process
+  -- O APEX é o dono da transação do request: o process não comita. COMMIT
+  -- no meio quebra o "tudo ou nada" da página (se um process seguinte
+  -- falhar, o que veio antes já foi gravado).
 
 ANTI-PATTERN 5: Checkbox sem hidden complementar
   -- g_fNN (checkbox) só traz MARCADOS; sem g_fMM (hidden ID), não dá pra

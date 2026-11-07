@@ -2,7 +2,7 @@
 
 **Skills Claude para Oracle — Stack Completa em Português**
 
-10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 24.2 + ORDS.
+10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 24.2–26.2 + ORDS.
 
 ---
 
@@ -18,16 +18,16 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 
 | Skill | Versão | Escopo | Recursos |
 |---|---|---|---|
-| `oracle-core-ptbr` | 1.4.1 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
-| `oracle-plsql-ptbr` | 2.2.2 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
-| `oracle-apex-ptbr` | 2.4.2 | APEX (padrões de 24.2+) development + Data Dictionary completo | 20 |
-| `oracle-ords-ptbr` | 2.4.0 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
-| `oracle-dba-ptbr` | 2.3.2 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
-| `oracle-tuning-ptbr` | 2.6.2 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
-| `oracle-trivadis-ptbr` | 2.3.1 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
-| `oracle-devops-ptbr` | 4.0.0 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 30 |
-| `oracle-lab-ptbr` | 1.0.2 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
-| `oracle-26ai-ptbr` | 1.0.2 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
+| `oracle-core-ptbr` | 1.5.0 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
+| `oracle-plsql-ptbr` | 3.0.1 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
+| `oracle-apex-ptbr` | 2.6.0 | APEX (padrões de 24.2+) development + Data Dictionary completo | 21 |
+| `oracle-ords-ptbr` | 2.5.0 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
+| `oracle-dba-ptbr` | 2.4.0 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
+| `oracle-tuning-ptbr` | 2.7.0 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
+| `oracle-trivadis-ptbr` | 2.4.1 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
+| `oracle-devops-ptbr` | 4.1.1 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 31 |
+| `oracle-lab-ptbr` | 1.1.0 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
+| `oracle-26ai-ptbr` | 1.1.0 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
 
 ---
 
@@ -151,6 +151,12 @@ Só quando a versão-alvo declarada for 23ai/26ai · migração 19c → 26ai · 
 
 ---
 
+## Skill irmã (repositório separado)
+
+[`oracle-26ai-helper-ptbr`](https://github.com/Maxwbh/oracle-26ai-helper-ptbr) — aprofundamento em Oracle AI Database 26ai: **Vector Search, JSON Relational Duality e RAFT**. Roteamento: Vector / Duality / RAFT → `oracle-26ai-helper-ptbr`; sintaxe nova e migração 19c→26ai → `oracle-26ai-ptbr`.
+
+---
+
 ## Referências cruzadas entre skills
 
 ```
@@ -166,13 +172,29 @@ oracle-devops-ptbr ←→  oracle-ords-ptbr          (ords/modules/)
 
 ---
 
+## Versões suportadas
+
+| Item | Situação em 06/11/2026 | Fonte |
+|---|---|---|
+| **Oracle Database 19c** | Long Term Support Release · **Premier até 31/12/2029 · Extended até 31/12/2032** · RU mais recente com página de novidades: **19.33** · upgrade **direto 19c → 26ai** (detalhe em `oracle-26ai-ptbr`) | [Lifetime Support Policy](https://www.oracle.com/us/assets/lifetime-support-technology-069183.pdf) (02/10/2026), [26ai Upgrade Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/upgrd/oracle-database-releases-that-support-direct-upgrade.html), [RU 19.33](https://docs.oracle.com/en/database/oracle/oracle-database/19/newft/ru-19-33.html) |
+| Oracle AI Database 26ai | Long Term Support Release · Premier até dez/2031 | Lifetime Support Policy |
+| **APEX 26.2** | **atual** — GA 06/10/2026 · exige **ORDS 26.3.0+**, **SQLcl 26.3.0+**, banco **19c RU 19.18+** ou **26ai 23.26.0+** · upgrade direto a partir do 18.1 · patch 26.2.1 | [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html), [downloads](https://www.oracle.com/tools/downloads/apex-downloads) |
+| APEX 26.1 | GA 14/05/2026 · ORDS 26.1.1+ · patch 26.1.6 | [downloads 26.1](https://www.oracle.com/tools/downloads/apex-261-downloads) |
+| **APEX 24.2** | **baseline suportada da suíte** · patch set mais recente **24.2.22** (04/11/2026) · ⚠ 24.2.0–24.2.20 na faixa da **CVE-2026-101521** (CVSS 9.8) | [downloads 24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) |
+| ORDS | **26.3.1** (04/11/2026) é a mais recente · 26.4 planejada ("Winter 2026", Tomcat 10/WebLogic 15) | [ORDS changelog](https://www.oracle.com/tools/ords/ords-changelog.html) |
+| SQLcl | **26.3.1** (03/11/2026) · CodeScan com regras para APEXlang desde 26.3.0 | [SQLcl changelog](https://www.oracle.com/tools/sqlcl/sqlcl-changelog.html) |
+
+**A verificar:** datas de fim de suporte do APEX (24.2, 26.1, 26.2); data de lançamento do RU 19.33; primeira versão corrigida da CVE-2026-101521.
+
+---
+
 ## Stack coberta
 
 | Tecnologia | Versão | Cobertura |
 |---|---|---|
-| Oracle Database | 19c (LTS) | PL/SQL, SQL, tipos, EBR, Data Dictionary 11g→26ai |
-| Oracle APEX | 24.2 | Development + Data Dictionary (APEX_APPLICATION_* etc.) |
-| Oracle ORDS | 24.4 / 25.x | REST services + Data Dictionary (USER/DBA_ORDS_*) |
+| Oracle Database | 19c (padrão) · 23ai/26ai só com versão declarada | PL/SQL, SQL, tipos, EBR, Data Dictionary 11g→26ai |
+| Oracle APEX | 24.2 (baseline) → 26.2 | Development + Data Dictionary (APEX_APPLICATION_* etc.) |
+| Oracle ORDS | 24.4 → 26.3 | REST services + Data Dictionary (USER/DBA_ORDS_*) |
 | Trivadis Guidelines | 4.4 | Nomenclatura PT-BR + checklist |
 | Python oracledb | 2.0+ (Thin Mode) | Scripts DevOps sem Oracle Client |
 | GitHub Actions | — | CI/CD com deploy por ambiente e aprovação prod |
@@ -249,22 +271,39 @@ oracle-skills-ptbr/
 
 ---
 
-## Publicar no GitHub
+## Desenvolvimento e release
 
 ```bash
-# Extrair o ZIP
-unzip oracle-skills-ptbr-v3.1.0-git.zip
-
-cd oracle-skills-ptbr
-git init
-git add .
-git commit -m "feat: oracle-skills-ptbr v3.1.0 — 10 skills stack Oracle completa"
-git remote add origin https://github.com/maxwbh/oracle-skills-ptbr.git
-git push -u origin main
-
-git tag -a v3.1.0 -m "10 skills + devops Python oracledb v3.1.0"
-git push origin v3.1.0
+pip install -r requirements-dev.txt
+python build.py --check      # frontmatter, suite_size, CHANGELOG, marketplace, clientes reais
+python build.py              # regenera dist/*.skill + checksums — commite junto com a mudança
+python build.py --check-dist # dist/ igual a um build novo (o CI exige)
+python -m pytest -q          # unitários (integração é pulada sem banco)
+ruff check .
 ```
+
+**CI** (`.github/workflows/ci.yml`, em todo PR): `build.py --check`,
+`build.py --check-dist`, `pytest`, `ruff`, `shellcheck` e `actionlint`.
+
+**Clientes reais:** a trava do `--check` lê os nomes do secret
+`CLIENTES_PROIBIDOS` (no CI) ou do arquivo local `.clientes-proibidos.txt`
+(fora do git). A lista não fica no código.
+
+**Integração** (`.github/workflows/integracao.yml`, manual): sobe o Oracle Free
+em container descartável, instala SQLcl e roda `tests/integracao/` — inclusive
+a migration que falha no meio, fica em `ERRO` e é retomada. Para rodar local:
+
+```bash
+docker run -d --name orafree -p 1521:1521 -e ORACLE_PWD=<senha> container-registry.oracle.com/database/free:latest-lite
+export ORACLE_TESTE_DSN=localhost:1521/FREEPDB1 ORACLE_TESTE_ADMIN_USER=system ORACLE_TESTE_ADMIN_PASS=<senha>
+export SQLCL_BIN=/caminho/do/sqlcl/bin/sql
+python -m pytest -q tests/integracao
+```
+
+Nunca aponte essas variáveis para um banco real.
+
+**Release:** `git tag vX.Y.Z && git push origin vX.Y.Z` dispara o
+`release.yml`, que roda o mesmo CI e só publica os `.skill` com tudo verde.
 
 ---
 

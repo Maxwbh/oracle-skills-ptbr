@@ -1,5 +1,11 @@
 # Changelog — oracle-lab-ptbr
 
+## [1.1.0] - 2026-11-06
+- Feature — 19c em Oracle Linux 10: Oracle recomenda RU 19.32+ com one-offs; build oraclebase/vagrant `ol10_19` com RU 19.33 (instalação limpa segundo o oracle-base).
+- Feature — fim do HCP Vagrant Registry (criação encerrada em 01/10/2026, suporte em 02/11/2026, desligamento em 31/12/2026): guardar a box localmente.
+- Docs — Fedora 45 (`f45_*`) como curiosidade ("don't do this for something serious"); VirtualBox 7.2.22 é a mais recente (sem versão mínima exigida); APEX 26.2 na tabela de compatibilidade.
+- Docs — roteamento para oracle-26ai-helper-ptbr.
+
 ## [1.0.2] - 2026-09-15
 - Docs — tabela "Áreas cobertas" no SKILL.md: os 3 references e os 4 assets não eram citados, então future-Claude não sabia que existiam.
 

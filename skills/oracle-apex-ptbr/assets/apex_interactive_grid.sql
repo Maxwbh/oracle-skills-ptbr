@@ -322,18 +322,23 @@ DYNAMIC ACTION:
 
 
 -- AJAX Callback "MARK_AS_PAID"
+-- Captura o erro para responder JSON; como a exceção não sobe, o APEX
+-- comitaria o que já foi feito — por isso SAVEPOINT + ROLLBACK TO. Sem
+-- COMMIT: o APEX é o dono da transação do request.
 DECLARE
   l_ids       APEX_T_NUMBER;
   l_qtd     NUMBER;
 BEGIN
+  SAVEPOINT sp_mark_as_paid;
+
   -- Converte CSV de IDs em coleção
   SELECT TO_NUMBER(REGEXP_SUBSTR(APEX_APPLICATION.G_X01, '[^,]+', 1, LEVEL))
     BULK COLLECT INTO l_ids
     FROM dual
  CONNECT BY REGEXP_SUBSTR(APEX_APPLICATION.G_X01, '[^,]+', 1, LEVEL) IS NOT NULL;
 
-  -- Bulk update
-  FORALL i IN l_ids.FIRST..l_ids.LAST
+  -- Bulk update (INDICES OF: lista vazia não quebra)
+  FORALL i IN INDICES OF l_ids
     UPDATE faturas
        SET status     = 'PAGO',
            pago_em    = SYSDATE,
@@ -343,14 +348,13 @@ BEGIN
        AND status <> 'PAGO';
 
   l_qtd := SQL%ROWCOUNT;
-  COMMIT;
 
   APEX_JSON.open_object;
   APEX_JSON.write('count', l_qtd);
   APEX_JSON.close_object;
 EXCEPTION
   WHEN OTHERS THEN
-    ROLLBACK;
+    ROLLBACK TO sp_mark_as_paid;
     APEX_JSON.open_object;
     APEX_JSON.write('error', SQLERRM);
     APEX_JSON.close_object;
