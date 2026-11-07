@@ -1,5 +1,8 @@
 # Changelog — oracle-26ai-ptbr
 
+## [1.1.2] - 2026-11-07
+- Fix — matriz de migração: APEX 26.2 (padrão) com ORDS/SQLcl 26.3.0+ e Deep Data Security 23.26.3+; "24.2/24.1 suportados até jul/2027 e dez/2026" não tinha fonte → a verificar; fase 2 do roteiro com ORDS 26.3+ (Tomcat 10 só no ORDS 26.4).
+
 ## [1.1.1] - 2026-11-07
 - Docs — `VECTOR_MEMORY_SIZE` medido no 26ai Free 23.26.3: no CDB com pool 0, aumentar exige `SCOPE=SPFILE` + restart (ORA-51950); com pool alocado, cresce sem restart e não reduz abaixo do inicial (ORA-51953); no PDB a cota é dinâmica e limitada ao CDB (ORA-51955). Nova armadilha na migração: definir o pool na janela do upgrade.
 - Docs — fronteira: roteiro do upgrade 19c→26ai (fases, riscos, Vector Pool na janela) → oracle-26ai-helper-ptbr; checklist de código, caminhos e compatibilidade ficam aqui; operação → oracle-dba-ptbr.

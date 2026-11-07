@@ -2,8 +2,10 @@
 -- Template: APEX Pagination — Padrão Correto
 --
 -- Compatibilidade: padrões de pagination de IR/Classic Report valem em todas as
---   versões cobertas (24.1/24.2/26.1). AI Interactive Reports (NL2IR) são
---   exclusivos do 26.1. Matriz: references/apex-version-matrix-ptbr.md
+--   versões cobertas (24.2/26.1/26.2; padrão 26.2). AI Interactive Reports
+--   (NL2IR) existem desde o 26.1. No 26.2 a barra de pesquisa do IR mudou e há
+--   botão automático "Interactive Report Reset" (Yes em apps novas, No nas
+--   existentes). Matriz: references/apex-version-matrix-ptbr.md
 --
 -- Uso: configurações e queries para relatorios com pagination performante.
 --      Cobre Classic Report e Interactive Report.

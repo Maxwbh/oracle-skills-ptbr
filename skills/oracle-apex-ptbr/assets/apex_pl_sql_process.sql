@@ -2,8 +2,9 @@
 -- Template: APEX PL/SQL Process e AJAX Callback
 --
 -- Compatibilidade: Page Process, AJAX Callback, Validation e Computation valem
---   em 24.1/24.2/26.1. Recursos de IA (APEX_AI, geração de texto) divergem por
---   versão — em dúvida, pergunte a versão-alvo. Matriz:
+--   em 24.2/26.1/26.2 (padrão 26.2). Recursos de IA (APEX_AI, geração de texto)
+--   divergem por versão — no 26.2: p_reasoning_effort; tool_calls de
+--   t_chat_message e message de t_chat_response deprecated. Matriz:
 --   references/apex-version-matrix-ptbr.md
 --
 -- Cobre dois cenários:

@@ -2,7 +2,7 @@
 name: oracle-devops-ptbr
 description: Módulo DevOps da suíte Oracle PT-BR. Estrutura Git e CI/CD para projetos Oracle/APEX/ORDS. ATIVE em estrutura de projeto Oracle no Git, commit de objetos do banco, script de deploy, GitHub Actions ou Azure Pipelines para Oracle, export APEX split via SQLcl, versionamento de módulos ORDS, GMUD naming (001_projeto_ddl_objeto.sql), deploy-db/deploy-apex/deploy-ords, branch strategy, .gitignore Oracle, rollback, ordem de dependências, changelog Liquibase XML (databaseChangeLog/changeSet), code review e promoção entre ambientes via GitHub/Azure. Frases — "estruturar projeto no Git", "script de deploy Oracle", "export do APEX para Git", "deploy ordenado do banco", "nomenclatura GMUD", "changelog Liquibase", "pipeline Azure DevOps", "deploy com aprovação por ambiente", "enviar para homologação/produção". NÃO ATIVE em código PL/SQL (oracle-plsql-ptbr), APEX pages (oracle-apex-ptbr), ORDS handlers (oracle-ords-ptbr), DBA operacional (oracle-dba-ptbr), tuning (oracle-tuning-ptbr). Templates em assets/.
 metadata:
-  version: "4.1.2"
+  version: "4.1.3"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 31
@@ -27,14 +27,14 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo DevOps (oracle-devops-ptbr)
 
-> **Versão:** 4.1.2 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (31 recursos nesta skill)
-> **v4.1.2:** deploy pelo SQLcl com `SET SQLBLANKLINES ON` (linha em branco não corta mais UPDATE/DELETE); regras de formatação de scripts GMUD. Histórico em `CHANGELOG.md`.
+> **Versão:** 4.1.3 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (31 recursos nesta skill)
+> **v4.1.3:** APEX 26.2 como padrão; APEX Advisor deprecated → CodeScan; Export Wizard do 26.2 sempre com supporting objects. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 26.2 (padrão; compatível com 24.2+): páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
@@ -45,7 +45,7 @@ Suíte completa (10 skills — conjunto único):
 > Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality, RAFT (replicação do Globally Distributed Database) e roteiro do upgrade 19c→26ai. Roteamento: Vector / Duality / RAFT e roteiro do upgrade (fases, riscos, Vector Pool na janela) → **oracle-26ai-helper-ptbr**; sintaxe nova e checklist de código da migração (o que muda, caminhos, compatibilidade APEX/ORDS/SQLcl) → **oracle-26ai-ptbr**; operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 
-Estrutura Git, scripts de deploy e CI/CD para projetos Oracle 19c + APEX 24.2–26.2 + ORDS.
+Estrutura Git, scripts de deploy e CI/CD para projetos Oracle 19c + APEX 26.2 (padrão; compatível com 24.2+) + ORDS.
 
 **Desenvolvido por:** Maxwell da Silva Oliveira — [M&S do Brasil LTDA](https://msbrasil.inf.br)
 

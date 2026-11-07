@@ -120,7 +120,7 @@ Para `ol9_26_free`, tipicamente:
 | Arquivo | Onde | Precisa de login? |
 |---|---|---|
 | `oracle-ai-database-free-26ai-…el9.x86_64.rpm` | oracle.com/database/free | não |
-| `apex_26.1_en.zip` | oracle.com/tools/downloads/apex-downloads | não |
+| `apex_26.2.zip` (APEX 26.2, padrão da suíte; o nome exato muda — confira na página) | oracle.com/tools/downloads/apex-downloads | não |
 | `ords-latest.zip` | downloads do ORDS | não |
 | `sqlcl-latest.zip` | oracle.com/tools/downloads/sqlcl-downloads | não |
 | `graalvm-jdk-21_linux-x64_bin.tar.gz` | graalvm.org/downloads | não |
@@ -130,7 +130,7 @@ Duas correções úteis sobre essa lista:
 
 - **GraalVM não é obrigatório.** O ORDS 26.1 aceita **Oracle JDK 17 ou 21** e também GraalVM 17/21. O build usa GraalVM porque foi a escolha do autor; se você já tem um JDK 21, aponte `JAVA_SOFTWARE` para ele. GraalVM só vira requisito se você for usar **GraphQL** no ORDS.
 - **Tomcat tem que ser da série 9.** O ORDS 26.1 suporta Tomcat 9.0.x; o suporte a Tomcat 10 só chega no ORDS 26.4 (previsto para o inverno de 2026), e a própria Oracle pede para não antecipar a migração. Baixar o Tomcat 10 "porque é mais novo" quebra a instalação.
-- **Fixe a versão do ORDS.** O arquivo que a Oracle publica chama-se `ords-latest.zip` — e o conteúdo muda a cada release. Para o lab ser reproduzível, renomeie o download (`ords-26.1.1.zip`) e aponte `ORDS_SOFTWARE` para esse nome. Assim, quem repetir o passo a passo daqui a três meses monta o mesmo ambiente. O APEX 26.1 exige **ORDS ≥ 26.1.1**; versão menor falha.
+- **Fixe a versão do ORDS.** O arquivo que a Oracle publica chama-se `ords-latest.zip` — e o conteúdo muda a cada release. Para o lab ser reproduzível, renomeie o download (ex.: `ords-26.3.1.zip`) e aponte `ORDS_SOFTWARE` para esse nome. Assim, quem repetir o passo a passo daqui a três meses monta o mesmo ambiente. O APEX 26.2 exige **ORDS ≥ 26.3.0** (o 26.1 exigia ≥ 26.1.1); versão menor falha.
 
 Para `ol9_19` troque o RPM por `LINUX.X64_193000_db_home.zip` (e-delivery/edelivery.oracle.com — **exige conta Oracle**, ~3 GB). Patches são opcionais (`PATCH_DB` no `install.env`) e exigem My Oracle Support.
 
@@ -148,7 +148,7 @@ export INSTALL_APEX=true               # false = só o banco, sobe muito mais r�
 export INSTALL_ORDS="true"             # false se não for usar APEX nem REST
 export APEX_PASSWORD="ApexPassword1"
 export DB_SOFTWARE=oracle-ai-database-free-26ai-23.26.0-1.el9.x86_64.rpm
-export APEX_SOFTWARE="apex_26.1_en.zip"
+export APEX_SOFTWARE="apex_26.2.zip"   # nome exato do arquivo baixado
 export TOMCAT_SOFTWARE="apache-tomcat-9.0.110.tar.gz"
 ```
 

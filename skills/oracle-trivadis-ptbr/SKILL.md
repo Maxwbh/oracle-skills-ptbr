@@ -2,7 +2,7 @@
 name: oracle-trivadis-ptbr
 description: Módulo de padrões Trivadis da suíte Oracle PT-BR. Trivadis PL/SQL Guidelines 4.4 — nomenclatura, estrutura de código e revisão. ATIVE em revisar código Oracle com padrão Trivadis, validar prefixos (g_, gc_, l_, lc_, p_, r_, t_, co_, e_), naming PT-BR em variáveis/tabelas/colunas, checklist antes de deploy/GMUD, "esse código segue Trivadis?", "qual prefixo usar?", "como nomear essa variável?", "revisa esse package", dbLinter, db* CODECOP, IslandSQL, regras G-92xx (naming de tabelas/constraints/assertions), "Trivadis ainda existe?". NÃO ATIVE em geração de código (use oracle-plsql-ptbr), APEX development, ORDS endpoints, DBA operacional, tuning. As demais oracle-*-ptbr aplicam Trivadis automaticamente — esta skill foca em consultas e revisões explícitas do padrão.
 metadata:
-  version: "2.4.2"
+  version: "2.4.3"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
@@ -24,14 +24,14 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Padrões Trivadis (oracle-trivadis-ptbr)
 
-> **Versão:** 2.4.2 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill)
-> **v2.4.2:** roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.4.3 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill)
+> **v2.4.3:** lista da suíte com APEX 26.2 como padrão. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 26.2 (padrão; compatível com 24.2+): páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache

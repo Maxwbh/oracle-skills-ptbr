@@ -1,5 +1,8 @@
 # Changelog — oracle-lab-ptbr
 
+## [1.2.1] - 2026-11-07
+- Docs — passo a passo da VM com APEX 26.2 e ORDS ≥ 26.3.0 (26.1 exigia 26.1.1); requisito de memória da instalação 26.2: a verificar.
+
 ## [1.2.0] - 2026-11-07
 - Feature — caminho "Docker Compose: 26ai Free + imagem oficial do ORDS" na escolha do caminho e §9.1 do passo a passo: a imagem `database/ords` instala o APEX montado em `/opt/oracle/apex`; variáveis (inclusive `ORACLE_USER_PWD`, obrigatória no ORDS 26.x), troca da senha do ADMIN, scripts `startup` × `setup` e tempos medidos (26ai Free 23.26.3 + ORDS 26.3.1 + APEX 26.2). Aponta para o `ambiente-teste/` do oracle-26ai-helper-ptbr.
 - Docs — troubleshooting de container: `ORACLE_USER_PWD` ausente, ORA-20001 na senha do APEX, script de `setup` que não roda (banco pré-criado) e `curl` em loop no `/ords/apex` (cookie).

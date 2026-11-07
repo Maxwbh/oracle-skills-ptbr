@@ -1,9 +1,9 @@
 --==============================================================================
 -- Template: APEX Dynamic Action
 --
--- Compatibilidade: padrões base de Dynamic Actions valem em 24.1/24.2/26.1.
---   Itens Select One/Select Many existem desde 24.1; partials client-side de
---   Template Components só no 26.1. Em dúvida sobre a versão-alvo, pergunte.
+-- Compatibilidade: versão padrão APEX 26.2; padrões base de Dynamic Actions
+--   valem em 24.2/26.1/26.2. Itens Select One/Select Many existem desde 24.1;
+--   partials client-side de Template Components desde o 26.1.
 --   Matriz: references/apex-version-matrix-ptbr.md
 --
 -- Uso: copie estes blocos no APEX Builder para configurar Dynamic Actions

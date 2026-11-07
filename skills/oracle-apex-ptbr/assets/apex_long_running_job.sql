@@ -5,7 +5,7 @@
 -- Solução: rodar em background, retornar imediatamente, polling via AJAX
 --          para mostrar progresso ao usuário.
 --
--- Versão de referência: APEX 26.1 (padrões válidos de 24.2+)
+-- Versão de referência: APEX 26.2 (padrão da suíte; padrões válidos de 24.2+)
 --
 -- Duas abordagens cobertas:
 --   1. Background Page Processing (Execution Chain "Run in Background",
@@ -398,7 +398,8 @@ DBMS_SCHEDULER:
 ESCOLHA:
   - Job triggered de página APEX, contexto APEX importa → Execution Chain (Abordagem 1)
   - Job recorrente, ETL, limpeza, fora de APEX → DBMS_SCHEDULER (Abordagem 2)
-  - APEX 26.1 (versão atual) traz melhorias de Workflow e automações que também
+  - APEX 26.1/26.2 trazem melhorias de Workflow (Parallel Flow no 26.1; custom
+    outcomes e APEX_WORKFLOW.MIGRATE_INSTANCE no 26.2) e automações que também
     cobrem cenários assíncronos — avalie conforme o caso
 */
 

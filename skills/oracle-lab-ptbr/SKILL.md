@@ -2,7 +2,7 @@
 name: oracle-lab-ptbr
 description: "Módulo de instalação e ambiente local da suíte Oracle PT-BR, para desenvolvedor sem experiência de DBA. Montar Oracle 19c ou 26ai na própria máquina (Windows, Linux, Mac) via VM Vagrant+VirtualBox (padrão), container Docker/Podman, OVA ou RPM, com APEX e ORDS opcionais, e acessar esse banco de outros aparelhos da rede de casa. ATIVE em instalar Oracle na minha máquina, montar ambiente de desenvolvimento, subir banco local, vagrant up, VirtualBox, Oracle Free, XE, APEX local, ORDS local, quanto de RAM preciso, liberar porta 1521, e nos erros de quem está começando — ORA-12541, ORA-12514, ORA-01017, VM não sobe, conflito Hyper-V/WSL2, host-only fora da faixa, APEX em branco. Frases — 'como instalo isso aqui', 'não consigo conectar no banco', 'preciso de um banco pra testar'. NÃO ATIVE em banco de cliente ou produção (é oracle-dba-ptbr), nem em código, página APEX, endpoint ORDS ou pipeline."
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 8
@@ -26,8 +26,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Lab/Instalação (oracle-lab-ptbr)
 
-> **Versão:** 1.2.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (8 recursos nesta skill)
-> **v1.2.0:** APEX/ORDS em container pela imagem oficial do ORDS, com tempos medidos (1ª subida ~21 min, snapshot ~2 min, PDB clonado ~10 s); roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.2.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (8 recursos nesta skill)
+> **v1.2.1:** VM com APEX 26.2 (padrão) e ORDS 26.3+. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único): ver `oracle-core-ptbr`.
 
@@ -89,13 +89,13 @@ Regra da suíte: **código nasce 19c**. O 26ai Free serve para experimentar o qu
 
 Sempre deixar **pelo menos 4 GB livres para o host**. VM sem RAM não dá erro claro: ela fica lenta, o banco derruba sessões e a pessoa acha que "o Oracle é ruim".
 
-**RAM da VM ≠ RAM do banco.** Os 4 GB da linha "26ai Free + APEX + ORDS" são da máquina virtual, repartidos entre Linux, banco, JVM do Tomcat e ORDS. A edição **Free limita o banco a 2 GB**, independentemente do que a VM tenha — dar 8 GB à VM não faz o Free usar mais que isso. E o APEX 26.1 exige **SGA ≥ 1200 MB e PGA ≥ 300 MB**: cabe nos 2 GB do Free, mas sem folga. Se a instalação do APEX reclamar de memória, é isso.
+**RAM da VM ≠ RAM do banco.** Os 4 GB da linha "26ai Free + APEX + ORDS" são da máquina virtual, repartidos entre Linux, banco, JVM do Tomcat e ORDS. A edição **Free limita o banco a 2 GB**, independentemente do que a VM tenha — dar 8 GB à VM não faz o Free usar mais que isso. E o APEX 26.1 exige **SGA ≥ 1200 MB e PGA ≥ 300 MB** (o mínimo do 26.2 está a verificar): cabe nos 2 GB do Free, mas sem folga. Se a instalação do APEX reclamar de memória, é isso.
 
 ## Compatibilidade — a corrente que precisa fechar
 
 | Peça | Exigência | Observação |
 |---|---|---|
-| APEX 26.2 | **ORDS ≥ 26.3.0** e **SQLcl ≥ 26.3.0** | Release notes do APEX 26.2 (consultadas em 06/11/2026) |
+| APEX 26.2 (padrão da suíte) | **ORDS ≥ 26.3.0** e **SQLcl ≥ 26.3.0** | Release notes do APEX 26.2 (consultadas em 06/11/2026) |
 | APEX 26.1 | **ORDS ≥ 26.1.1** | Regra da doc de instalação do APEX 26.1 |
 | APEX 26.1 / 26.2 em 26ai | banco **≥ 23.26.0** (out/2025) | Em 19c, ≥ 19.18 |
 | APEX 26.1 | SGA ≥ 1200 MB, PGA ≥ 300 MB, `WORKAREA_SIZE_POLICY=AUTO` na sessão de instalação | |

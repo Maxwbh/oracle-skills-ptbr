@@ -5,6 +5,27 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [4.2.0] — 2026-11-07
+
+**APEX 26.2 passa a ser a versão padrão da suíte** e a skill APEX foi revisada contra as release notes da 26.2 (New Features, Changed Behavior, Deprecated e Desupported, consultadas em 07/11/2026).
+
+### Alterado
+- **oracle-apex-ptbr 2.6.1 → 2.7.0:** sem versão declarada, o código sai para 26.2 e a resposta diz a suposição em uma linha, com a alternativa para 24.2/26.1; pergunta só para instância existente (patch level) ou recurso que exige banco 26ai — o banco padrão segue 19c. Tabela de recursos 24.2 × 26.1 × 26.2 e tabela de alternativas. 24.2 passa de "baseline" a "versão mínima coberta".
+- **oracle-core-ptbr 1.5.1 → 1.6.0:** stack alvo com APEX 26.2 padrão, ORDS/SQLcl 26.3+.
+- **Lista da suíte** (plsql 3.0.3, trivadis 2.4.3, dba 2.4.2, tuning 2.7.2): APEX 26.2 (padrão; compatível com 24.2+).
+- **oracle-ords-ptbr 2.5.2:** Network ACL do APEX 26.2 no schema `APEX_260200`.
+- **oracle-devops-ptbr 4.1.3:** APEX Advisor deprecated no 26.2 → CodeScan; Export Wizard do 26.2 sempre com supporting objects.
+- **oracle-lab-ptbr 1.2.1:** VM com APEX 26.2 e ORDS ≥ 26.3.0.
+
+### Adicionado
+- **oracle-apex-ptbr:** mudanças de comportamento do 26.2 que afetam código e deploy (OAuth com scope em `SET_OAUTH_TOKEN`, Network ACL, Export Wizard, Static ID sem Tab, barra do IR e botão Reset, Allow to Exclude), deprecated (APEX Advisor, OAS SSO, Data Generator, membros de `APEX_AI`), desupported (Query Builder, Export Repository, modelos Cohere, `APEX_LISTENER`, Swagger UI URL); Workflow, IG e Universal Theme do 26.2.
+
+### Corrigido
+- **oracle-26ai-ptbr 1.1.1 → 1.1.2:** a matriz de migração afirmava "APEX 24.2/24.1 suportados até jul/2027 e dez/2026" sem fonte → a verificar; APEX 26.2 com ORDS/SQLcl 26.3.0+; fase 2 do roteiro dizia ORDS 26.1 + Tomcat 10 (Tomcat 10 só a partir do ORDS 26.4).
+
+### A verificar
+- Requisitos de memória da instalação do APEX 26.2 (guia de instalação não lido); datas de fim de suporte do APEX.
+
 ## [4.1.0] — 2026-11-07
 
 Ajustes vindos do teste de integração do oracle-26ai-helper-ptbr no **26ai Free 23.26.3** (SQLcl 26.1.2/26.3.1, SQL*Plus 23.26.3, ORDS 26.3.1, APEX 26.2).

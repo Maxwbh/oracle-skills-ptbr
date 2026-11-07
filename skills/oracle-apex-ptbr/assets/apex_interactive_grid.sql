@@ -1,5 +1,8 @@
 --==============================================================================
--- Template: APEX Interactive Grid (APEX 26.1; IG existe desde o 5.1/2017)
+-- Template: APEX Interactive Grid (padrão APEX 26.2; IG existe desde o 5.1/2017)
+-- 26.2: apex.region.multipleRefresh aceita interactiveGrid (várias regiões numa
+--   só requisição AJAX); relatórios salvos do IG aceitam substituições e
+--   tradução por text messages.
 --
 -- Interactive Grid (IG) é o substituto do Tabular Form desde o APEX 5.1.
 -- Permite edição em massa, sort/filter dinâmico, save selectivo.

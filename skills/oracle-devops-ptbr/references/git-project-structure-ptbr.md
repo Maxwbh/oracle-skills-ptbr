@@ -1,6 +1,6 @@
 # Estrutura Git para Projetos Oracle/APEX/ORDS
 
-Referência completa para organizar projetos Oracle 19c + APEX 24.2/26.1 + ORDS no Git. Cobre estrutura de diretórios, convenções de nomenclatura de arquivos, ordem de deploy, estratégia de branches, versionamento de módulos ORDS, export split do APEX, GMUD naming e CI/CD com GitHub Actions.
+Referência completa para organizar projetos Oracle 19c + APEX 26.2 (padrão; compatível com 24.2+) + ORDS no Git. Cobre estrutura de diretórios, convenções de nomenclatura de arquivos, ordem de deploy, estratégia de branches, versionamento de módulos ORDS, export split do APEX, GMUD naming e CI/CD com GitHub Actions.
 
 ---
 
@@ -412,7 +412,7 @@ SQLcl 26.3.1): o gate lê o relatório JSON.
   SQLcl: `{"ignore":[{"ruleNo":"G-7310","reason":"..."}]}`. Cada exceção com
   motivo, revisada no PR como código.
 
-### APEXlang no pipeline (APEX 26.1+)
+### APEXlang no pipeline (APEX 26.1+; padrão da suíte: 26.2)
 
 - Export e versionamento: comando `apex` do SQLcl (APEXlang desde o SQLcl
   26.1.2; SQLcl Projects com APEXlang desde o 26.2). Exige ORDS 26.1.1+.
@@ -421,6 +421,12 @@ SQLcl 26.3.1): o gate lê o relatório JSON.
   o import **por arquivo** do APEX 26.2 (`apex import -files ...`) é suportado
   **só pelo SQLcl e pelo VS Code e só em desenvolvimento**. Não use import por
   arquivo como deploy incremental entre ambientes.
+- **APEX Advisor está deprecated no 26.2**; a checagem de qualidade e
+  segurança de APEXlang no pipeline é o CodeScan do SQLcl 26.3.0+
+  (`codescan_gate.py`).
+- No 26.2 o Export Wizard do App Builder sempre leva os *supporting objects*;
+  o export pelo SQLcl (`apex export`) continua escolhendo
+  (`-expSupportingObjects`).
 
 ---
 

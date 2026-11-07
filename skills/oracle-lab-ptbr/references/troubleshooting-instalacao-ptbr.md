@@ -75,8 +75,8 @@ Siga o diagnóstico em 4 perguntas do reference de rede antes de olhar a tabela.
 | Aviso de certificado em `https://…:8443` | Certificado autoassinado do lab | Esperado — aceitar. Nunca em produção |
 | Login no `INTERNAL` recusado | Senha do admin do APEX diferente da do `install.env` | Dentro da VM: `@apxchpwd.sql` no diretório do APEX |
 | APEX lento com 2 GB de RAM | Banco + Tomcat + JVM não cabem | Subir a VM para 4 GB (lembrando que o Free limita o **banco** a 2 GB) |
-| Instalação do APEX reclama de memória | APEX 26.1 exige SGA ≥ 1200 MB e PGA ≥ 300 MB | `show parameter sga_target` / `pga_aggregate_target`; ajustar e reiniciar. No Free, o teto de 2 GB torna isso apertado — não sobra para outros usos |
-| APEX instalado, mas ORDS recusa ou o APEX não abre | ORDS abaixo de 26.1.1 com APEX 26.1 | Conferir `ords --version`; baixar 26.1.1 ou superior |
+| Instalação do APEX reclama de memória | APEX 26.1 exige SGA ≥ 1200 MB e PGA ≥ 300 MB (26.2: a verificar no guia de instalação) | `show parameter sga_target` / `pga_aggregate_target`; ajustar e reiniciar. No Free, o teto de 2 GB torna isso apertado — não sobra para outros usos |
+| APEX instalado, mas ORDS recusa ou o APEX não abre | ORDS abaixo do mínimo: 26.3.0 para APEX 26.2, 26.1.1 para APEX 26.1 | Conferir `ords --version`; baixar 26.3.x ou superior |
 | ORDS não inicia: "requires Java 17 and above" | JDK antigo no `JAVA_HOME` | Java 17 ou 21 (Oracle JDK ou GraalVM) |
 | ORDS não sobe no Tomcat 10 | ORDS 26.1 só suporta Tomcat 9.0.x | Usar Tomcat 9; Tomcat 10 só a partir do ORDS 26.4 |
 

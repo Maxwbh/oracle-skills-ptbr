@@ -2,7 +2,7 @@
 name: oracle-26ai-ptbr
 description: "Módulo 26ai da suíte Oracle PT-BR. Novidades de Oracle Database 23ai/26ai (SQL, PL/SQL, segurança, JSON, migração) isoladas do restante da suíte, que é 19c. ATIVE quando a versão-alvo declarada for 23ai ou 26ai, ou em perguntas sobre migrar de 19c para 26ai, o que muda no código, backports 19.28 (IF NOT EXISTS, Annotations, DBMS_DEVELOPER), BOOLEAN em SQL, SELECT sem FROM, UPDATE/DELETE com JOIN, RETURNING OLD/NEW, GROUP BY ALL, INSERT BY NAME, QUALIFY, FILTER, calendar functions, UUID(), Domains, Assertions, RESETTABLE, transpiler PL/SQL→SQL, lock-free reservations, priority transactions, schema privileges, SQL Firewall, MLE JavaScript, AutoUpgrade. Frases — 'estou no 26ai', 'quando migrarmos pro 26', 'isso existe no 26ai?', 'dá pra usar no 19c?'. NÃO ATIVE quando a versão for 19c ou não estiver declarada — o módulo específico responde em 19c e só cita esta skill se houver alternativa 26ai relevante — nem em Vector Search, JSON duality views ou RAFT (use oracle-26ai-helper-ptbr)."
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 6
@@ -25,8 +25,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo 26ai (oracle-26ai-ptbr)
 
-> **Versão:** 1.1.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
-> **v1.1.1:** Vector Pool medido (restart só para ligar no CDB) e fronteira do roteiro de upgrade com oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.1.2 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
+> **v1.1.2:** APEX 26.2 na matriz de migração; datas de suporte do APEX 24.x não confirmadas → a verificar. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único): ver `oracle-core-ptbr`.
 
@@ -57,7 +57,7 @@ Cerca de 90% do trabalho da suíte roda em 19c. Se as sintaxes novas ficassem es
 - Planejamento ou execução de upgrade 19c/21c → 26ai (AutoUpgrade, non-CDB → PDB)
 - "Isso existe no 26ai?" / "dá pra fazer mais simples na versão nova?"
 - Confirmar se uma feature foi **backportada para 19c** (19.16, 19.28)
-- Código que depende de versão em APEX 26.1 (session state BOOLEAN exige banco 26ai) ou ORDS 26.1 (VecDB REST APIs)
+- Código que depende de versão em APEX 26.1+ (padrão da suíte: 26.2; session state BOOLEAN exige banco 26ai, Deep Data Security exige 23.26.3+) ou ORDS 26.1 (VecDB REST APIs)
 
 **Não usar** quando a versão é 19c ou não foi informada: o módulo técnico responde em 19c. Se houver uma alternativa 26ai claramente melhor, ele acrescenta **uma linha** "no 26ai: …" apontando para cá — não gera o código 26ai por conta própria.
 
@@ -102,7 +102,7 @@ Detalhes, restrições e exemplos completos nos references.
 
 1. **19c é o padrão da suíte.** Sintaxe 26ai só com versão declarada; marque `-- 26ai` no código.
 2. **Backport primeiro.** Se a feature existe em 19.28 (IF NOT EXISTS, Annotations), prefira-a à emulação — mas confirme o RU do cliente.
-3. **BOOLEAN nativo ≠ BOOLEAN do APEX.** Colunas `BOOLEAN` funcionam em qualquer 23ai+; *session state* BOOLEAN no APEX 26.1 exige banco 26ai e ORDS 26.1.1+. Em items APEX de bancos 19c, continue com `'Y'/'N'`.
+3. **BOOLEAN nativo ≠ BOOLEAN do APEX.** Colunas `BOOLEAN` funcionam em qualquer 23ai+; *session state* BOOLEAN no APEX 26.1+ exige banco 26ai (ORDS 26.1.1+ no 26.1; 26.3.0+ no 26.2). Em items APEX de bancos 19c, continue com `'Y'/'N'`.
 4. **Priority transactions: o default é `TXN_PRIORITY = HIGH`** para todas as sessões — nada é rollbackado até você baixar a prioridade de sessões de lote. Não ative `PRIORITY_TXNS_MODE = ROLLBACK` em produção sem período em `TRACK`.
 5. **Duality views são API, não atalho.** Exigem PK/FK íntegras e definem quais tabelas aceitam `INSERT/UPDATE/DELETE`; não substituem package de negócio. Modelagem e templates: `oracle-26ai-helper-ptbr`.
 6. **Transpiler PL/SQL→SQL é automático, mas limitado.** Só funções simples (sem SQL interno, loops, exceções) são transpiladas; `SQL_TRANSPILER = ON` na sessão para testar. Continue aplicando "SQL puro antes de PL/SQL".
@@ -115,7 +115,7 @@ Detalhes, restrições e exemplos completos nos references.
 |---|---|
 | Gerar packages/procedures (19c ou 26ai com versão declarada) | **oracle-plsql-ptbr** |
 | Naming e revisão Trivadis | **oracle-trivadis-ptbr** |
-| APEX 26.1 e dependências de versão de banco | **oracle-apex-ptbr** |
+| APEX 26.2 (padrão) e dependências de versão de banco | **oracle-apex-ptbr** |
 | ORDS 26.1 (VecDB, export com DROP, APEXlang) | **oracle-ords-ptbr** |
 | Upgrade operacional: AutoUpgrade, PDB, Data Guard | **oracle-dba-ptbr** |
 | Plano de execução, stats, transpiler na prática | **oracle-tuning-ptbr** |

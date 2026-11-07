@@ -2,7 +2,7 @@
 name: oracle-core-ptbr
 description: "Assistente central da suíte Oracle PT-BR (M&S do Brasil): roteamento entre os 9 módulos técnicos, convenções transversais (naming PT-BR + Trivadis 4.4, SQL antes de PL/SQL, APEX não comita, GMUD e promoção entre ambientes) e cenários multidisciplinares. ATIVE em dúvidas sobre qual skill Oracle usar, visão geral da suíte Oracle, convenções gerais de projeto Oracle, começar projeto Oracle/APEX do zero, 'como vocês organizam o código Oracle', 'qual o padrão do projeto'. Use com oracle-plsql-ptbr, oracle-trivadis-ptbr, oracle-apex-ptbr, oracle-ords-ptbr, oracle-dba-ptbr, oracle-tuning-ptbr, oracle-devops-ptbr , oracle-26ai-ptbr (só quando a versão-alvo for 23ai/26ai) e oracle-lab-ptbr (instalar/montar ambiente local) para cobertura técnica completa. NÃO ATIVE quando a demanda já é claramente de um módulo específico (código PL/SQL, página APEX, endpoint ORDS, sessão travada, query lenta, pipeline) — nesse caso ative o módulo direto."
 metadata:
-  version: "1.5.1"
+  version: "1.6.0"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
@@ -14,8 +14,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Core (oracle-core-ptbr)
 
-> **Versão:** 1.5.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
-> **v1.5.1:** roteamento do roteiro de upgrade 19c→26ai para oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.6.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
+> **v1.6.0:** APEX 26.2 como versão padrão da suíte (24.2 mínima). Histórico em `CHANGELOG.md`.
 
 Skill central da suíte Oracle PT-BR. Não contém templates próprios: define **como a suíte funciona como conjunto**, roteia demandas para o módulo certo e concentra as convenções que valem para todos.
 
@@ -23,7 +23,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — esta skill: roteamento, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 26.2 (padrão; compatível com 24.2+): páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
@@ -35,7 +35,7 @@ Suíte completa (10 skills — conjunto único):
 
 ## Contexto da suíte
 
-- **Stack alvo:** Oracle Database **19c** (padrão) · APEX **24.2 (baseline) a 26.2** · ORDS · SQLcl. 23ai/26ai só com versão declarada — ver `oracle-26ai-ptbr`; na dúvida, 19c
+- **Stack alvo:** Oracle Database **19c** (padrão) · APEX **26.2** (padrão; compatível com 24.2+ — sem versão declarada, gere para 26.2 e diga isso em uma linha) · ORDS 26.3+ · SQLcl 26.3+. 23ai/26ai só com versão declarada — ver `oracle-26ai-ptbr`; na dúvida, 19c (o APEX 26.2 roda no 19c com RU 19.18+)
 
 ### Versões suportadas (06/11/2026)
 
@@ -43,9 +43,9 @@ Suíte completa (10 skills — conjunto único):
 |---|---|---|
 | **Oracle Database 19c** | Long Term Support Release · **Premier até 31/12/2029 · Extended até 31/12/2032** · RU mais recente com página de novidades: **19.33** · upgrade **direto 19c → 26ai** (detalhe em `oracle-26ai-ptbr`) | [Lifetime Support Policy](https://www.oracle.com/us/assets/lifetime-support-technology-069183.pdf) (02/10/2026), [26ai Upgrade Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/upgrd/oracle-database-releases-that-support-direct-upgrade.html), [RU 19.33](https://docs.oracle.com/en/database/oracle/oracle-database/19/newft/ru-19-33.html) |
 | Oracle AI Database 26ai | Long Term Support Release · Premier até dez/2031 | Lifetime Support Policy |
-| **APEX 26.2** | **atual** — GA 06/10/2026 · exige **ORDS 26.3.0+**, **SQLcl 26.3.0+**, banco **19c RU 19.18+** ou **26ai 23.26.0+** · upgrade direto a partir do 18.1 · patch 26.2.1 | [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html), [downloads](https://www.oracle.com/tools/downloads/apex-downloads) |
+| **APEX 26.2** | **atual e padrão da suíte** — GA 06/10/2026 · exige **ORDS 26.3.0+**, **SQLcl 26.3.0+**, banco **19c RU 19.18+** ou **26ai 23.26.0+** · upgrade direto a partir do 18.1 · patch 26.2.1 | [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html), [downloads](https://www.oracle.com/tools/downloads/apex-downloads) |
 | APEX 26.1 | GA 14/05/2026 · ORDS 26.1.1+ · patch 26.1.6 | [downloads 26.1](https://www.oracle.com/tools/downloads/apex-261-downloads) |
-| **APEX 24.2** | **baseline suportada da suíte** · patch set mais recente **24.2.22** (04/11/2026) · ⚠ 24.2.0–24.2.20 na faixa da **CVE-2026-101521** (CVSS 9.8) | [downloads 24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) |
+| **APEX 24.2** | **versão mínima coberta pela suíte** · patch set mais recente **24.2.22** (04/11/2026) · ⚠ 24.2.0–24.2.20 na faixa da **CVE-2026-101521** (CVSS 9.8) | [downloads 24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) |
 | ORDS | **26.3.1** (04/11/2026) é a mais recente · 26.4 planejada ("Winter 2026", Tomcat 10/WebLogic 15) | [ORDS changelog](https://www.oracle.com/tools/ords/ords-changelog.html) |
 | SQLcl | **26.3.1** (03/11/2026) · CodeScan com regras para APEXlang desde 26.3.0 | [SQLcl changelog](https://www.oracle.com/tools/sqlcl/sqlcl-changelog.html) |
 

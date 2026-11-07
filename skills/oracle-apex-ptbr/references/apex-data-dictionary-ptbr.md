@@ -11,7 +11,7 @@ Referência para consulta e uso correto das views do dicionário do Oracle APEX.
 - [3. Nomenclatura interna de colunas APEX](#3-nomenclatura-interna-de-colunas-apex)
 - [4. Mapa por categoria — views mais importantes](#4-mapa-por-categoria-views-mais-importantes)
 - [5. Queries práticas de auditoria](#5-queries-práticas-de-auditoria)
-- [6. Evolução por versão — APEX 19 a 26.1](#6-evolução-por-versão-apex-19-a-261)
+- [6. Evolução por versão — APEX 19 a 26.2](#6-evolução-por-versão-apex-19-a-262)
 - [7. Impacto Oracle Edition nas views APEX](#7-impacto-oracle-edition-nas-views-apex)
 - [8. Fontes confiáveis para atualização](#8-fontes-confiáveis-para-atualização)
 - [Linkagem interna](#linkagem-interna)
@@ -495,7 +495,7 @@ ORDER BY 1;
 
 ---
 
-## 6. Evolução por versão — APEX 19 a 26.1
+## 6. Evolução por versão — APEX 19 a 26.2
 
 ### APEX 19.x / 20.x
 
@@ -587,11 +587,13 @@ ORDER BY 1;
 
 ---
 
-### APEX 26.2 (versão atual — GA em 06/10/2026)
+### APEX 26.2 (versão atual e padrão da suíte — GA em 06/10/2026)
 
 - **REST Workshop removido:** as views `APEX_REST_RESOURCE_*` continuam existindo por compatibilidade, mas **não expõem mais dados do REST Workshop** — para inventário de serviços REST use o dicionário do ORDS (`USER_ORDS_*` / `DBA_ORDS_*`, ver `oracle-ords-ptbr`).
 - **APIs novas** em `APEX_APPLICATION_ADMIN`: `LOCK_APPLICATION`, `UNLOCK_APPLICATION`, `CREATE_WORKING_COPY`, e as de Deep Data Security (`SET_DEEP_SEC` e correlatas).
-- Schema: `APEX_260200`. Detalhes e fontes: `apex-version-matrix-ptbr.md`.
+- **IA:** configurações OCI (Model, Compartment ID, Serving Mode, Endpoint ID, Project ID) passam a ser consultáveis em `APEX_WORKSPACE_AI_SERVICES`, fora do JSON de Additional Attributes.
+- **Static ID** não aceita Tab — um linter sobre as views pode procurar `INSTR(static_id, CHR(9)) > 0` nos componentes antes do upgrade.
+- Schema: `APEX_260200` (é a ele que o DBA concede Network ACL para e-mail/REST/LDAP). Mudanças de comportamento, deprecated e desupported: `apex-version-matrix-ptbr.md`.
 
 ### APEX 26.1 (GA em 14/05/2026)
 
@@ -665,9 +667,11 @@ https://docs.oracle.com/en/database/oracle/apex/{VER}/htmdb/   ← App Builder G
 https://docs.oracle.com/en/database/oracle/apex/{VER}/aeapi/   ← API Reference
 https://docs.oracle.com/en/database/oracle/apex/{VER}/htmrn/   ← Release Notes
 
-# Onde {VER} = 19.2 | 20.1 | 20.2 | 21.1 | 21.2 | 22.1 | 22.2 | 23.1 | 23.2 | 24.1 | 24.2 | 26.1
+# Onde {VER} = 19.2 | 20.1 | 20.2 | 21.1 | 21.2 | 22.1 | 22.2 | 23.1 | 23.2 | 24.1 | 24.2 | 26.1 | 26.2
 
 # Exemplos diretos
+https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/new-features.html
+https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/changed-behavior.html
 https://docs.oracle.com/en/database/oracle/apex/24.2/htmdb/changes-in-this-release.html
 https://docs.oracle.com/en/database/oracle/apex/24.2/htmdb/accessing-apex-views.html
 

@@ -6,8 +6,12 @@
 -- as classes evita criar CSS custom que duplica o que já existe e quebra com
 -- upgrade do tema.
 --
--- Em 24.2: Font APEX 2.4, Theme Roller para customização visual sem código,
--- support a CSS-only Light/Dark mode.
+-- Versão padrão: APEX 26.2. Estilo padrão "Iris" desde o 26.1 (Font APEX 2.5).
+-- 26.2: estilos Dark/Light/Pillar Dark/Pillar Light para cabeçalho e navegação
+-- no Theme Roller do Iris; "Redwood Light" virou "Redwood Light [Legacy]";
+-- Utility CSS Framework (ex.: u-flex, u-padding-4) e u-color-subtle.
+-- Em 24.2: Font APEX 2.4, Theme Roller e Light/Dark mode só com CSS.
+-- Lista viva das classes: app "Universal Theme Reference" (oracleapex.com/ut).
 --==============================================================================
 
 --==============================================================================
