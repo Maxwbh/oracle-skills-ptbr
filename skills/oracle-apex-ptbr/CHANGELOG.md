@@ -1,5 +1,10 @@
 # Changelog — oracle-apex-ptbr
 
+## [2.7.0] - 2026-11-07
+- Feature — APEX 26.2 passa a ser a versão padrão: sem versão declarada, o código sai para 26.2 com a suposição dita em uma linha e a alternativa para 24.2/26.1; pergunta só para instância existente (patch level) ou recurso que exige banco 26ai (o padrão segue 19c). Tabela de recursos 24.2 × 26.1 × 26.2 no SKILL.md e tabela de alternativas na matriz.
+- Feature — matriz: mudanças de comportamento do 26.2 que afetam código e deploy (OAuth com scope, Network ACL no schema APEX_260200, Export Wizard sempre com supporting objects, Static ID sem Tab, barra do IR e botão Reset, Allow to Exclude), deprecated (APEX Advisor → CodeScan, OAS SSO, Data Generator, membros de APEX_AI) e desupported (Query Builder, Export Repository, modelos Cohere, APEX_LISTENER, Swagger UI URL); Workflow, IG e Universal Theme do 26.2. Fontes consultadas em 07/11/2026.
+- Docs — assets e dicionário atualizados para 26.2 (cabeçalhos de compatibilidade, UT 26.2, APEX_AI deprecations, IR Reset, Workflow MIGRATE_INSTANCE, APEX_WORKSPACE_AI_SERVICES); "24.2 baseline" → "24.2 versão mínima". Requisitos de memória da instalação 26.2: a verificar.
+
 ## [2.6.1] - 2026-11-07
 - Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
 

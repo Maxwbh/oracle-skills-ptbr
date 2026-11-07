@@ -2,8 +2,9 @@
 -- Template: APEX BLOB Upload/Download
 --
 -- Compatibilidade: upload/download via APEX_APPLICATION_TEMP_FILES e
---   WPG_DOCLOAD valem em 24.1/24.2/26.1. Document Generator com PDF protegido
---   por senha é exclusivo do 26.1. Matriz: references/apex-version-matrix-ptbr.md
+--   WPG_DOCLOAD valem em 24.2/26.1/26.2 (padrão: 26.2). Document Generator com
+--   PDF protegido por senha existe desde o 26.1; no 26.2 as Report Queries
+--   passam JSON hierárquico ao Document Generator. Matriz: references/apex-version-matrix-ptbr.md
 --
 -- Cenários cobertos:
 --   1. Upload de arquivo via File Browse Item

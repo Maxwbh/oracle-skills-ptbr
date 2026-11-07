@@ -1,14 +1,14 @@
 # Matriz de Versões Oracle APEX — 24.1, 24.2, 26.1 e 26.2
 
 Referência para distinguir o que é exclusivo de cada release e decidir o que é
-seguro usar conforme a versão-alvo do ambiente. **Sempre que uma feature
-depender de versão e a versão-alvo não estiver clara na conversa, PERGUNTE ao
-usuário para qual versão do APEX (e, quando relevante, qual versão de banco) o
-código se destina antes de gerar algo que dependa de versão.**
+seguro usar conforme a versão-alvo do ambiente. **A versão padrão da suíte é o
+APEX 26.2:** sem versão declarada, o código sai para 26.2 (banco 19c, na
+dúvida) e a resposta diz isso em uma linha, com a alternativa para 24.2/26.1
+quando o recurso for 26.x. Ver [Versão padrão e quando perguntar](#versão-padrão-e-quando-perguntar).
 
 Todas as informações abaixo foram verificadas nas release notes oficiais da
-Oracle (docs.oracle.com / apex.oracle.com). Revisão de **06/11/2026**: 26.2,
-requisitos e segurança conferidos nas fontes citadas em cada seção; o que não
+Oracle (docs.oracle.com / apex.oracle.com). Revisão de **06/11/2026**, completada em **07/11/2026** (mudanças de comportamento,
+deprecated e desupported do 26.2): 26.2, requisitos e segurança conferidos nas fontes citadas em cada seção; o que não
 foi confirmado está marcado como **a verificar**.
 
 ## Índice
@@ -16,12 +16,13 @@ foi confirmado está marcado como **a verificar**.
 - [Linha do tempo e suporte](#linha-do-tempo-e-suporte)
 - [Requisitos por versão](#requisitos-por-versão)
 - [Exclusivo do APEX 26.2](#exclusivo-do-apex-262)
+- [Mudanças de comportamento, deprecated e desupported no 26.2](#mudanças-de-comportamento-deprecated-e-desupported-no-262)
 - [Exclusivo do APEX 26.1](#exclusivo-do-apex-261)
 - [Exclusivo do APEX 24.2](#exclusivo-do-apex-242)
 - [Exclusivo do APEX 24.1](#exclusivo-do-apex-241)
 - [Base comum (24.1+)](#base-comum-241)
 - [Dependências de versão de BANCO](#dependências-de-versão-de-banco)
-- [Quando perguntar a versão](#quando-perguntar-a-versão)
+- [Versão padrão e quando perguntar](#versão-padrão-e-quando-perguntar)
 - [Segurança — CPU de outubro/2026](#segurança--cpu-de-outubro2026-consultado-em-06112026)
 
 ## Linha do tempo e suporte
@@ -30,13 +31,13 @@ foi confirmado está marcado como **a verificar**.
 |---|---|---|---|---|
 | 23.2 | nov/2023 | — | a verificar | Introduziu Workflow nativo e Working Copy |
 | 24.1 | jun/2024 | 24.1.23 | a verificar | Primeiro release com IA generativa (APEX Assistant, APEX_AI) |
-| 24.2 | 15/01/2025 | **24.2.22** | **baseline suportada da suíte** ("fully supported" na página de download; data de fim **a verificar**) | RAG declarativo, JSON Sources Shared Component |
+| 24.2 | 15/01/2025 | **24.2.22** | **versão mínima coberta pela suíte** ("fully supported" na página de download; data de fim **a verificar**) | RAG declarativo, JSON Sources Shared Component |
 | 26.1 | 14/05/2026 (re-release 25/05) | 26.1.6 | suportada | APEXlang, AI Interactive Reports, AI Agents |
-| **26.2** | **06/10/2026** (re-release 09/10) | 26.2.1 | **atual** | APEXlang por arquivo, IA com reasoning effort, Deep Data Security; REST Workshop removido |
+| **26.2** | **06/10/2026** (re-release 09/10) | 26.2.1 | **atual — padrão da suíte** | APEXlang por arquivo, IA com reasoning effort, Deep Data Security; REST Workshop removido |
 
 Fontes: páginas de download do APEX ([24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [26.1](https://www.oracle.com/tools/downloads/apex-261-downloads), [atual](https://www.oracle.com/tools/downloads/apex-downloads)).
 
-> **24.2 como baseline:** os padrões da suíte valem de 24.2 em diante. Quem está na 24.2 deve estar no **patch set mais recente** — ver [Segurança](#segurança--cpu-de-outubro2026-consultado-em-06112026): a 24.2.0–24.2.20 está na faixa da CVE-2026-101521 (CVSS 9.8).
+> **26.2 padrão, 24.2 mínimo:** o código sai para 26.2; os padrões base valem de 24.2 em diante. Quem está na 24.2 deve estar no **patch set mais recente** — ver [Segurança](#segurança--cpu-de-outubro2026-consultado-em-06112026): a 24.2.0–24.2.20 está na faixa da CVE-2026-101521 (CVSS 9.8).
 
 Não houve release "25.x" — a Oracle pulou de 24.2 direto para 26.1, alinhando a
 numeração ao Oracle AI Database 26ai. Upgrade direto só é suportado a partir do
@@ -53,6 +54,7 @@ numeração ao Oracle AI Database 26ai. Upgrade direto só é suportado a partir
 | Schema | `APEX_240100` / `APEX_240200` | `APEX_260100` (pelo padrão; a verificar) | **`APEX_260200`** |
 | Ordem de instalação nova | — | ORDS antes do APEX | ORDS antes do APEX |
 | Edições | EE, SE2, Free | EE, SE2, 26ai Free | EE, SE2 (19c e 26ai) |
+| Memória na instalação | — | SGA ≥ 1200 MB, PGA ≥ 300 MB | a verificar (guia de instalação 26.2 não lido) |
 
 Fonte 26.2: [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html) e [changed behavior](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/changed-behavior.html).
 
@@ -106,6 +108,58 @@ Fonte: [New Features 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/
   `APEX_SESSION.ENABLE_DEEP_SEC_DATA_ROLES`. Fonte: [Configuring Deep Data
   Security with APEX](https://docs.oracle.com/en/database/oracle/apex/26.2/htmdb/configuring-deep-data-security-with-apex.html).
   Recursos do banco 26ai em si: `oracle-26ai-helper-ptbr`.
+- **Workflow:** *custom outcomes* em Action Tasks (`APEX_HUMAN_TASK.SET_TASK_OUTCOME`),
+  evento **Fail** quando a task vai para *Errored*, atividades de rascunho
+  (Draft Generic/Switch/Wait), export do diagrama em PNG/SVG e
+  `APEX_WORKFLOW.MIGRATE_INSTANCE` (migra instâncias em andamento para a nova
+  versão do workflow).
+- **Interactive Grid:** `apex.region.multipleRefresh` aceita `interactiveGrid`
+  (várias regiões numa requisição AJAX).
+- **Universal Theme 26.2:** estilos Dark, Light, Pillar Dark e Pillar Light para
+  cabeçalho e navegação no Theme Roller do Iris; "Redwood Light" renomeado para
+  "Redwood Light [Legacy]"; novo *Utility CSS Framework* (ex.: `u-flex`,
+  `u-padding-4`) e classe `u-color-subtle`. Referência viva: app *Universal
+  Theme Reference* (oracleapex.com/ut).
+- **IA — configurações OCI** (Model, Compartment ID, Serving Mode, Endpoint ID,
+  Project ID) saem do JSON de Additional Attributes; consulta em
+  `APEX_WORKSPACE_AI_SERVICES`.
+
+## Mudanças de comportamento, deprecated e desupported no 26.2
+
+Fontes (consultadas em 07/11/2026): [Changed Behavior](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/changed-behavior.html), [Deprecated Features](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/deprecated-features.html), [Desupported Features](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/desupported-features.html).
+
+**Mudanças que afetam código e deploy:**
+
+| Mudança | Impacto |
+|---|---|
+| **OAuth:** tokens reutilizados e regra de scope respeitada | Código que define token na mão (`APEX_WEB_SERVICE.SET_OAUTH_TOKEN`) com scope diferente do da requisição pode falhar → prefira a autenticação OAuth declarativa (Web Credential) |
+| **Network ACL** para e-mail, REST, LDAP e impressão | O DBA concede `connect` ao schema **`APEX_260200`** com `DBMS_NETWORK_ACL_ADMIN` (o upgrade replica a configuração da versão anterior; não se aplica ao Autonomous) — ver `oracle-ords-ptbr` |
+| **Export Wizard:** sai a opção *Supporting Objects* | Os supporting objects passam a ir sempre no export pelo App Builder; para exportar sem eles use `APEX_EXPORT.GET_APPLICATION` ou `apex export` do SQLcl |
+| **Static ID** não aceita caractere Tab | Valores antigos não mudam sozinhos, mas são validados ao editar o componente |
+| **Barra de pesquisa do IR** redesenhada | Botão automático *Interactive Report Reset*: **Yes** em apps novas, **No** nas existentes; o upgrade desliga alguns botões de reset criados pelo desenvolvedor; atalhos de teclado mudaram |
+| **Faceted Search / Smart Filters:** *Allow to Exclude* ligado por padrão | Revise facets que não devem permitir exclusão |
+| **Substituições** em mais Report Settings (nome, filtro, highlight, rótulos de gráfico) | — |
+| **Report Queries** passam JSON bruto (inclusive hierárquico) ao Document Generator | — |
+| Instance setting **Enable RESTful Services** | Passa a controlar também o REST do schema gerenciado pelo APEX e os aliases para o SQL Developer Web |
+
+**Deprecated no 26.2** (continuam funcionando; remoção prevista):
+- **APEX Advisor** → use o **CodeScan do SQLcl 26.3.0+**, que tem regras para APEXlang (`oracle-devops-ptbr`, `codescan_gate.py`);
+- autenticação **Oracle Application Server Single Sign-On** → Social Sign-In ou SAML;
+- **Data Generator** do SQL Workshop e o wizard *Create Shared Component* do Page Designer;
+- `APEX_AI`: membro `tool_calls` de `t_chat_message` (use entradas com `CHAT_ROLE = C_ROLE_TOOL_CALL` e `TOOL_CALL`) e membro `message` de `t_chat_response` (use `MESSAGES`);
+- *Provider API* Chat Completions (OpenAI, Ollama, Generic) e Generate Text (Gemini).
+
+**Desupported no 26.2:**
+- REST Workshop do SQL Workshop (ver [Exclusivo do APEX 26.2](#exclusivo-do-apex-262));
+- **Query Builder** do SQL Workshop (queries salvas viram *SQL Commands saved queries*, sem o layout);
+- **Export Repository**;
+- modelos OCI Generative AI `cohere.command-r-08-2024`, `cohere.command-r-plus-08-2024`, `cohere.command-latest` e `cohere.command-plus-latest` (migrados para `cohere.command-a-03-2025` no upgrade/import);
+- `APEX_LISTENER` em instalação nova e a configuração *Swagger UI URL*.
+
+**Import de apps de 24.2/26.1 no 26.2:** as notas consultadas não documentam
+restrição geral; trazem as migrações automáticas acima (modelos Cohere,
+serviços OpenAI/Gemini, Query Builder). O guia de instalação/upgrade da 26.2
+não foi lido — requisitos de memória da instalação 26.2: **a verificar**.
 
 ## Exclusivo do APEX 26.1
 
@@ -225,26 +279,31 @@ Algumas features dependem da versão do **banco**, não só do APEX:
 - **Deep Data Security (APEX 26.2)** — exige **Oracle AI Database 23.26.3+** e
   Social Sign-In com OCI IAM ou Microsoft Entra. Não existe em 19c.
 
-## Quando perguntar a versão
+## Versão padrão e quando perguntar
 
-Faça **uma** pergunta curta de versão-alvo (APEX e, se aplicável, banco) **antes
-de gerar código** quando o pedido envolver:
+**Padrão: APEX 26.2.** Sem versão declarada, gere para 26.2 e avise em uma
+linha ("Considerei APEX 26.2"). Quando o recurso não existe em 24.2/26.1, diga
+a alternativa na mesma resposta. Exemplos:
 
-- IA no app: APEX Assistant, `APEX_AI`, AI Interactive Reports, AI Agents,
-  geração por linguagem natural, RAG, vector search (24.1 / 24.2 / 26.1
-  divergem bastante).
-- APEXlang / export para source control em `.apx` (26.1+ com ORDS 26.1.1+); import por arquivo (`apex import -files`) só na 26.2, só via SQLcl/VS Code e só em desenvolvimento.
-- Definição de APIs REST: no 26.2 o REST Workshop saiu — use SQL Developer Web (ver `oracle-ords-ptbr`).
-- Deep Data Security, reasoning effort, navigation targets, colunas por linguagem natural no IR (26.2).
-- Page items Select One/Select Many, Slots, Template Components com partials
-  (24.1 introduziu; partials client-side só no 26.1).
-- Background jobs/Execution Chain (23.1+) e Workflow/Working Copy (23.2+/24.1).
-- Session state BOOLEAN, ou qualquer item que dependa de banco 26ai.
-- Universal Theme/estilo (Iris é padrão só no 26.1).
+| Recurso 26.x usado no padrão | Alternativa em versão anterior |
+|---|---|
+| Import por arquivo (`apex import -files`), 26.2 | 26.1: importar a aplicação inteira em APEXlang; 24.2: export/import SQL (`apex export -split`) |
+| `APEX_APPLICATION_ADMIN.LOCK_APPLICATION` / `CREATE_WORKING_COPY`, 26.2 | Working Copy e lock de página pelo App Builder (23.2+) |
+| `p_reasoning_effort` em `APEX_AI`, 26.2 | Omitir o parâmetro (24.1+) |
+| APIs REST pelo SQL Developer Web (REST Workshop removido na 26.2) | Em 24.2/26.1 o REST Workshop ainda existe, mas o caminho recomendado já é o mesmo |
+| APEXlang (`.apx`), 26.1+ | 24.2: export SQL com `-split` |
+| AI Interactive Reports / AI Agents, 26.1+ | 24.2: `APEX_AI.CHAT`/`GENERATE` e DA "gerar texto" |
 
-Se a versão-alvo já estiver clara na conversa (ex.: o usuário disse "estou no
-26.1" ou a app do cliente já foi descrita como 26.1), **não pergunte de novo** — use o que já foi
-informado e apenas sinalize a dependência de versão quando relevante.
+**Pergunte (uma vez, antes de gerar) só quando:**
+- houver uma **instância existente** (app de cliente, upgrade, incidente):
+  versão completa com patch set — ver [Segurança](#segurança--cpu-de-outubro2026-consultado-em-06112026);
+- o recurso depender do **banco 26ai** — session state BOOLEAN, Deep Data
+  Security (23.26.3+), vector search — e o banco não tiver sido informado (o
+  padrão é 19c, que não tem esses recursos).
+
+Se a versão já estiver clara na conversa (ex.: "estou no 24.2"), **não
+pergunte de novo** — use a versão informada e só sinalize a dependência quando
+relevante.
 
 ---
 
