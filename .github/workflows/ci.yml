@@ -3,7 +3,7 @@
 #
 # Jobs (todos sem banco de dados):
 #   build     → python build.py --check (frontmatter, suite_size, CHANGELOG,
-#               marketplace, clientes reais)
+#               marketplace, clientes reais) e --check-dist (dist/ em dia)
 #   testes    → pytest (os testes de integração se pulam sem banco)
 #   lint      → ruff, shellcheck (*.sh) e actionlint (workflows do repo e os
 #               templates de workflow das skills)
@@ -49,6 +49,8 @@ jobs:
             echo "::warning::Secret CLIENTES_PROIBIDOS não configurado — trava de clientes reais inativa"
           fi
           python build.py --check
+      - name: dist/ em dia com as skills (pacotes .skill versionados)
+        run: python build.py --check-dist
 
   testes:
     name: pytest

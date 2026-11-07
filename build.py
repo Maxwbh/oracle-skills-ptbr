@@ -41,6 +41,7 @@ import os
 import re
 import shutil
 import sys
+import tempfile
 import unicodedata
 import zipfile
 from pathlib import Path
@@ -244,7 +245,7 @@ def versao_changelog(skill_dir: Path) -> str | None:
 
 # ─── Empacotamento ────────────────────────────────────────────────────────────
 
-def empacotar_skill(skill_dir: Path) -> Path:
+def empacotar_skill(skill_dir: Path, destino: Path | None = None) -> Path:
     """
     Monta a skill em BUILD_TMP (com propagação de shared/),
     valida e gera dist/{name}.skill.
@@ -272,8 +273,9 @@ def empacotar_skill(skill_dir: Path) -> Path:
         return None
 
     # Empacotar como .zip renomeado para .skill
-    DIST.mkdir(exist_ok=True)
-    skill_file = DIST / f"{name}.skill"
+    destino = destino or DIST
+    destino.mkdir(exist_ok=True)
+    skill_file = destino / f"{name}.skill"
 
     with zipfile.ZipFile(skill_file, "w", zipfile.ZIP_DEFLATED) as zf:
         for arquivo in sorted(build_dir.rglob("*")):
@@ -282,6 +284,49 @@ def empacotar_skill(skill_dir: Path) -> Path:
                 zf.write(arquivo, arcname)
 
     return skill_file
+
+
+# ─── dist/ versionado em dia ────────────────────────────────────────────────
+
+def conteudo_pacote(arquivo: Path) -> dict[str, bytes]:
+    """Conteúdo de um .skill (nome → bytes), sem datas/metadados do zip."""
+    with zipfile.ZipFile(arquivo) as zf:
+        return {n: zf.read(n) for n in zf.namelist()}
+
+
+def verificar_dist(skill_dirs: list[Path]) -> list[str]:
+    """
+    dist/ fica versionado (instalação direta dos .skill no Claude): cada pacote
+    tem de ter o mesmo conteúdo de um build novo, sem pacotes sobrando, e o
+    checksums.sha256 tem de bater com os arquivos.
+    """
+    problemas: list[str] = []
+    nomes = {d.name for d in skill_dirs}
+    with tempfile.TemporaryDirectory(prefix="dist_") as tmp:
+        for skill_dir in skill_dirs:
+            novo = empacotar_skill(skill_dir, Path(tmp))
+            atual = DIST / f"{skill_dir.name}.skill"
+            if novo is None:
+                problemas.append(f"{skill_dir.name}: não empacota")
+            elif not atual.exists():
+                problemas.append(f"dist/{atual.name} ausente — rode: python build.py")
+            elif conteudo_pacote(atual) != conteudo_pacote(novo):
+                problemas.append(f"dist/{atual.name} desatualizado — rode: python build.py")
+    if BUILD_TMP.exists():
+        shutil.rmtree(BUILD_TMP)
+    for sobra in sorted(f.name for f in DIST.glob("*.skill") if f.stem not in nomes):
+        problemas.append(f"dist/{sobra} não corresponde a nenhuma skill")
+    checksums = DIST / "checksums.sha256"
+    if not checksums.exists():
+        problemas.append("dist/checksums.sha256 ausente — rode: python build.py")
+    else:
+        registrados = dict(reversed(linha.split("  ", 1)) for linha in
+                           checksums.read_text(encoding="utf-8").splitlines() if "  " in linha)
+        for f in sorted(DIST.glob("*.skill")):
+            sha = hashlib.sha256(f.read_bytes()).hexdigest()
+            if registrados.get(f.name) != sha:
+                problemas.append(f"dist/checksums.sha256 não confere com {f.name}")
+    return problemas
 
 
 # ─── Checksums ────────────────────────────────────────────────────────────────
@@ -365,6 +410,8 @@ def main() -> None:
                         help="Empacotar apenas esta skill (ex: oracle-dba-ptbr)")
     parser.add_argument("--check", action="store_true",
                         help="Verificar consistência sem empacotar")
+    parser.add_argument("--check-dist", action="store_true",
+                        help="Verificar se dist/ está igual a um build novo")
     parser.add_argument("--checksums", action="store_true",
                         help="Gerar dist/checksums.sha256")
     args = parser.parse_args()
@@ -412,6 +459,16 @@ def main() -> None:
         sep()
         log(f"  {G}OK: {total_ok}{Z}  |  {R}Erros: {total_err}{Z}\n")
         sys.exit(1 if total_err else 0)
+
+    # ── Modo dist em dia ──────────────────────────────────────────────────────
+    if args.check_dist:
+        log("  Conferindo dist/ contra um build novo...\n")
+        problemas = verificar_dist(skill_dirs)
+        for p in problemas:
+            err(p)
+        if not problemas:
+            ok(f"dist/ em dia ({len(skill_dirs)} pacotes + checksums)")
+        sys.exit(1 if problemas else 0)
 
     # ── Modo checksums ────────────────────────────────────────────────────────
     if args.checksums:
