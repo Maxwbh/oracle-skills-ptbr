@@ -1,5 +1,9 @@
 # Changelog — oracle-devops-ptbr
 
+## [4.1.1] - 2026-11-07
+- Fix — `export_db.py`: sem `--schema`, usava `DB_USER` mesmo com `DB_SCHEMA` definido; agora `DB_SCHEMA` tem precedência (mesma regra do `oracle_devops_utils`).
+- Fix — lint dos `export_*.py` (imports, f-strings, `check=False` explícito no `subprocess.run`) para o ruff do CI.
+
 ## [4.1.0] - 2026-11-06
 - Feature — `codescan_gate.py`: gate de CI com SQLcl CodeScan (SQL, PL/SQL e APEXlang `.apx`, regras de .apx desde o SQLcl 26.3.0); falha se houver achado (o `codescan` sai com 0 mesmo com violações); exceções em `codescan.json`. Job `validate` do `github-deploy.yml` instala Java 21 + SQLcl e roda o gate. `suite_size` 30 → 31.
 - Docs — APEXlang no pipeline: promoção entre ambientes com a aplicação inteira; import por arquivo do APEX 26.2 é só SQLcl/VS Code e só dev.
