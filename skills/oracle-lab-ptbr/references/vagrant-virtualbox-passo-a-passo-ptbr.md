@@ -16,6 +16,7 @@ Baseado nos builds públicos de Tim Hall (github.com/oraclebase/vagrant, Apache 
 - [7. Testar](#7-testar)
 - [8. Snapshot e rotina do dia a dia](#8-snapshot-e-rotina-do-dia-a-dia)
 - [9. Alternativa rápida: container](#9-alternativa-rápida-container)
+  - [9.1 Container com APEX e ORDS (Docker Compose)](#91-container-com-apex-e-ords-docker-compose)
 
 ---
 
@@ -249,4 +250,25 @@ docker run -d --name oracle26 -p 1521:1521 \
 - Acompanhe a subida com `docker logs -f oracle26` até aparecer "DATABASE IS READY TO USE".
 - Trocar a senha depois: `docker exec oracle26 ./setPassword.sh NovaSenha1`.
 
-APEX e ORDS em container existem, mas exigem montar os dois serviços e amarrar a configuração — se APEX faz parte do trabalho, o caminho da VM é mais curto.
+### 9.1 Container com APEX e ORDS (Docker Compose)
+
+A Oracle publica a imagem **`container-registry.oracle.com/database/ords`** (ex.: tag `26.3.1`). Ao subir apontando para o banco, ela instala o ORDS no banco e, se a pasta do APEX estiver montada em `/opt/oracle/apex`, **instala ou atualiza o APEX** e serve as imagens em `/i/`. Medido em nov/2026 (26ai Free 23.26.3 + ORDS 26.3.1 + APEX 26.2, 4 vCPU/15 GB):
+
+| Situação | Tempo até o APEX responder |
+|---|---|
+| Primeira subida (instala ORDS + APEX) | ~21 min |
+| Restaurar snapshot dos volumes (já com APEX) | ~2 min |
+| `docker compose stop` / `start` | ~1 min |
+| Zerar o banco para um teste (clonar PDB de um PDB "dourado" READ ONLY) | ~10 s (descartar: ~3 s) |
+
+Pontos que pegam na montagem:
+
+- **Variáveis do container do ORDS:** `DBHOST`, `DBPORT`, `DBSERVICENAME` (ex.: `FREEPDB1`), `ORACLE_PWD` (senha do SYS), `APEX_PWD` (pool do APEX) e **`ORACLE_USER_PWD`** (senha do `ORDS_PUBLIC_USER`) — sem esta última o ORDS 26.x aborta na subida.
+- **APEX baixado** de `https://download.oracle.com/otn_software/apex/apex-latest.zip` (ou `apex_26.2.zip`) e descompactado na pasta montada.
+- A instalação é silenciosa e usa senhas internas fixas: **troque a senha do ADMIN do INTERNAL** depois. A política de senha do APEX exige pontuação (senão ORA-20001 "Password validation failed").
+- A imagem do 26ai Free já traz o **banco pré-criado**: scripts em `/opt/oracle/scripts/setup` não rodam; use `/opt/oracle/scripts/startup` (roda a cada subida).
+- Checagem automática do APEX por `curl` precisa de cookie jar (`-c`/`-b`): sem ele o APEX redireciona em loop.
+
+Um ambiente pronto (compose, pós-instalação, snapshot dourado e PDB descartável, com esses tempos) está no repositório **oracle-26ai-helper-ptbr**, pasta `ambiente-teste/`: https://github.com/Maxwbh/oracle-26ai-helper-ptbr
+
+Se o objetivo é **reproduzir o ambiente de um cliente** (19c, Tomcat, caminhos de produção), a VM continua sendo o caminho.

@@ -60,6 +60,14 @@ def test_sqlcl_usa_whenever_com_rollback_e_exit_com_commit(sql_falso, script):
     assert linhas[-2] == f'@"{script.resolve()}"'
 
 
+def test_sqlcl_liga_sqlblanklines_antes_do_script(sql_falso, script):
+    # Linha em branco dentro de um comando não pode encerrá-lo (UPDATE sem WHERE)
+    u.executar_script_sqlcl(script, CFG, verbose=False)
+    linhas = sql_falso()["stdin"].splitlines()
+    assert "SET SQLBLANKLINES ON" in linhas
+    assert linhas.index("SET SQLBLANKLINES ON") < linhas.index(f'@"{script.resolve()}"')
+
+
 def test_sqlcl_roda_na_pasta_do_script_para_preservar_arroba_arroba(sql_falso, script):
     u.executar_script_sqlcl(script, CFG, verbose=False)
     assert sql_falso()["cwd"] == str(script.parent)

@@ -1,5 +1,8 @@
 # Changelog — oracle-ords-ptbr
 
+## [2.5.1] - 2026-11-07
+- Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
+
 ## [2.5.0] - 2026-11-06
 - Feature — linha do tempo com ORDS 26.3.0 (exigido pelo APEX 26.2) e 26.3.1 (mais recente em 06/11/2026); 26.4 continua planejada (Tomcat 10/WebLogic 15; standalone não afetado). Par mínimo APEX × ORDS documentado.
 - Feature — segurança: 35 CVEs do ORDS no CPU out/2026 (faixa 24.2.0–26.2.2), CVE-2026-91610 (8.8) e demais.

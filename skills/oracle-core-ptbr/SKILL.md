@@ -2,8 +2,8 @@
 name: oracle-core-ptbr
 description: "Assistente central da suíte Oracle PT-BR (M&S do Brasil): roteamento entre os 9 módulos técnicos, convenções transversais (naming PT-BR + Trivadis 4.4, SQL antes de PL/SQL, APEX não comita, GMUD e promoção entre ambientes) e cenários multidisciplinares. ATIVE em dúvidas sobre qual skill Oracle usar, visão geral da suíte Oracle, convenções gerais de projeto Oracle, começar projeto Oracle/APEX do zero, 'como vocês organizam o código Oracle', 'qual o padrão do projeto'. Use com oracle-plsql-ptbr, oracle-trivadis-ptbr, oracle-apex-ptbr, oracle-ords-ptbr, oracle-dba-ptbr, oracle-tuning-ptbr, oracle-devops-ptbr , oracle-26ai-ptbr (só quando a versão-alvo for 23ai/26ai) e oracle-lab-ptbr (instalar/montar ambiente local) para cobertura técnica completa. NÃO ATIVE quando a demanda já é claramente de um módulo específico (código PL/SQL, página APEX, endpoint ORDS, sessão travada, query lenta, pipeline) — nesse caso ative o módulo direto."
 metadata:
-  version: "1.5.0"
-  release_date: "2026-11-06"
+  version: "1.5.1"
+  release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
   author: "Maxwell da Silva Oliveira"
@@ -14,8 +14,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Core (oracle-core-ptbr)
 
-> **Versão:** 1.5.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
-> **v1.5.0:** quadro de versões suportadas (19c com Premier até 31/12/2029 e Extended até 31/12/2032; APEX 24.2–26.2; ORDS/SQLcl 26.3.1) e roteamento para oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.5.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
+> **v1.5.1:** roteamento do roteiro de upgrade 19c→26ai para oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
 
 Skill central da suíte Oracle PT-BR. Não contém templates próprios: define **como a suíte funciona como conjunto**, roteia demandas para o módulo certo e concentra as convenções que valem para todos.
 
@@ -31,7 +31,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
-> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality, RAFT (replicação do Globally Distributed Database) e roteiro do upgrade 19c→26ai. Roteamento: Vector / Duality / RAFT e roteiro do upgrade (fases, riscos, Vector Pool na janela) → **oracle-26ai-helper-ptbr**; sintaxe nova e checklist de código da migração (o que muda, caminhos, compatibilidade APEX/ORDS/SQLcl) → **oracle-26ai-ptbr**; operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 ## Contexto da suíte
 
@@ -67,7 +67,7 @@ Suíte completa (10 skills — conjunto único):
 | "query lenta", "qual índice criar", "explain plan", "hard parse", "stats desatualizadas", "result cache", "analisar AWR/ASH desse SQL" | **oracle-tuning-ptbr** |
 | "estruturar projeto no Git", "pipeline", "changelog Liquibase", "export APEX pra Git", "nomenclatura GMUD", "enviar pra homologação" | **oracle-devops-ptbr** |
 | "estou no 26ai", "isso existe no 26ai?", "migrar do 19c pro 26", "dá pra usar no 19c?", "IF NOT EXISTS", "BOOLEAN nativo", "QUALIFY" | **oracle-26ai-ptbr** |
-| "busca vetorial", "VECTOR", "RAG no banco", "duality view", "RAFT", "Globally Distributed Database" | **oracle-26ai-helper-ptbr** (skill irmã, fora da suíte) |
+| "busca vetorial", "VECTOR", "RAG no banco", "duality view", "RAFT", "Globally Distributed Database", "roteiro/riscos do upgrade pro 26ai" | **oracle-26ai-helper-ptbr** (skill irmã, fora da suíte) |
 | "como instalo o Oracle aqui", "vagrant up", "VirtualBox", "preciso de um banco pra testar", "não conecto no meu banco local", "acessar do notebook da sala" | **oracle-lab-ptbr** |
 
 ## Cenários multidisciplinares — ordem de carregamento

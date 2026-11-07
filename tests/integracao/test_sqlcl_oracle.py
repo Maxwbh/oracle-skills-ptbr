@@ -75,6 +75,27 @@ def test_falha_no_meio_desfaz_dml_parcial(tmp_path, conn_teste):
         assert cur.fetchone()[0] == 0
 
 
+def test_linha_em_branco_dentro_do_comando_nao_corta_o_statement(tmp_path, conn_teste):
+    """Sem SET SQLBLANKLINES ON, o SQLcl encerra o comando na linha em branco:
+    executaria 'UPDATE ... SET ...' SEM o WHERE (todas as linhas), acusaria
+    'Unknown Command' no resto e ainda sairia com 0 (WHENEVER SQLERROR não pega).
+    Medido no SQLcl 26.1.2 e 26.3.1 contra o 26ai Free 23.26.3."""
+    with conn_teste.cursor() as cur:
+        cur.execute("CREATE TABLE t_branco (id NUMBER PRIMARY KEY, situacao VARCHAR2(10))")
+        cur.executemany("INSERT INTO t_branco VALUES (:1, 'ATIVO')", [(1,), (2,), (3,)])
+        conn_teste.commit()
+    arq = _arq(tmp_path, "update.sql", """\
+        UPDATE t_branco
+           SET situacao = 'INATIVO'
+
+         WHERE id = 1;
+    """)
+    u.executar_script_sqlcl(arq, u.obter_config_db(), verbose=False)
+    with conn_teste.cursor() as cur:
+        cur.execute("SELECT id FROM t_branco WHERE situacao = 'INATIVO' ORDER BY id")
+        assert [r[0] for r in cur.fetchall()] == [1]
+
+
 def test_senha_errada_falha(tmp_path, schema_teste):
     arq = _arq(tmp_path, "x.sql", "SELECT 1 FROM dual;\n")
     cfg = {**u.obter_config_db(), "password": "errada"}

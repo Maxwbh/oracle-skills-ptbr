@@ -2,8 +2,8 @@
 name: oracle-tuning-ptbr
 description: Módulo de tuning da suíte Oracle PT-BR. Performance tuning Oracle 19c — explain plan, análise AWR/ASH de SQL, indexes, hints, bind variables, cursor sharing, DBMS_STATS, V$SQL, V$SQLAREA, V$SESSION_WAIT. ATIVE em query lenta, full scan indesejado, hard parse alto, index strategy, plano de execução ruim, estatísticas desatualizadas, cardinality errada, AWR snapshot, ASH amostragem. Frases — "query está lenta", "qual index criar", "melhorar explain plan", "muitos hard parse", "cursor sharing", "optimizer hint", "runstats". NÃO ATIVE em DBA operacional (sessões/locks/tablespace), código PL/SQL novo, APEX, ORDS. Templates em assets/.
 metadata:
-  version: "2.7.0"
-  release_date: "2026-11-06"
+  version: "2.7.1"
+  release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 7
   author: "Maxwell da Silva Oliveira"
@@ -26,8 +26,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Tuning (oracle-tuning-ptbr)
 
-> **Versão:** 2.7.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (7 recursos nesta skill)
-> **v2.7.0:** baseline SPM aceito pode não ser usado (caso 19.32): conferir V$SQL.SQL_PLAN_BASELINE e REPRODUCED. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.7.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (7 recursos nesta skill)
+> **v2.7.1:** roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
@@ -41,7 +41,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
-> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality, RAFT (replicação do Globally Distributed Database) e roteiro do upgrade 19c→26ai. Roteamento: Vector / Duality / RAFT e roteiro do upgrade (fases, riscos, Vector Pool na janela) → **oracle-26ai-helper-ptbr**; sintaxe nova e checklist de código da migração (o que muda, caminhos, compatibilidade APEX/ORDS/SQLcl) → **oracle-26ai-ptbr**; operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 
 Performance tuning Oracle 19c — análise de planos de execução, índices e leitura de AWR/ASH para diagnosticar SQL.

@@ -2,8 +2,8 @@
 name: oracle-lab-ptbr
 description: "Módulo de instalação e ambiente local da suíte Oracle PT-BR, para desenvolvedor sem experiência de DBA. Montar Oracle 19c ou 26ai na própria máquina (Windows, Linux, Mac) via VM Vagrant+VirtualBox (padrão), container Docker/Podman, OVA ou RPM, com APEX e ORDS opcionais, e acessar esse banco de outros aparelhos da rede de casa. ATIVE em instalar Oracle na minha máquina, montar ambiente de desenvolvimento, subir banco local, vagrant up, VirtualBox, Oracle Free, XE, APEX local, ORDS local, quanto de RAM preciso, liberar porta 1521, e nos erros de quem está começando — ORA-12541, ORA-12514, ORA-01017, VM não sobe, conflito Hyper-V/WSL2, host-only fora da faixa, APEX em branco. Frases — 'como instalo isso aqui', 'não consigo conectar no banco', 'preciso de um banco pra testar'. NÃO ATIVE em banco de cliente ou produção (é oracle-dba-ptbr), nem em código, página APEX, endpoint ORDS ou pipeline."
 metadata:
-  version: "1.1.0"
-  release_date: "2026-11-06"
+  version: "1.2.0"
+  release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 8
   author: "Maxwell da Silva Oliveira"
@@ -26,12 +26,12 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Lab/Instalação (oracle-lab-ptbr)
 
-> **Versão:** 1.1.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (8 recursos nesta skill)
-> **v1.1.0:** 19c em Oracle Linux 10 (RU 19.33), fim do HCP Vagrant Registry (31/12/2026), Fedora 45 e VirtualBox 7.2.22. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.2.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (8 recursos nesta skill)
+> **v1.2.0:** APEX/ORDS em container pela imagem oficial do ORDS, com tempos medidos (1ª subida ~21 min, snapshot ~2 min, PDB clonado ~10 s); roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único): ver `oracle-core-ptbr`.
 
-> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality, RAFT (replicação do Globally Distributed Database) e roteiro do upgrade 19c→26ai. Roteamento: Vector / Duality / RAFT e roteiro do upgrade (fases, riscos, Vector Pool na janela) → **oracle-26ai-helper-ptbr**; sintaxe nova e checklist de código da migração (o que muda, caminhos, compatibilidade APEX/ORDS/SQLcl) → **oracle-26ai-ptbr**; operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 Ajuda um **desenvolvedor sem experiência de DBA** a ter um Oracle rodando na própria máquina e a usá-lo de outros aparelhos da rede de casa. As demais skills assumem um banco existente; esta é a que o coloca de pé.
 
@@ -61,7 +61,8 @@ O público não é DBA. Regras de tom, valem para toda a interação:
 | Situação | Caminho | Por quê |
 |---|---|---|
 | **Padrão da casa** — máquina com 8 GB+ livres, quer algo parecido com o cliente | **VM Vagrant + VirtualBox** | Linux de verdade, mesmas versões e caminhos da produção; APEX e ORDS incluídos; dá para destruir e refazer com um comando |
-| Só precisa de um banco para testar SQL/PL/SQL, hoje | **Container Docker/Podman (26ai Free)** | Sobe em minutos, banco pré-criado, ~1–2 GB de RAM; não tem APEX/ORDS prontos |
+| Só precisa de um banco para testar SQL/PL/SQL, hoje | **Container Docker/Podman (26ai Free)** | Sobe em minutos, banco pré-criado, ~1–2 GB de RAM |
+| Quer APEX/ORDS em container, ou testes repetidos com reset rápido | **Docker Compose: 26ai Free + imagem oficial do ORDS** | A imagem do ORDS instala o APEX montado numa pasta (~21 min só na 1ª vez); depois snapshot dourado restaura em ~2 min e PDB clonado zera o banco em ~10 s. Ver `references/vagrant-virtualbox-passo-a-passo-ptbr.md` §9 |
 | Máquina fraca ou sem permissão para instalar | **OVA pronta do Oracle** (VirtualBox) ou banco compartilhado da equipe | Zero comando: importar e ligar |
 | Já usa Oracle Linux na máquina ou num mini-PC | **RPM nativo** | Sem camada de virtualização |
 | Mac com Apple Silicon | **Container imagem arm64** ou VM em outro host | VirtualBox x86 não roda ali |

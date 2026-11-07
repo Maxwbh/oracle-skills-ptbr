@@ -90,6 +90,10 @@ Siga o diagnóstico em 4 perguntas do reference de rede antes de olhar a tabela.
 | Conecta de dentro, não de fora | Porta não publicada | `-p 1521:1521` na criação; não dá para adicionar depois — recrie o container |
 | "database is not ready" | Ainda inicializando | `docker logs -f` até "DATABASE IS READY TO USE" |
 | Não roda no Mac M1/M2/M3 | Imagem x86 | Usar tag `…-lite-arm64` |
+| Container do ORDS aborta: "Required variable ORACLE_USER_PWD is missing" | Imagem do ORDS 26.x exige a senha do `ORDS_PUBLIC_USER` | Passar `ORACLE_USER_PWD` no `docker run`/compose |
+| ORA-20001 "Password validation failed" ao trocar a senha do ADMIN do APEX | Política de senha do APEX | Incluir caractere de pontuação na senha |
+| Script em `/opt/oracle/scripts/setup` nunca roda | A imagem do Free traz o banco pré-criado | Usar `/opt/oracle/scripts/startup` (roda a cada subida; faça-o idempotente) |
+| `curl` no `/ords/apex` fica em redirecionamento infinito | O APEX controla sessão por cookie | `curl -c cj -b cj -L …` |
 
 ## 7. Lentidão e travamentos
 
