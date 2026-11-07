@@ -276,12 +276,18 @@ oracle-skills-ptbr/
 ```bash
 pip install -r requirements-dev.txt
 python build.py --check      # frontmatter, suite_size, CHANGELOG, marketplace, clientes reais
+python build.py              # regenera dist/*.skill + checksums — commite junto com a mudança
+python build.py --check-dist # dist/ igual a um build novo (o CI exige)
 python -m pytest -q          # unitários (integração é pulada sem banco)
 ruff check .
 ```
 
-**CI** (`.github/workflows/ci.yml`, em todo PR): `build.py --check`, `pytest`,
-`ruff`, `shellcheck` e `actionlint`.
+**CI** (`.github/workflows/ci.yml`, em todo PR): `build.py --check`,
+`build.py --check-dist`, `pytest`, `ruff`, `shellcheck` e `actionlint`.
+
+**Clientes reais:** a trava do `--check` lê os nomes do secret
+`CLIENTES_PROIBIDOS` (no CI) ou do arquivo local `.clientes-proibidos.txt`
+(fora do git). A lista não fica no código.
 
 **Integração** (`.github/workflows/integracao.yml`, manual): sobe o Oracle Free
 em container descartável, instala SQLcl e roda `tests/integracao/` — inclusive
