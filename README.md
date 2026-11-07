@@ -2,9 +2,9 @@
 
 **Skills Claude para Oracle — Stack Completa em Português**
 
-10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 24.2–26.2 + ORDS.
+10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 26.2 (versão padrão; compatível com 24.2+) + ORDS 26.3+.
 
-**Versão da coleção: 4.1.0** — histórico em [CHANGELOG.md](./CHANGELOG.md) · pacotes em [Releases](https://github.com/maxwbh/oracle-skills-ptbr/releases/latest) e em [`dist/`](./dist/)
+**Versão da coleção: 4.2.0** — histórico em [CHANGELOG.md](./CHANGELOG.md) · pacotes em [Releases](https://github.com/maxwbh/oracle-skills-ptbr/releases/latest) e em [`dist/`](./dist/)
 
 ---
 
@@ -20,16 +20,16 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 
 | Skill | Versão | Escopo | Recursos |
 |---|---|---|---|
-| `oracle-core-ptbr` | 1.5.1 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
-| `oracle-plsql-ptbr` | 3.0.2 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
-| `oracle-apex-ptbr` | 2.6.1 | APEX (padrões de 24.2+) development + Data Dictionary completo | 21 |
-| `oracle-ords-ptbr` | 2.5.1 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
-| `oracle-dba-ptbr` | 2.4.1 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
-| `oracle-tuning-ptbr` | 2.7.1 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
-| `oracle-trivadis-ptbr` | 2.4.2 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
-| `oracle-devops-ptbr` | 4.1.2 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 31 |
-| `oracle-lab-ptbr` | 1.2.0 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
-| `oracle-26ai-ptbr` | 1.1.1 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
+| `oracle-core-ptbr` | 1.6.0 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
+| `oracle-plsql-ptbr` | 3.0.3 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
+| `oracle-apex-ptbr` | 2.7.0 | APEX 26.2 (padrão; compatível com 24.2+) development + Data Dictionary completo | 21 |
+| `oracle-ords-ptbr` | 2.5.2 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
+| `oracle-dba-ptbr` | 2.4.2 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
+| `oracle-tuning-ptbr` | 2.7.2 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
+| `oracle-trivadis-ptbr` | 2.4.3 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
+| `oracle-devops-ptbr` | 4.1.3 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 31 |
+| `oracle-lab-ptbr` | 1.2.1 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
+| `oracle-26ai-ptbr` | 1.1.2 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
 
 ---
 
@@ -40,6 +40,11 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 1. Baixe os arquivos `.skill` da pasta [`dist/`](./dist/) ou da [última release](https://github.com/maxwbh/oracle-skills-ptbr/releases/latest) (com `checksums.sha256`)
 2. No Claude.ai → **Settings** → **Skills** → arraste ou clique em **Upload**
 3. Repita para cada skill desejada
+
+### Atualizando da 4.1
+
+- **APEX 26.2 é a versão padrão:** sem versão declarada na conversa, o código sai para 26.2 (banco 19c, na dúvida) e a resposta diz isso em uma linha, com a alternativa para 24.2/26.1. Declare a versão (ex.: "estou no 24.2") para receber código daquela versão. Recursos que exigem banco 26ai (session state BOOLEAN, Deep Data Security) só com o banco declarado.
+- Instância existente: a skill pede a versão completa com patch set antes de orientar (CVE-2026-101521).
 
 ### Atualizando da 3.x
 
@@ -93,6 +98,7 @@ APEX · Dynamic Action · Interactive Report · Interactive Grid · Page Process
 "Como auditar a paginação dos meus IRs?"
 "Diferença entre Page Process e Dynamic Action"
 "Como verificar pages sem authorization scheme?"
+"Bloquear a aplicação por API antes do deploy (APEX 26.2)"
 ```
 
 ### oracle-ords-ptbr
@@ -184,13 +190,13 @@ oracle-devops-ptbr ←→  oracle-ords-ptbr          (ords/modules/)
 
 ## Versões suportadas
 
-| Item | Situação em 06/11/2026 | Fonte |
+| Item | Situação em 06/11/2026 (APEX revisto em 07/11/2026) | Fonte |
 |---|---|---|
 | **Oracle Database 19c** | Long Term Support Release · **Premier até 31/12/2029 · Extended até 31/12/2032** · RU mais recente com página de novidades: **19.33** · upgrade **direto 19c → 26ai** (detalhe em `oracle-26ai-ptbr`) | [Lifetime Support Policy](https://www.oracle.com/us/assets/lifetime-support-technology-069183.pdf) (02/10/2026), [26ai Upgrade Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/upgrd/oracle-database-releases-that-support-direct-upgrade.html), [RU 19.33](https://docs.oracle.com/en/database/oracle/oracle-database/19/newft/ru-19-33.html) |
 | Oracle AI Database 26ai | Long Term Support Release · Premier até dez/2031 | Lifetime Support Policy |
-| **APEX 26.2** | **atual** — GA 06/10/2026 · exige **ORDS 26.3.0+**, **SQLcl 26.3.0+**, banco **19c RU 19.18+** ou **26ai 23.26.0+** · upgrade direto a partir do 18.1 · patch 26.2.1 | [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html), [downloads](https://www.oracle.com/tools/downloads/apex-downloads) |
+| **APEX 26.2** | **atual e padrão da suíte** — GA 06/10/2026 · exige **ORDS 26.3.0+**, **SQLcl 26.3.0+**, banco **19c RU 19.18+** ou **26ai 23.26.0+** · upgrade direto a partir do 18.1 · patch 26.2.1 | [release notes 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html), [downloads](https://www.oracle.com/tools/downloads/apex-downloads) |
 | APEX 26.1 | GA 14/05/2026 · ORDS 26.1.1+ · patch 26.1.6 | [downloads 26.1](https://www.oracle.com/tools/downloads/apex-261-downloads) |
-| **APEX 24.2** | **baseline suportada da suíte** · patch set mais recente **24.2.22** (04/11/2026) · ⚠ 24.2.0–24.2.20 na faixa da **CVE-2026-101521** (CVSS 9.8) | [downloads 24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) |
+| **APEX 24.2** | **versão mínima coberta pela suíte** · patch set mais recente **24.2.22** (04/11/2026) · ⚠ 24.2.0–24.2.20 na faixa da **CVE-2026-101521** (CVSS 9.8) | [downloads 24.2](https://www.oracle.com/tools/downloads/apex-242-downloads), [CPU out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) |
 | ORDS | **26.3.1** (04/11/2026) é a mais recente · 26.4 planejada ("Winter 2026", Tomcat 10/WebLogic 15) | [ORDS changelog](https://www.oracle.com/tools/ords/ords-changelog.html) |
 | SQLcl | **26.3.1** (03/11/2026) · CodeScan com regras para APEXlang desde 26.3.0 | [SQLcl changelog](https://www.oracle.com/tools/sqlcl/sqlcl-changelog.html) |
 
@@ -203,7 +209,7 @@ oracle-devops-ptbr ←→  oracle-ords-ptbr          (ords/modules/)
 | Tecnologia | Versão | Cobertura |
 |---|---|---|
 | Oracle Database | 19c (padrão) · 23ai/26ai só com versão declarada | PL/SQL, SQL, tipos, EBR, Data Dictionary 11g→26ai |
-| Oracle APEX | 24.2 (baseline) → 26.2 | Development + Data Dictionary (APEX_APPLICATION_* etc.) |
+| Oracle APEX | **26.2 (padrão)** · 26.1 e 24.2 quando declaradas | Development + Data Dictionary (APEX_APPLICATION_* etc.), mudanças de comportamento e deprecated do 26.2 |
 | Oracle ORDS | 24.4 → 26.3 | REST services + Data Dictionary (USER/DBA_ORDS_*) |
 | Trivadis Guidelines | 4.4 | Nomenclatura PT-BR + checklist |
 | SQLcl | 26.3.0+ para APEX 26.2 e CodeScan de `.apx` | Execução dos scripts SQL no deploy, export APEX, CodeScan |
