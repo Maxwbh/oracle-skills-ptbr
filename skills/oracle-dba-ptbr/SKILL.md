@@ -2,8 +2,8 @@
 name: oracle-dba-ptbr
 description: Módulo DBA da suíte Oracle PT-BR. DBA operacional Oracle 19c e dicionário (V$, GV$, DBA_*, CDB_*, DBA_HIST_*). ATIVE em sessão travada, bloqueio, kill session, RAC (GV$SESSION, INST_ID), flashback query/table, recompile objetos inválidos, tablespace cheio, espaço em disco, DBMS_STATS (coleta, agendamento, lock), AWR/ASH (licença, retenção, snapshots — a análise do SQL é oracle-tuning-ptbr), Diagnostics Pack, SE2 vs EE, Data Guard, CDB/PDB, V$PDBS. Frases — "quem tá bloqueando", "recuperar dado deletado", "objetos inválidos", "qual view DBA usar", "tablespace cheio", "edição do banco", "Diagnostics Pack licença". NÃO ATIVE em código PL/SQL novo, APEX, ORDS, explain plan/tuning.
 metadata:
-  version: "2.3.2"
-  release_date: "2026-09-15"
+  version: "2.4.0"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 15
   author: "Maxwell da Silva Oliveira"
@@ -26,20 +26,22 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo DBA (oracle-dba-ptbr)
 
-> **Versão:** 2.3.2 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (15 recursos nesta skill)
-> **v2.3.2:** suíte com 10 skills; fronteira com oracle-lab-ptbr (máquina local do dev) explicitada. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.4.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (15 recursos nesta skill)
+> **v2.4.0:** datas de suporte do 19c corrigidas (Premier 31/12/2029, Extended 31/12/2032) e criptografia do RU 19.32 (TLS 1.3, FIPS 140-3, PQC). Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 26.1: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
 - **oracle-devops-ptbr** — Git/CI-CD: estrutura, Liquibase, pipelines, GMUD
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
+
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
 
 
 DBA operacional Oracle 19c e dicionário completo de views (estáticas e dinâmicas).

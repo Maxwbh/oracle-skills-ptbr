@@ -11,7 +11,8 @@ Uso:
 
 O que este script faz:
     1. Propaga shared/ → cada skill que declara dependência
-    2. Valida frontmatter (quick_validate)
+    2. Valida frontmatter (validação própria: YAML, name = pasta, description
+       ≤ 1024, version, suite_size = contagem real, CHANGELOG, clientes reais)
     3. Empacota cada skill → dist/*.skill
     4. Gera dist/checksums.sha256
 
@@ -36,9 +37,12 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
+import re
 import shutil
-import subprocess
 import sys
+import tempfile
+import unicodedata
 import zipfile
 from pathlib import Path
 
@@ -122,31 +126,126 @@ def propagar_shared(skill_dir: Path, build_dir: Path) -> list[str]:
     return propagados
 
 
-# ─── Validação do SKILL.md ────────────────────────────────────────────────────
+# ─── Validação do SKILL.md (própria — não depende de /mnt/skills) ───────────
+
+LIMITE_DESCRIPTION = 1024
+
+# Ignorados no pacote e na contagem de recursos (suite_size).
+IGNORAR = ("manifest.yml", "__pycache__", "*.pyc")
+
+
+def ler_frontmatter(skill_dir: Path) -> tuple[dict | None, str | None]:
+    """(frontmatter, erro). Frontmatter = bloco YAML entre os '---' iniciais."""
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.exists():
+        return None, "SKILL.md não encontrado"
+    texto = skill_md.read_text(encoding="utf-8")
+    if not texto.startswith("---\n"):
+        return None, "SKILL.md sem frontmatter (deve começar com '---')"
+    fim = texto.find("\n---", 4)
+    if fim == -1:
+        return None, "frontmatter sem '---' de fechamento"
+    try:
+        dados = yaml.safe_load(texto[4:fim])
+    except yaml.YAMLError as e:
+        return None, f"frontmatter: YAML inválido ({str(e).splitlines()[0]})"
+    if not isinstance(dados, dict):
+        return None, "frontmatter: YAML não é um mapa"
+    return dados, None
+
 
 def validar_skill(skill_dir: Path) -> bool:
-    """Roda quick_validate.py do skill-creator. Retorna True se válido."""
-    validator = Path("/mnt/skills/examples/skill-creator/scripts/quick_validate.py")
-    if not validator.exists():
-        # Fallback: validação manual de frontmatter
-        skill_md = skill_dir / "SKILL.md"
-        if not skill_md.exists():
-            return False
-        content = skill_md.read_text(encoding="utf-8")
-        return content.startswith("---\n") and "name:" in content
-    try:
-        result = subprocess.run(
-            [sys.executable, str(validator), str(skill_dir)],
-            capture_output=True, text=True
-        )
-        return result.returncode == 0 and "valid" in result.stdout.lower()
-    except Exception:
-        return False
+    """Frontmatter mínimo para empacotar (YAML, name = pasta, description, version)."""
+    dados, erro = ler_frontmatter(skill_dir)
+    return erro is None and not _problemas_frontmatter(skill_dir, dados)
+
+
+def _problemas_frontmatter(skill_dir: Path, dados: dict) -> list[str]:
+    problemas: list[str] = []
+    if dados.get("name") != skill_dir.name:
+        problemas.append(f"name '{dados.get('name')}' diferente da pasta '{skill_dir.name}'")
+    descricao = dados.get("description")
+    if not isinstance(descricao, str) or not descricao.strip():
+        problemas.append("description ausente")
+    elif len(descricao) > LIMITE_DESCRIPTION:
+        problemas.append(f"description com {len(descricao)} caracteres (máx. {LIMITE_DESCRIPTION})")
+    meta = dados.get("metadata") or {}
+    if not str(meta.get("version", "")).strip():
+        problemas.append("metadata.version ausente")
+    return problemas
+
+
+def _ignorado(rel: Path) -> bool:
+    return any(rel.match(padrao) or padrao in rel.parts for padrao in IGNORAR)
+
+
+def arquivos_do_pacote(skill_dir: Path) -> list[str]:
+    """Caminhos relativos que vão para o .skill: a pasta + shared/ propagado."""
+    rels = {str(f.relative_to(skill_dir)) for f in skill_dir.rglob("*")
+            if f.is_file() and not _ignorado(f.relative_to(skill_dir))}
+    shared_cfg = ler_manifest(skill_dir).get("shared", {}) or {}
+    for tipo in ("references", "assets"):
+        for nome in shared_cfg.get(tipo, []) or []:
+            if (SHARED / tipo / nome).exists():
+                rels.add(f"{tipo}/{nome}")
+    return sorted(rels)
+
+
+def contar_recursos(skill_dir: Path) -> int:
+    """suite_size real: arquivos do pacote, exceto SKILL.md (CHANGELOG.md conta)."""
+    return sum(1 for r in arquivos_do_pacote(skill_dir) if r != "SKILL.md")
+
+
+# Nomes de clientes reais que nunca podem ir para o repositório público.
+# A lista NÃO fica no código (o repositório é público): vem da variável
+# CLIENTES_PROIBIDOS (separados por vírgula; no CI, o secret de mesmo nome)
+# e/ou do arquivo .clientes-proibidos.txt na raiz (um por linha; no .gitignore).
+
+
+def clientes_proibidos() -> list[str]:
+    termos = [t.strip() for t in os.environ.get("CLIENTES_PROIBIDOS", "").split(",") if t.strip()]
+    extra = ROOT / ".clientes-proibidos.txt"
+    if extra.exists():
+        termos += [linha.strip() for linha in extra.read_text(encoding="utf-8").splitlines()
+                   if linha.strip() and not linha.startswith("#")]
+    return termos
+
+
+def _sem_acento(texto: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFKD", texto)
+                   if not unicodedata.combining(c)).lower()
+
+
+def procurar_clientes(skill_dir: Path) -> list[str]:
+    """Varre TODOS os arquivos de texto da skill (não só .md)."""
+    termos = [(t, re.compile(rf"\b{re.escape(_sem_acento(t))}\b")) for t in clientes_proibidos()]
+    if not termos:
+        return []
+    achados: list[str] = []
+    for arquivo in sorted(skill_dir.rglob("*")):
+        if not arquivo.is_file() or _ignorado(arquivo.relative_to(skill_dir)):
+            continue
+        try:
+            conteudo = _sem_acento(arquivo.read_text(encoding="utf-8"))
+        except (UnicodeDecodeError, OSError):
+            continue  # binário
+        for termo, padrao in termos:
+            if padrao.search(conteudo):
+                achados.append(f"cliente real '{termo}' em {arquivo.relative_to(skill_dir)}")
+    return achados
+
+
+def versao_changelog(skill_dir: Path) -> str | None:
+    changelog = skill_dir / "CHANGELOG.md"
+    if not changelog.exists():
+        return None
+    m = re.search(r"^## \[([^\]]+)\]", changelog.read_text(encoding="utf-8"), re.MULTILINE)
+    return m.group(1) if m else None
 
 
 # ─── Empacotamento ────────────────────────────────────────────────────────────
 
-def empacotar_skill(skill_dir: Path) -> Path:
+def empacotar_skill(skill_dir: Path, destino: Path | None = None) -> Path:
     """
     Monta a skill em BUILD_TMP (com propagação de shared/),
     valida e gera dist/{name}.skill.
@@ -160,8 +259,7 @@ def empacotar_skill(skill_dir: Path) -> Path:
         shutil.rmtree(build_dir)
     # manifest.yml é metadado de build, não recurso da skill; caches do Python
     # (gerados ao rodar os testes) também ficam fora do pacote.
-    shutil.copytree(skill_dir, build_dir,
-                    ignore=shutil.ignore_patterns("manifest.yml", "__pycache__", "*.pyc"))
+    shutil.copytree(skill_dir, build_dir, ignore=shutil.ignore_patterns(*IGNORAR))
 
     # Propagar shared/
     propagados = propagar_shared(skill_dir, build_dir)
@@ -175,8 +273,9 @@ def empacotar_skill(skill_dir: Path) -> Path:
         return None
 
     # Empacotar como .zip renomeado para .skill
-    DIST.mkdir(exist_ok=True)
-    skill_file = DIST / f"{name}.skill"
+    destino = destino or DIST
+    destino.mkdir(exist_ok=True)
+    skill_file = destino / f"{name}.skill"
 
     with zipfile.ZipFile(skill_file, "w", zipfile.ZIP_DEFLATED) as zf:
         for arquivo in sorted(build_dir.rglob("*")):
@@ -185,6 +284,49 @@ def empacotar_skill(skill_dir: Path) -> Path:
                 zf.write(arquivo, arcname)
 
     return skill_file
+
+
+# ─── dist/ versionado em dia ────────────────────────────────────────────────
+
+def conteudo_pacote(arquivo: Path) -> dict[str, bytes]:
+    """Conteúdo de um .skill (nome → bytes), sem datas/metadados do zip."""
+    with zipfile.ZipFile(arquivo) as zf:
+        return {n: zf.read(n) for n in zf.namelist()}
+
+
+def verificar_dist(skill_dirs: list[Path]) -> list[str]:
+    """
+    dist/ fica versionado (instalação direta dos .skill no Claude): cada pacote
+    tem de ter o mesmo conteúdo de um build novo, sem pacotes sobrando, e o
+    checksums.sha256 tem de bater com os arquivos.
+    """
+    problemas: list[str] = []
+    nomes = {d.name for d in skill_dirs}
+    with tempfile.TemporaryDirectory(prefix="dist_") as tmp:
+        for skill_dir in skill_dirs:
+            novo = empacotar_skill(skill_dir, Path(tmp))
+            atual = DIST / f"{skill_dir.name}.skill"
+            if novo is None:
+                problemas.append(f"{skill_dir.name}: não empacota")
+            elif not atual.exists():
+                problemas.append(f"dist/{atual.name} ausente — rode: python build.py")
+            elif conteudo_pacote(atual) != conteudo_pacote(novo):
+                problemas.append(f"dist/{atual.name} desatualizado — rode: python build.py")
+    if BUILD_TMP.exists():
+        shutil.rmtree(BUILD_TMP)
+    for sobra in sorted(f.name for f in DIST.glob("*.skill") if f.stem not in nomes):
+        problemas.append(f"dist/{sobra} não corresponde a nenhuma skill")
+    checksums = DIST / "checksums.sha256"
+    if not checksums.exists():
+        problemas.append("dist/checksums.sha256 ausente — rode: python build.py")
+    else:
+        registrados = dict(reversed(linha.split("  ", 1)) for linha in
+                           checksums.read_text(encoding="utf-8").splitlines() if "  " in linha)
+        for f in sorted(DIST.glob("*.skill")):
+            sha = hashlib.sha256(f.read_bytes()).hexdigest()
+            if registrados.get(f.name) != sha:
+                problemas.append(f"dist/checksums.sha256 não confere com {f.name}")
+    return problemas
 
 
 # ─── Checksums ────────────────────────────────────────────────────────────────
@@ -207,35 +349,54 @@ def gerar_checksums() -> Path:
 
 def verificar(skill_dir: Path) -> list[str]:
     """Verifica consistência da skill sem empacotar. Retorna lista de problemas."""
-    problemas: list[str] = []
+    dados, erro = ler_frontmatter(skill_dir)
+    if erro:
+        return [erro]
+    problemas = _problemas_frontmatter(skill_dir, dados)
+    meta = dados.get("metadata") or {}
 
-    # SKILL.md existe?
-    skill_md = skill_dir / "SKILL.md"
-    if not skill_md.exists():
-        problemas.append("SKILL.md não encontrado")
-        return problemas
-
-    # Frontmatter válido?
-    if not validar_skill(skill_dir):
-        problemas.append("Frontmatter inválido")
-
-    # Manifesto: verificar shared/ referenciados existem?
+    # Manifesto: shared/ referenciados existem?
     manifest = ler_manifest(skill_dir)
-    for ref in manifest.get("shared", {}).get("references", []):
-        if not (SHARED / "references" / ref).exists():
-            problemas.append(f"shared/references/{ref} — não existe")
-    for asset in manifest.get("shared", {}).get("assets", []):
-        if not (SHARED / "assets" / asset).exists():
-            problemas.append(f"shared/assets/{asset} — não existe")
+    for tipo in ("references", "assets"):
+        for nome in (manifest.get("shared", {}) or {}).get(tipo, []) or []:
+            if not (SHARED / tipo / nome).exists():
+                problemas.append(f"shared/{tipo}/{nome} — não existe")
 
-    # Clientes reais?
-    proibidos = ["IMESC", "Zitrus", "Memora", "Hapvida", "Nexdom"]
-    for arquivo in skill_dir.rglob("*.md"):
-        conteudo = arquivo.read_text(encoding="utf-8", errors="ignore")
-        for termo in proibidos:
-            if termo.lower() in conteudo.lower():
-                problemas.append(f"cliente real '{termo}' em {arquivo.name}")
+    # suite_size = contagem real (arquivos do pacote, SKILL.md fora)
+    real = contar_recursos(skill_dir)
+    if meta.get("suite_size") != real:
+        problemas.append(f"metadata.suite_size = {meta.get('suite_size')}, contagem real = {real}")
 
+    # CHANGELOG.md da skill acompanha a versão
+    topo = versao_changelog(skill_dir)
+    versao = str(meta.get("version", "")).strip()
+    if versao and topo != versao:
+        problemas.append(f"CHANGELOG.md: última entrada [{topo}] ≠ metadata.version {versao}")
+
+    problemas += procurar_clientes(skill_dir)
+    return problemas
+
+
+def verificar_marketplace(marketplace: Path) -> list[str]:
+    """marketplace.yml lista todas as skills com a mesma versão do SKILL.md."""
+    if not marketplace.exists():
+        return [f"{marketplace.name} não encontrado"]
+    try:
+        dados = yaml.safe_load(marketplace.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError as e:
+        return [f"{marketplace.name}: YAML inválido ({str(e).splitlines()[0]})"]
+    no_marketplace = {s.get("name"): str(s.get("version")) for s in dados.get("skills", []) or []}
+    problemas: list[str] = []
+    for skill_dir in sorted(d for d in SKILLS.iterdir() if d.is_dir()):
+        fm, erro = ler_frontmatter(skill_dir)
+        if erro:
+            continue
+        versao = str((fm.get("metadata") or {}).get("version"))
+        if skill_dir.name not in no_marketplace:
+            problemas.append(f"{skill_dir.name} ausente do {marketplace.name}")
+        elif no_marketplace[skill_dir.name] != versao:
+            problemas.append(f"{marketplace.name}: {skill_dir.name} {no_marketplace[skill_dir.name]} "
+                             f"≠ SKILL.md {versao}")
     return problemas
 
 
@@ -249,6 +410,8 @@ def main() -> None:
                         help="Empacotar apenas esta skill (ex: oracle-dba-ptbr)")
     parser.add_argument("--check", action="store_true",
                         help="Verificar consistência sem empacotar")
+    parser.add_argument("--check-dist", action="store_true",
+                        help="Verificar se dist/ está igual a um build novo")
     parser.add_argument("--checksums", action="store_true",
                         help="Gerar dist/checksums.sha256")
     args = parser.parse_args()
@@ -270,6 +433,9 @@ def main() -> None:
     # ── Modo verificação ──────────────────────────────────────────────────────
     if args.check:
         log("  Verificando consistência...\n")
+        if not clientes_proibidos():
+            warn("Trava de clientes reais INATIVA: defina CLIENTES_PROIBIDOS ou "
+                 ".clientes-proibidos.txt")
         total_ok = total_err = 0
         for skill_dir in skill_dirs:
             problemas = verificar(skill_dir)
@@ -281,9 +447,28 @@ def main() -> None:
             else:
                 ok(skill_dir.name)
                 total_ok += 1
+        if not args.skill:
+            problemas_mk = verificar_marketplace(ROOT / "marketplace.yml")
+            if problemas_mk:
+                err("marketplace.yml")
+                for p in problemas_mk:
+                    log(f"    → {p}")
+                total_err += 1
+            else:
+                ok("marketplace.yml")
         sep()
         log(f"  {G}OK: {total_ok}{Z}  |  {R}Erros: {total_err}{Z}\n")
         sys.exit(1 if total_err else 0)
+
+    # ── Modo dist em dia ──────────────────────────────────────────────────────
+    if args.check_dist:
+        log("  Conferindo dist/ contra um build novo...\n")
+        problemas = verificar_dist(skill_dirs)
+        for p in problemas:
+            err(p)
+        if not problemas:
+            ok(f"dist/ em dia ({len(skill_dirs)} pacotes + checksums)")
+        sys.exit(1 if problemas else 0)
 
     # ── Modo checksums ────────────────────────────────────────────────────────
     if args.checksums:
@@ -323,7 +508,7 @@ def main() -> None:
     if total_err:
         log(f"  {R}{total_err} com erro{Z}")
         sys.exit(1)
-    log(f"\n  dist/ pronto para GitHub Release.\n")
+    log("\n  dist/ pronto para GitHub Release.\n")
 
 
 if __name__ == "__main__":

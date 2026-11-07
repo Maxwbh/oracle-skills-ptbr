@@ -2,7 +2,7 @@
 name: oracle-ords-ptbr
 description: Módulo ORDS da suíte Oracle PT-BR. Oracle ORDS — REST services e dicionário USER_ORDS_*/DBA_ORDS_*. ATIVE em define_module, define_template, define_handler, AutoREST, OAuth, ORDS_SECURITY, ORDS_SECURITY_ADMIN, JWT, PAR via ORDS_PAR, ORDS_EXPORT_ADMIN, delete_module/drop_rest_for_schema, privilege, role ORDS, ORDS_EXPORT, USER_ORDS_MODULES, USER_ORDS_HANDLERS, USER_ORDS_SCHEMAS, DBA_ORDS_*, source_type_collection_feed, source_type_collection_item, CORS, versionamento de API, depreciação OAUTH package. Frases — "criar endpoint REST", "módulo ORDS", "autenticar API", "inventário de handlers ORDS", "OAUTH deprecated". NÃO ATIVE em APEX pages, PL/SQL puro, DBA operacional. Templates em assets/.
 metadata:
-  version: "2.4.1"
+  version: "2.5.0"
   release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 6
@@ -25,20 +25,22 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo ORDS (oracle-ords-ptbr)
 
-> **Versão:** 2.4.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
-> **v2.4.0:** linha do tempo ORDS 24.3→26.4 (25.1 ORDS_EXPORT_ADMIN, 25.3 remoção do OAUTH, 26.1 export com DROP, 26.1.1 para APEX 26.1, 26.4 Tomcat 10) e limpeza de metadata. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.5.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
+> **v2.5.0:** ORDS 26.3.x, par APEX × ORDS (26.2 → 26.3.0+), 35 CVEs do CPU out/2026 e fronteira APEX/ORDS (REST Workshop removido no APEX 26.2). Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 26.1: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
 - **oracle-devops-ptbr** — Git/CI-CD: estrutura, Liquibase, pipelines, GMUD
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
+
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
 
 
 Oracle REST Data Services — padrões de desenvolvimento e dicionário completo de views de metadados.
@@ -93,9 +95,32 @@ Oracle REST Data Services — padrões de desenvolvimento e dicionário completo
 | **25.3** (out/2025) | `OAUTH`/`OAUTH_ADMIN` **removidos** — chamadas passam a dar erro; `ORDS.DELETE_TEMPLATE`/`DELETE_HANDLER` | Cliente que ainda usa OAuth antigo **quebra** ao subir o ORDS |
 | **26.1** | Export gera `DROP` de objetos removidos; VecDB REST APIs (exigem banco 23.26.1+) | Muda o comportamento do `export_ords.py` (`oracle-devops-ptbr`) |
 | **26.1.1** | Exigido pelo **APEX 26.1** e pelo suporte a APEXlang | APEX 26.1 com ORDS menor que isso não é suportado |
-| **26.4** (previsto inverno/2026) | Passa a exigir **Tomcat 10 / WebLogic 15** | Tomcat 9 deixa de servir — planejar o servidor de aplicação junto |
+| **26.3.0** (out/2026) | Exigido pelo **APEX 26.2** (e pelo APEXlang com ele) | APEX 26.2 com ORDS menor que 26.3.0 não é suportado |
+| **26.3.1** (04/11/2026) | Versão mais recente em 06/11/2026 | Alvo de atualização (ver segurança abaixo) |
+| **26.4** (planejado "Winter 2026", ainda não lançado) | Passa a suportar **Tomcat 10 / WebLogic 15** e deixa de rodar em Tomcat 9 e WebLogic 14 | Planejar o servidor de aplicação junto; **standalone (Jetty embutido) não é afetado** |
 
-Enquanto o ORDS for 26.1–26.3, **Tomcat 9.0.x** continua sendo o correto: a Oracle pede explicitamente para não antecipar a migração para o Tomcat 10. Java suportado: **17 ou 21** (Oracle JDK ou GraalVM; GraalVM só é obrigatório para GraphQL).
+Fontes (06/11/2026): [ORDS changelog](https://www.oracle.com/tools/ords/ords-changelog.html), [página de download](https://www.oracle.com/database/sqldeveloper/technologies/db-actions/download/), [release notes APEX 26.2](https://docs.oracle.com/en/database/oracle/apex/26.2/htmrn/about-release-notes.html).
+
+**Par APEX × ORDS (mínimo exigido pela doc do APEX):** APEX 26.1 → ORDS **26.1.1+**; APEX 26.2 → ORDS **26.3.0+**. Ao subir o APEX, confira primeiro o ORDS; em instalação nova a Oracle recomenda instalar o ORDS antes do APEX.
+
+Enquanto o ORDS for 26.1–26.3, **Tomcat 9.0.x** (ou WebLogic 14.1.2) continua sendo o correto — a doc do 26.3 lista exatamente esses — e a Oracle pede para não migrar antes do 26.4 sair. Java suportado: **17 ou 21** (Oracle JDK ou GraalVM; GraalVM só é obrigatório para GraphQL).
+
+### Segurança — CPU de outubro/2026
+
+O [CPU de out/2026](https://www.oracle.com/security-alerts/cpuoct2026.html) traz **35 CVEs do ORDS** (11 exploráveis sem autenticação), faixa geral **24.2.0–26.2.2**. As mais graves: **CVE-2026-91610** (CVSS 8.8, "takeover of Oracle REST Data Services", usuário com privilégio baixo, 24.2.0–26.2.2), CVE-2026-33941 (8.2, Database Actions), CVE-2026-9753 (8.1) e CVE-2026-101494 (7.7). O advisory não nomeia a versão que corrige: atualize para o **ORDS mais recente** (26.3.1 em 06/11/2026) e confira o documento de patches do CPU na Oracle Support.
+
+### O que é do APEX e o que é do ORDS
+
+| Recurso | Dono | Situação (06/11/2026) |
+|---|---|---|
+| *RESTful Services* do SQL Workshop (REST Workshop) | **APEX** (tela dentro do App Builder) | Deprecated no APEX 26.1, **removido no 26.2**. Import/export legado e serviços de exemplo saíram; `APEX_REST_RESOURCE_*` ficam sem dados do Workshop |
+| Módulos, templates e handlers REST | **ORDS** (metadados no banco, API `ORDS.*`) | **Continuam funcionando** — nada muda para quem já tem serviços |
+| Definir APIs REST por tela | **SQL Developer Web / Database Actions** (vem com o ORDS) | Caminho recomendado; o APEX 26.2 abre o REST Designer a partir do App Builder |
+| Definir APIs REST por código / CI | **ORDS** — `ORDS.define_*`, `ORDS_EXPORT` / `ORDS_EXPORT_ADMIN` | Caminho da suíte (assets desta skill + `oracle-devops-ptbr`) |
+| `APEX_LISTENER` | APEX | Instalação nova do 26.2 não cria mais |
+| Swagger UI URL (configuração de instância) | APEX | Removida no 26.2 |
+
+A depreciação da tela do APEX já vinha anunciada nas [release notes do ORDS 25.1](https://www.oracle.com/tools/ords/ords-relnotes-25.1.html), que indicam o SQL Developer Web como interface recomendada.
 
 ## Referências cruzadas
 
