@@ -2,8 +2,8 @@
 name: oracle-26ai-ptbr
 description: "Módulo 26ai da suíte Oracle PT-BR. Novidades de Oracle Database 23ai/26ai (SQL, PL/SQL, segurança, JSON, migração) isoladas do restante da suíte, que é 19c. ATIVE quando a versão-alvo declarada for 23ai ou 26ai, ou em perguntas sobre migrar de 19c para 26ai, o que muda no código, backports 19.28 (IF NOT EXISTS, Annotations, DBMS_DEVELOPER), BOOLEAN em SQL, SELECT sem FROM, UPDATE/DELETE com JOIN, RETURNING OLD/NEW, GROUP BY ALL, INSERT BY NAME, QUALIFY, FILTER, calendar functions, UUID(), Domains, Assertions, RESETTABLE, transpiler PL/SQL→SQL, lock-free reservations, priority transactions, schema privileges, SQL Firewall, MLE JavaScript, AutoUpgrade. Frases — 'estou no 26ai', 'quando migrarmos pro 26', 'isso existe no 26ai?', 'dá pra usar no 19c?'. NÃO ATIVE quando a versão for 19c ou não estiver declarada — o módulo específico responde em 19c e só cita esta skill se houver alternativa 26ai relevante — nem em Vector Search, JSON duality views ou RAFT (use oracle-26ai-helper-ptbr)."
 metadata:
-  version: "1.1.0"
-  release_date: "2026-11-06"
+  version: "1.1.1"
+  release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 6
   author: "Maxwell da Silva Oliveira"
@@ -25,14 +25,15 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo 26ai (oracle-26ai-ptbr)
 
-> **Versão:** 1.1.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
-> **v1.1.0:** fronteira com a skill irmã oracle-26ai-helper-ptbr (Vector/Duality/RAFT); datas de suporte do 19c e upgrade direto com fonte. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.1.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
+> **v1.1.1:** Vector Pool medido (restart só para ligar no CDB) e fronteira do roteiro de upgrade com oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único): ver `oracle-core-ptbr`.
 
 **Fronteira com a skill irmã `oracle-26ai-helper-ptbr`** (repositório separado, fora da suíte):
 - **Vector Search, JSON Relational Duality e RAFT** (replicação do Globally Distributed Database) → **oracle-26ai-helper-ptbr**, que traz o aprofundamento e os templates. Aqui esses recursos só aparecem como item da lista "o que muda" e com o encaminhamento.
-- **Sintaxe nova do 23ai/26ai e migração 19c→26ai** (o que muda no código, checklist, compatibilidade) → **esta skill**.
+- **Roteiro do upgrade 19c→26ai** (fases e duração, riscos × mitigação, Vector Pool na janela do upgrade) → **oracle-26ai-helper-ptbr**.
+- **Sintaxe nova do 23ai/26ai e checklist de código da migração** (o que muda no código, caminhos de upgrade, compatibilidade APEX/ORDS/SQLcl) → **esta skill**. Operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 Novidades de **Oracle Database 23ai/26ai** organizadas pelo que muda na prática para quem escreve SQL/PL/SQL e mantém sistemas hoje em **19c**. 26ai é o *long term release* sucessor do 19c; 23ai → 26ai é patch, não upgrade.
 
@@ -121,3 +122,4 @@ Detalhes, restrições e exemplos completos nos references.
 | Scripts GMUD idempotentes com `IF NOT EXISTS` | **oracle-devops-ptbr** |
 | Subir um 26ai Free local para testar a sintaxe nova | **oracle-lab-ptbr** |
 | Vector Search, JSON Relational Duality, RAFT (aprofundamento e templates) | **oracle-26ai-helper-ptbr** (fora da suíte) |
+| Roteiro do upgrade 19c → 26ai (fases, riscos, Vector Pool na janela) | **oracle-26ai-helper-ptbr** (fora da suíte) |

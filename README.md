@@ -18,16 +18,16 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 
 | Skill | Versão | Escopo | Recursos |
 |---|---|---|---|
-| `oracle-core-ptbr` | 1.5.0 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
-| `oracle-plsql-ptbr` | 3.0.1 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
-| `oracle-apex-ptbr` | 2.6.0 | APEX (padrões de 24.2+) development + Data Dictionary completo | 21 |
-| `oracle-ords-ptbr` | 2.5.0 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
-| `oracle-dba-ptbr` | 2.4.0 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
-| `oracle-tuning-ptbr` | 2.7.0 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
-| `oracle-trivadis-ptbr` | 2.4.1 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
-| `oracle-devops-ptbr` | 4.1.1 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 31 |
-| `oracle-lab-ptbr` | 1.1.0 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
-| `oracle-26ai-ptbr` | 1.1.0 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
+| `oracle-core-ptbr` | 1.5.1 | Assistente central — roteamento entre os módulos e convenções transversais | 2 |
+| `oracle-plsql-ptbr` | 3.0.2 | PL/SQL 19c, packages, LOBs, EBR, triggers, Logger | 11 |
+| `oracle-apex-ptbr` | 2.6.1 | APEX (padrões de 24.2+) development + Data Dictionary completo | 21 |
+| `oracle-ords-ptbr` | 2.5.1 | ORDS REST services + Data Dictionary (USER/DBA_ORDS_*) | 6 |
+| `oracle-dba-ptbr` | 2.4.1 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
+| `oracle-tuning-ptbr` | 2.7.1 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
+| `oracle-trivadis-ptbr` | 2.4.2 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
+| `oracle-devops-ptbr` | 4.1.2 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 31 |
+| `oracle-lab-ptbr` | 1.2.0 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
+| `oracle-26ai-ptbr` | 1.1.1 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
 
 ---
 
@@ -153,7 +153,7 @@ Só quando a versão-alvo declarada for 23ai/26ai · migração 19c → 26ai · 
 
 ## Skill irmã (repositório separado)
 
-[`oracle-26ai-helper-ptbr`](https://github.com/Maxwbh/oracle-26ai-helper-ptbr) — aprofundamento em Oracle AI Database 26ai: **Vector Search, JSON Relational Duality e RAFT**. Roteamento: Vector / Duality / RAFT → `oracle-26ai-helper-ptbr`; sintaxe nova e migração 19c→26ai → `oracle-26ai-ptbr`.
+[`oracle-26ai-helper-ptbr`](https://github.com/Maxwbh/oracle-26ai-helper-ptbr) — aprofundamento em Oracle AI Database 26ai: **Vector Search, JSON Relational Duality e RAFT**. Roteamento: Vector / Duality / RAFT e roteiro do upgrade 19c→26ai (fases, riscos, Vector Pool na janela) → `oracle-26ai-helper-ptbr`; sintaxe nova e checklist de código da migração → `oracle-26ai-ptbr`; operação do upgrade → `oracle-dba-ptbr`. O helper também traz um ambiente de teste em Docker (26ai Free + ORDS + APEX, snapshot dourado e PDB descartável).
 
 ---
 

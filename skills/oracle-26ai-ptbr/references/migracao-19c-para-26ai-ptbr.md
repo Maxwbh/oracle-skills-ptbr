@@ -78,6 +78,7 @@ Nada obrigatório quebra sintaxe válida de 19c; o checklist é de **oportunidad
 - **Duality view exige integridade referencial declarada** — tabelas legadas sem FK não servem sem antes criar as constraints (pode ser `RELY NOVALIDATE` enquanto se limpa o dado).
 - **Assertions são caras** — reavaliadas por transação; não use para regra de linha.
 - **SQL Firewall + APEX:** IR/IG geram SQL variável; capture por semanas antes de `BLOCK`.
+- **Vector Pool depois do upgrade custa um restart:** com `VECTOR_MEMORY_SIZE` em 0 no startup, o CDB só passa a ter pool após `SCOPE=SPFILE` + restart (ORA-51950). Se o projeto vai usar HNSW, defina o pool já na janela do upgrade (medido no 26ai Free 23.26.3; detalhes em `novidades-plsql-plataforma-26ai-ptbr.md` §4.1).
 - **Read-only Oracle Home** muda caminhos de `tnsnames.ora`/`sqlnet.ora` — pipelines e `oracle_devops_utils.py` que apontam para `$ORACLE_HOME/network/admin` devem usar `$ORACLE_BASE_HOME`.
 
 ## 6. Estratégia de código dual (19c hoje, 26ai amanhã)

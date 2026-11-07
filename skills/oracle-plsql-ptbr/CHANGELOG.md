@@ -1,5 +1,8 @@
 # Changelog — oracle-plsql-ptbr
 
+## [3.0.2] - 2026-11-07
+- Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
+
 ## [3.0.1] - 2026-11-06
 - Docs — roteamento para a skill irmã oracle-26ai-helper-ptbr; lista da suíte com APEX 24.2–26.2.
 

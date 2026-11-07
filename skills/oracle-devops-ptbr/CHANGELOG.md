@@ -1,5 +1,10 @@
 # Changelog — oracle-devops-ptbr
 
+## [4.1.2] - 2026-11-07
+- Fix — `oracle_devops_utils.montar_script_sqlcl`: preâmbulo com `SET SQLBLANKLINES ON`. Sem ele, o SQLcl encerrava o comando numa linha em branco: `UPDATE … SET …` rodava **sem o WHERE** (todas as linhas), o resto virava "Unknown Command" e o script saía com 0 — o `WHENEVER SQLERROR` não pega. Reproduzido no SQLcl 26.1.2 e 26.3.1 contra o 26ai Free 23.26.3; teste de integração `test_linha_em_branco_dentro_do_comando_nao_corta_o_statement` e unitário `test_sqlcl_liga_sqlblanklines_antes_do_script`.
+- Docs — "Formatação dos scripts (SQLcl e SQL*Plus)" no SKILL.md: linha em branco dentro de comando, linha começando com `@` e `;` seguido de comentário (descarta o comando sem erro no SQL*Plus), com o comportamento medido nos dois clientes.
+- Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
+
 ## [4.1.1] - 2026-11-07
 - Fix — `export_db.py`: sem `--schema`, usava `DB_USER` mesmo com `DB_SCHEMA` definido; agora `DB_SCHEMA` tem precedência (mesma regra do `oracle_devops_utils`).
 - Fix — lint dos `export_*.py` (imports, f-strings, `check=False` explícito no `subprocess.run`) para o ruff do CI.

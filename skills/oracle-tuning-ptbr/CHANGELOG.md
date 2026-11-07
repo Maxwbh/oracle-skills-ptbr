@@ -1,5 +1,8 @@
 # Changelog — oracle-tuning-ptbr
 
+## [2.7.1] - 2026-11-07
+- Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
+
 ## [2.7.0] - 2026-11-06
 - Feature — baseline SPM aceito pode ser ignorado (caso relatado no 19c RU 19.32, oracle-base 29/09/2026): etapa 9 do `explain_plan_workflow.sql` confere `V$SQL.SQL_PLAN_BASELINE`, `DBA_SQL_PLAN_BASELINES.REPRODUCED` e o trace `[SQL_Compiler.*]`. Bug/nota MOS: a verificar.
 - Docs — roteamento para oracle-26ai-helper-ptbr.

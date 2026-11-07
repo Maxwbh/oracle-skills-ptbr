@@ -1,5 +1,11 @@
 # Changelog — oracle-lab-ptbr
 
+## [1.2.0] - 2026-11-07
+- Feature — caminho "Docker Compose: 26ai Free + imagem oficial do ORDS" na escolha do caminho e §9.1 do passo a passo: a imagem `database/ords` instala o APEX montado em `/opt/oracle/apex`; variáveis (inclusive `ORACLE_USER_PWD`, obrigatória no ORDS 26.x), troca da senha do ADMIN, scripts `startup` × `setup` e tempos medidos (26ai Free 23.26.3 + ORDS 26.3.1 + APEX 26.2). Aponta para o `ambiente-teste/` do oracle-26ai-helper-ptbr.
+- Docs — troubleshooting de container: `ORACLE_USER_PWD` ausente, ORA-20001 na senha do APEX, script de `setup` que não roda (banco pré-criado) e `curl` em loop no `/ords/apex` (cookie).
+- Docs — container deixa de ser descrito como "sem APEX/ORDS prontos".
+- Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
+
 ## [1.1.0] - 2026-11-06
 - Feature — 19c em Oracle Linux 10: Oracle recomenda RU 19.32+ com one-offs; build oraclebase/vagrant `ol10_19` com RU 19.33 (instalação limpa segundo o oracle-base).
 - Feature — fim do HCP Vagrant Registry (criação encerrada em 01/10/2026, suporte em 02/11/2026, desligamento em 31/12/2026): guardar a box localmente.
