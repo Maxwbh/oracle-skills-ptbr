@@ -1,0 +1,12 @@
+# requirements-dev.txt — ferramentas do repositório (build, testes e lint).
+# Não confundir com skills/oracle-devops-ptbr/assets/requirements-devops.txt,
+# que é o requirements dos PROJETOS que usam a skill.
+#
+#   pip install -r requirements-dev.txt
+#
+# Versões fixadas para o CI ser reprodutível (as mesmas usadas na revisão 2026-11).
+PyYAML==6.0.3
+oracledb==26.1.0
+pytest==9.2.0
+ruff==0.16.9
+shellcheck-py==0.11.0.1

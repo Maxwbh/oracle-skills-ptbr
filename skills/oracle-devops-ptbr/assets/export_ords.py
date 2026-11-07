@@ -21,8 +21,15 @@ import oracledb
 
 sys.path.insert(0, str(Path(__file__).parent))
 from oracle_devops_utils import (
-    GREEN, YELLOW, RED, CYAN, BOLD, RESET, SEP2,
-    banner, carregar_dotenv, conectar, log,
+    CYAN,
+    GREEN,
+    RED,
+    RESET,
+    YELLOW,
+    banner,
+    carregar_dotenv,
+    conectar,
+    log,
 )
 
 
@@ -133,7 +140,7 @@ def main() -> None:
     log.info("")
     log.info("Próximos passos:")
     data_commit = datetime.now().strftime("%Y-%m-%d")
-    log.info(f"  git add ords/")
+    log.info("  git add ords/")
     log.info(f"  git commit -m 'ords: export schema {schema.upper()} — {data_commit}'")
 
 

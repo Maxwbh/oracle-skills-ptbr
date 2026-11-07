@@ -80,6 +80,9 @@ CREATE OR REPLACE PACKAGE BODY pagamento_pkg AS
     l_params         logger.tab_param;
     l_status_fatura  VARCHAR2(20);
   BEGIN
+    -- Rotina reutilizável: não comita; desfaz só o próprio trabalho em erro
+    SAVEPOINT sp_processar_pagamento;
+
     -- Adiciona parâmetros ao log para debugging
     logger.append_param(l_params, 'p_id_fatura', p_id_fatura);
     logger.append_param(l_params, 'p_valor', p_valor);
@@ -114,13 +117,14 @@ CREATE OR REPLACE PACKAGE BODY pagamento_pkg AS
       l_scope
     );
 
-    COMMIT;
+    -- SEM COMMIT: quem chama é o dono da transação (regra 4)
 
     -- INFO: marco de sucesso
     logger.log('Pagamento processado com sucesso', l_scope, NULL, l_params);
 
   EXCEPTION
     WHEN NO_DATA_FOUND THEN
+      ROLLBACK TO sp_processar_pagamento;
       -- Logger captura SQLERRM automaticamente em log_error
       logger.log_error(
         'Fatura não encontrada: ' || p_id_fatura,
@@ -129,13 +133,13 @@ CREATE OR REPLACE PACKAGE BODY pagamento_pkg AS
       raise_application_error(-20101, 'Fatura ' || p_id_fatura || ' não encontrada');
     
     WHEN OTHERS THEN
-      ROLLBACK;
+      ROLLBACK TO sp_processar_pagamento;
       -- log_error captura: SQLERRM, SQLCODE, call stack, error stack
       logger.log_error(
         'Erro inesperado em ' || lc_nome_unidade,
         l_scope, NULL, l_params
       );
-      raise_application_error(-20999, 'Erro: ' || SQLERRM);
+      RAISE;  -- preserva código e pilha originais
   END processar_pagamento;
 
 END pagamento_pkg;
@@ -203,6 +207,9 @@ END;
 
 --==============================================================================
 -- 6. Logger em ORDS handlers
+--
+-- O handler PL/SQL é ponto de entrada: dono da transação (COMMIT/ROLLBACK
+-- ficam nele, nunca nos packages que ele chama).
 --==============================================================================
 
 /*

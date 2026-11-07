@@ -14,6 +14,9 @@ Ordem de execução:
     3. ords/privileges/global_privileges.sql
     4. ords/modules/**/module.sql → templates.sql → handlers.sql → privileges.sql
     5. Verificação pós-deploy via DBA_ORDS_MODULES (24.4+) ou USER_ORDS_MODULES
+
+Execução pelo SQLcl (pré-validação de todos os arquivos, WHENEVER SQLERROR
+EXIT FAILURE ROLLBACK, ALL_ERRORS ao final de cada etapa).
 """
 
 from __future__ import annotations
@@ -27,41 +30,50 @@ import oracledb
 
 sys.path.insert(0, str(Path(__file__).parent))
 from oracle_devops_utils import (
-    GREEN, YELLOW, RED, CYAN, BOLD, RESET, DIM, SEP, SEP2,
-    banner, carregar_dotenv, conectar, confirmar_producao,
-    executar_arquivo_sql, log,
+    BOLD,
+    CYAN,
+    DIM,
+    GREEN,
+    RED,
+    RESET,
+    SEP,
+    SEP2,
+    YELLOW,
+    ErroSQLcl,
+    banner,
+    carregar_dotenv,
+    conectar,
+    confirmar_producao,
+    executar_lote_sqlcl,
+    log,
+    obter_config_db,
+    schema_efetivo,
+    validar_arquivo_sql,
 )
 
 # Ordem canônica de execução dentro de cada módulo
 PARTES_MODULO = ["module", "templates", "handlers", "privileges"]
 
 
-def deploy_arquivo_opcional(
-    conn: oracledb.Connection,
-    arquivo: Path,
-    label: str,
-) -> bool:
-    """Executa um arquivo SQL se existir. Retorna True se executado."""
-    if not arquivo.exists():
-        log.info(f"  {DIM}{label} não encontrado — pulando{RESET}")
-        return False
-    try:
-        n = executar_arquivo_sql(conn, arquivo)
-        log.info(f"  {GREEN}✓{RESET} {label} ({n} statement(s))")
-        return True
-    except RuntimeError as e:
-        log.error(f"  {RED}✗ {label}: {e}{RESET}")
-        raise
-
-
-def deploy_modulo(
-    conn: oracledb.Connection,
-    modulo_dir: Path,
-) -> None:
-    """Executa as 4 partes de um módulo ORDS na ordem correta."""
-    for parte in PARTES_MODULO:
-        arquivo = modulo_dir / f"{parte}.sql"
-        deploy_arquivo_opcional(conn, arquivo, f"{modulo_dir.name}/{parte}.sql")
+def montar_plano(ords_dir: Path, modulo: str | None) -> list[tuple[str, list[Path]]]:
+    """
+    Etapas (rótulo, arquivos) na ordem canônica:
+    segurança global → privileges globais → cada módulo (module → templates →
+    handlers → privileges). Arquivos ausentes são simplesmente omitidos.
+    """
+    plano: list[tuple[str, list[Path]]] = []
+    seguranca = [ords_dir / r for r in ("security/roles.sql", "security/oauth_clients.sql")]
+    plano.append(("segurança global", [a for a in seguranca if a.exists()]))
+    priv_dir = ords_dir / "privileges"
+    plano.append(("privileges globais",
+                  sorted(priv_dir.glob("*.sql")) if priv_dir.exists() else []))
+    modules_dir = ords_dir / "modules"
+    if modules_dir.exists():
+        for d in sorted(x for x in modules_dir.iterdir() if x.is_dir()):
+            if modulo is None or d.name == modulo:
+                arquivos = [d / f"{parte}.sql" for parte in PARTES_MODULO]
+                plano.append((f"módulo {d.name}", [a for a in arquivos if a.exists()]))
+    return plano
 
 
 def verificar_modulos(conn: oracledb.Connection) -> None:
@@ -75,8 +87,6 @@ def verificar_modulos(conn: oracledb.Connection) -> None:
     efetivo diferir do usuário conectado — garante visibilidade em qualquer
     configuração.
     """
-    from oracle_devops_utils import schema_efetivo
-
     schema = schema_efetivo(conn)
     log.info(f"\n{SEP}")
     log.info(f"  {CYAN}Módulos ORDS publicados — schema: {schema}{RESET}")
@@ -108,7 +118,7 @@ def verificar_modulos(conn: oracledb.Connection) -> None:
         log.info(f"  {YELLOW}Nenhum módulo encontrado no schema {schema}.{RESET}")
         return
 
-    for nome, prefixo, status, items in rows:
+    for nome, prefixo, status, _items in rows:
         cor = GREEN if status == "PUBLISHED" else YELLOW
         log.info(
             f"  {cor}{'●' if status == 'PUBLISHED' else '○'}{RESET} "
@@ -129,6 +139,8 @@ def main() -> None:
     parser.add_argument("--project-root", type=Path,
                         default=Path(__file__).parent.parent)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--confirmar-prod", action="store_true",
+                        help="Confirma deploy em produção sem prompt (obrigatório fora de TTY/CI)")
     args = parser.parse_args()
 
     root = args.project_root.resolve()
@@ -138,60 +150,47 @@ def main() -> None:
     banner("deploy_ords.py — Deploy de módulos ORDS", args.env, args.dry_run)
 
     if args.env == "prod":
-        confirmar_producao(args.dry_run)
+        confirmar_producao(args.dry_run, confirmado=args.confirmar_prod)
+
+    plano = montar_plano(ords_dir, args.modulo)
+    if args.modulo and not any(r == f"módulo {args.modulo}" for r, _ in plano):
+        log.error(f"{RED}Módulo não encontrado: {args.modulo}{RESET}")
+        sys.exit(1)
+
+    todos = [a for _, arquivos in plano for a in arquivos]
+    problemas = [p for a in todos for p in validar_arquivo_sql(a)]
+    for rotulo, arquivos in plano:
+        if arquivos:
+            log.info(f"  {CYAN}{rotulo}{RESET}: {', '.join(a.name for a in arquivos)}")
+    if problemas:
+        for p in problemas:
+            log.error(f"  {RED}✗ {p}{RESET}")
+        sys.exit(1)
 
     if args.dry_run:
-        log.info("DRY-RUN: listando o que seria executado...")
-        for parte in ["security/roles.sql", "security/oauth_clients.sql",
-                      "privileges/global_privileges.sql"]:
-            if (ords_dir / parte).exists():
-                log.info(f"  ords/{parte}")
-        for d in sorted((ords_dir / "modules").iterdir()):
-            if d.is_dir():
-                log.info(f"  Módulo: {d.name}")
+        log.info(f"\n{CYAN}DRY-RUN: {len(todos)} arquivo(s) validados, nada executado.{RESET}")
         return
 
-    conn = conectar()
-
+    cfg = obter_config_db()
+    conn = conectar(cfg)
     try:
-        # 1. Segurança global
-        log.info(f"\n{SEP}")
-        log.info(f"  {CYAN}SEGURANÇA GLOBAL{RESET}")
-        for arquivo_rel in ["security/roles.sql", "security/oauth_clients.sql"]:
-            deploy_arquivo_opcional(conn, ords_dir / arquivo_rel, arquivo_rel)
-
-        # 2. Privileges globais
-        log.info(f"\n{SEP}")
-        log.info(f"  {CYAN}PRIVILEGES GLOBAIS{RESET}")
-        priv_dir = ords_dir / "privileges"
-        if priv_dir.exists():
-            for arquivo in sorted(priv_dir.glob("*.sql")):
-                deploy_arquivo_opcional(conn, arquivo, f"privileges/{arquivo.name}")
-
-        # 3. Módulos
-        log.info(f"\n{SEP}")
-        log.info(f"  {CYAN}MÓDULOS ORDS{RESET}")
-        modules_dir = ords_dir / "modules"
-
-        if not modules_dir.exists():
-            log.warning(f"  {YELLOW}ords/modules/ não encontrado.{RESET}")
-        else:
-            modulos = sorted(
-                d for d in modules_dir.iterdir()
-                if d.is_dir() and (args.modulo is None or d.name == args.modulo)
-            )
-
-            if args.modulo and not modulos:
-                log.error(f"{RED}Módulo não encontrado: {args.modulo}{RESET}")
+        for rotulo, arquivos in plano:
+            if not arquivos:
+                continue
+            log.info(f"\n{SEP}")
+            log.info(f"  {BOLD}→ {rotulo}{RESET}")
+            try:
+                executar_lote_sqlcl(conn, arquivos, cfg, base=ords_dir)
+            except ErroSQLcl as e:
+                log.error(f"  {RED}✗ {e}{RESET}")
+                if e.statement:
+                    log.error(f"  {RED}  statement: {e.statement[:300]}{RESET}")
+                log.error(f"\n{RED}⛔ Deploy ORDS interrompido em '{rotulo}'.{RESET}")
                 sys.exit(1)
+            log.info(f"  {GREEN}✓ {len(arquivos)} arquivo(s){RESET}")
 
-            for modulo_dir in modulos:
-                log.info(f"\n  {BOLD}→ {modulo_dir.name}{RESET}")
-                deploy_modulo(conn, modulo_dir)
-
-        # 4. Verificação pós-deploy
+        # Verificação pós-deploy
         verificar_modulos(conn)
-
     finally:
         conn.close()
 

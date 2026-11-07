@@ -37,7 +37,7 @@ meu-projeto-apex/
 │   │   └── pkg_clientes.pkb            ← .pkb = package body
 │   ├── procedures/                     ← Procedures standalone
 │   ├── functions/                      ← Functions standalone
-│   ├── triggers/                       ← Compound triggers
+│   ├── triggers/                       ← Triggers (simples ou compound)
 │   ├── types/                          ← Object types e collections
 │   ├── sequences/                      ← Sequences e identity columns
 │   ├── synonyms/                       ← Sinônimos públicos e privados
@@ -48,7 +48,7 @@ meu-projeto-apex/
 │
 ├── apex/                               ← Aplicações APEX (export split)
 │   ├── app_100/
-│   │   ├── install.sql                 ← Entry point do deploy APEX
+│   │   ├── install.sql                 ← Import manual (o CI roda f100/install.sql)
 │   │   └── f100/                       ← Estrutura split (SQLcl/APEXExport)
 │   │       ├── application/
 │   │       │   ├── pages/
@@ -253,7 +253,7 @@ java -jar /opt/oracle/apex/utilities/oracle/apex/APEXExport.jar \
 
 ```
 apex/app_100/
-├── install.sql          ← commitar — entry point
+├── install.sql          ← commitar — import manual (rodar de dentro de f100/)
 └── f100/
     ├── application/
     │   ├── pages/
@@ -268,6 +268,8 @@ apex/app_100/
     │   └── set_environment.sql  ← commitar
     └── readable/        ← commitar se usando 24.2+ com readable format
 ```
+
+**Import no deploy:** o `deploy_full.py` roda `f100/install.sql` (gerado pelo `apex export -split`) pelo SQLcl, **com a pasta `f100/` como diretório de trabalho** — o install do export chama os componentes por caminho relativo. Antes, confere no destino que o workspace existe e que o app id não pertence a outro workspace, e define workspace/app id/parsing schema do destino com `APEX_APPLICATION_INSTALL` (`APEX_WORKSPACE`, `APEX_APP_ID`, `APEX_SCHEMA`).
 
 **Não commitar:** arquivos de export monolítico (`f100.sql`) — gera diff inutilizável.
 
@@ -362,23 +364,63 @@ DB_PASS=senha_real_aqui
 
 ## 9. CI/CD — GitHub Actions
 
-Veja `assets/github-deploy.yml` para o workflow completo. Resumo do fluxo:
+Veja `assets/github-deploy.yml` (copiar para `.github/workflows/deploy.yml`). Fluxo:
 
 ```
-Push para develop → Deploy em DEV
-  └── Validação SQL (sintaxe)
-  └── Deploy objetos DB (deploy-db.sh)
-  └── Import APEX (SQLcl)
-  └── Deploy ORDS modules (deploy-ords.sh)
-  └── Smoke tests (curl nos endpoints ORDS)
-
-Push para hom → Deploy em HOM
-  └── Mesmo fluxo + testes de integração (Newman)
-
-Push para main → Deploy em PROD (manual approval)
-  └── Mesmo fluxo + aprovação humana obrigatória
-  └── Tag automática de versão
+resolve   → ambiente pelo input (workflow_dispatch) ou pelo branch:
+            develop → dev · hom → hom · main → prod   (sem segredos nos outputs)
+validate  → offline, sem banco: CodeScan do SQLcl (SQL, PL/SQL e .apx),
+            nomenclatura GMUD, changelog.yml e todos os .sql (UTF-8,
+            literais/comentários fechados, terminadores)
+deploy    → environment: <dev|hom|prod>   ← em prod, aguarda os "Required reviewers"
+            └── deploy_full.py: changelog → APEX → ORDS (SQLcl + ALL_ERRORS)
+            └── apply_changelog.py --status, healthcheck, Newman (opcionais)
+tag-release → só prod, depois do deploy
 ```
+
+**GitHub Environments** (Settings → Environments): `dev`, `hom`, `prod`.
+
+| Onde | O quê |
+|---|---|
+| `prod` → Required reviewers | Aprovação humana obrigatória (é ela que libera o job `deploy`) |
+| `prod` → Deployment branches | Recomendado: só `main` |
+| Environment secret (cada ambiente) | `DB_PASS` |
+| Environment variables (cada ambiente) | `DB_HOST`, `DB_PORT`, `DB_SERVICE`, `DB_USER`, `DB_SCHEMA`, `APEX_WORKSPACE`, `APEX_APP_ID`, `APEX_SCHEMA`, `ORDS_HEALTHCHECK_URL`, `ORDS_URL` |
+
+Regras que o workflow segue:
+- **Um job de deploy por execução** — cada job que referencia o Environment `prod` pede aprovação de novo; banco, APEX e ORDS rodam no mesmo job.
+- Secrets de Environment só existem em jobs com `environment:`; nunca passe segredo por `outputs` de job (o GitHub descarta output que contém segredo).
+- Em prod o script recebe `--confirmar-prod`: a confirmação é a aprovação do Environment. Os scripts nunca chamam `input()` em CI.
+- Expressões do Actions não têm `upper()`/`lower()`; o segredo por ambiente vem do Environment (`secrets.DB_PASS`), não de `format('DB_PASS_{0}', ...)`.
+- Validado com `actionlint` (+ `shellcheck` nos blocos `run:`).
+
+### Gate de qualidade — SQLcl CodeScan
+
+`scripts/codescan_gate.py db apex ords` roda `codescan -path <pasta>` do SQLcl
+em cada pasta e **falha o job se houver achado**. O wrapper existe porque o
+`codescan` sai com código **0 mesmo encontrando violações** (verificado no
+SQLcl 26.3.1): o gate lê o relatório JSON.
+
+- Arquivos analisados (help do SQLcl 26.3.1): `.sql`, `.pks`, `.pkb`, `.pkh`,
+  `.pls`, `.plb`, `.pck`, `.tps`, `.tpb` e **`.apx`** (APEXlang). Não existe
+  opção `-ext`: a extensão é reconhecida sozinha.
+- Regras para `.apx` (APEX-001 em diante: autorização de páginas, processos,
+  AI tools, session state protection…) existem desde o **SQLcl 26.3.0**
+  ([changelog](https://www.oracle.com/tools/sqlcl/sqlcl-changelog.html)); o
+  26.3.1 estendeu a análise a SQL e PL/SQL dentro dos componentes APEXlang.
+- Exceções aceitas ficam versionadas em `codescan.json`, no formato do próprio
+  SQLcl: `{"ignore":[{"ruleNo":"G-7310","reason":"..."}]}`. Cada exceção com
+  motivo, revisada no PR como código.
+
+### APEXlang no pipeline (APEX 26.1+)
+
+- Export e versionamento: comando `apex` do SQLcl (APEXlang desde o SQLcl
+  26.1.2; SQLcl Projects com APEXlang desde o 26.2). Exige ORDS 26.1.1+.
+- **Deploy em homologação/produção é da aplicação inteira.** A doc do SQLcl
+  26.3 diz que, com arquivo único, ele "must contain the entire application";
+  o import **por arquivo** do APEX 26.2 (`apex import -files ...`) é suportado
+  **só pelo SQLcl e pelo VS Code e só em desenvolvimento**. Não use import por
+  arquivo como deploy incremental entre ambientes.
 
 ---
 
@@ -403,7 +445,11 @@ https://learning.postman.com/docs/collections/using-newman-cli/
 
 ## 12. Scripts Python — uso rápido
 
-Todos os scripts usam `oracle_devops_utils.py` como base compartilhada (conexão, SQL execution, logging).
+Todos os scripts usam `oracle_devops_utils.py` como base compartilhada (conexão, execução pelo SQLcl, logging).
+
+**Pré-requisito:** SQLcl (`sql` no PATH ou `SQLCL_BIN`). Scripts SQL — DDL, PL/SQL, migrations, `install.sql` do APEX — são **executados pelo SQLcl** (`sql -S /nolog` + `WHENEVER SQLERROR EXIT FAILURE ROLLBACK` + `WHENEVER OSERROR EXIT FAILURE ROLLBACK`), que entende `SET`, `PROMPT`, `@`, `@@` e as regras de terminador. O python-oracledb fica para controle: `db_changelog`, verificações e `ALL_ERRORS`.
+
+> **Por que `ROLLBACK` no `WHENEVER`:** o padrão de `EXIT` é `COMMIT`. Com só `WHENEVER SQLERROR EXIT FAILURE`, o DML executado antes do erro é **comitado** (comportamento verificado em teste). **Por que `ALL_ERRORS`:** `CREATE` de PL/SQL com erro de compilação não dispara `WHENEVER SQLERROR` (o SQLcl sai com 0) e não lança exceção no python-oracledb (só `cursor.warning` DPY-7000). Depois de cada script, os objetos criados/recompilados no deploy são conferidos em `ALL_ERRORS WHERE owner = SYS_CONTEXT('USERENV','CURRENT_SCHEMA')`; havendo erro, o deploy falha.
 
 ```bash
 # Instalar dependências (uma vez)
@@ -438,12 +484,12 @@ python scripts/export_ords.py --schema ms_app
 oracle_devops_utils.py
     ↑ importado por todos os demais scripts
     │
-    ├── apply_changelog.py  ← usa: conectar, executar_arquivo_sql, checksum_sha256
-    ├── deploy_db.py        ← usa: conectar, executar_arquivo_sql
-    ├── deploy_ords.py      ← usa: conectar, executar_arquivo_sql
+    ├── apply_changelog.py  ← usa: conectar, executar_e_verificar (SQLcl + ALL_ERRORS), checksum_sha256
+    ├── deploy_db.py        ← usa: conectar, executar_lote_sqlcl, validar_arquivo_sql
+    ├── deploy_ords.py      ← usa: conectar, executar_lote_sqlcl, validar_arquivo_sql
     ├── export_db.py        ← usa: conectar (DBMS_METADATA via oracledb)
     ├── export_ords.py      ← usa: conectar (ORDS_EXPORT via oracledb)
-    └── deploy_full.py      ← usa: conectar + chama outros via subprocess
+    └── deploy_full.py      ← usa: conectar, executar_e_verificar (install.sql APEX) + chama outros via subprocess
 ```
 
 ### Conexão: oracledb Thin Mode
@@ -468,7 +514,7 @@ DB_PASS=senha_admin
 DB_SCHEMA=ms_app     # deploya neste schema
 ```
 
-O `oracle_devops_utils.py` executa automaticamente `ALTER SESSION SET CURRENT_SCHEMA = MS_APP` após conectar. Isso garante que:
+O `oracle_devops_utils.py` executa automaticamente `ALTER SESSION SET CURRENT_SCHEMA = MS_APP` após conectar — na conexão python-oracledb e na sessão do SQLcl. Isso garante que:
 - `USER_*` views apontem para `ms_app` (não `admin_user`)
 - DDL sem prefixo de schema (`CREATE TABLE ...`) cria em `ms_app`
 - `ORDS.define_module(...)` registra no schema correto
@@ -521,7 +567,7 @@ db/
 
 ### Tabela de controle — db_changelog
 
-Criada automaticamente pelo `apply-changelog.sh` na primeira execução:
+Criada automaticamente pelo `apply_changelog.py` na primeira execução — e **atualizada** se vier de uma versão anterior sem status (colunas novas acrescentadas; linhas antigas ficam `APLICADA`). O DBA pode rodar o mesmo bloco à mão: `assets/create-changelog-table.sql` (idempotente).
 
 ```sql
 CREATE TABLE db_changelog (
@@ -530,27 +576,37 @@ CREATE TABLE db_changelog (
   arquivo        VARCHAR2(500)  NOT NULL,   -- relativo a db/
   tipo           VARCHAR2(10)   NOT NULL,   -- ddl | dml | fix
   checksum       VARCHAR2(64)   NOT NULL,   -- SHA-256 do arquivo
+  status         VARCHAR2(20)   NOT NULL,   -- EM_ANDAMENTO | APLICADA | ERRO
   aplicado_em    DATE           DEFAULT SYSDATE NOT NULL,
-  aplicado_por   VARCHAR2(100)  DEFAULT USER NOT NULL,
+  aplicado_por   VARCHAR2(128)  DEFAULT USER NOT NULL,
   duracao_ms     NUMBER,
   ambiente       VARCHAR2(10),              -- dev | hom | prod
-  CONSTRAINT pk_db_changelog PRIMARY KEY (id)
+  mensagem_erro  VARCHAR2(4000),            -- erro Oracle (status ERRO)
+  statement_erro VARCHAR2(4000),            -- statement que falhou
+  CONSTRAINT pk_db_changelog PRIMARY KEY (id),
+  CONSTRAINT ck_db_changelog_status
+    CHECK (status IN ('EM_ANDAMENTO', 'APLICADA', 'ERRO'))
 );
 ```
 
 Consultas úteis:
 
 ```sql
--- Histórico completo de migrations aplicadas
-SELECT id, tipo, descricao, TO_CHAR(aplicado_em, 'DD/MM/YYYY HH24:MI') AS quando,
+-- Pendências que bloqueiam o deploy
+SELECT id, status, aplicado_em, mensagem_erro, statement_erro
+  FROM db_changelog
+ WHERE status IN ('ERRO', 'EM_ANDAMENTO');
+
+-- Histórico completo de migrations
+SELECT id, status, tipo, descricao, TO_CHAR(aplicado_em, 'DD/MM/YYYY HH24:MI') AS quando,
        aplicado_por, duracao_ms || 'ms' AS duracao, ambiente
   FROM db_changelog
  ORDER BY aplicado_em;
 
 -- Migrations aplicadas em prod mas não em hom (drift de ambiente)
-SELECT id, descricao FROM db_changelog WHERE ambiente = 'prod'
+SELECT id, descricao FROM db_changelog WHERE ambiente = 'prod' AND status = 'APLICADA'
 MINUS
-SELECT id, descricao FROM db_changelog WHERE ambiente = 'hom';
+SELECT id, descricao FROM db_changelog WHERE ambiente = 'hom' AND status = 'APLICADA';
 
 -- Última migration aplicada
 SELECT id, descricao, aplicado_em, ambiente
@@ -589,11 +645,14 @@ migrations:
 ### Workflow completo de alteração
 
 ```bash
-# 1. Criar o script de alteração
+# 1. Criar os scripts de alteração — UMA DDL por arquivo
 cat > db/tables/alter/003_tb_clientes_add_col_cpf.sql << SQL
--- alter/003_tb_clientes_add_col_cpf.sql
 -- DB-011 — Adicionar coluna cpf em tb_clientes
 ALTER TABLE tb_clientes ADD (cpf VARCHAR2(14));
+SQL
+
+cat > db/indexes/alter/001_idx_clientes_cpf.sql << SQL
+-- DB-012 — Índice único em tb_clientes.cpf
 CREATE UNIQUE INDEX idx_clientes_cpf ON tb_clientes (cpf);
 SQL
 
@@ -602,36 +661,61 @@ cat >> db/changelog.yml << YAML
   - id: "DB-011"
     arquivo: "tables/alter/003_tb_clientes_add_col_cpf.sql"
     tipo: "ddl"
-    descricao: "tb_clientes — adicionar coluna cpf com índice único"
+    descricao: "tb_clientes — adicionar coluna cpf"
+  - id: "DB-012"
+    arquivo: "indexes/alter/001_idx_clientes_cpf.sql"
+    tipo: "ddl"
+    descricao: "tb_clientes — índice único em cpf"
 YAML
 
-# 3. Commitar os dois arquivos juntos
-git add db/tables/alter/003_tb_clientes_add_col_cpf.sql db/changelog.yml
-git commit -m "db(DB-011): tb_clientes add col cpf"
+# 3. Commitar os arquivos juntos
+git add db/tables/alter/003_tb_clientes_add_col_cpf.sql \
+        db/indexes/alter/001_idx_clientes_cpf.sql db/changelog.yml
+git commit -m "db(DB-011, DB-012): tb_clientes add col cpf + índice único"
 
 # 4. CI/CD (ou manual) aplica no ambiente
-./scripts/apply-changelog.sh dev
+python scripts/apply_changelog.py --env dev
 
 # 5. Atualizar o DDL atual após aplicação
-./scripts/export-db.sh ms_app tables
+python scripts/export_db.py --schema ms_app --tipo tables
 git add db/tables/tb_clientes.sql
 git commit -m "db: atualiza DDL tb_clientes após DB-011"
 ```
 
-### Comportamento do apply-changelog.sh
+### Comportamento do apply_changelog.py
 
 | Situação | Ação |
 |---|---|
-| Migration não aplicada | Executa o script, registra em `db_changelog` |
-| Migration aplicada, checksum OK | Pula silenciosamente |
-| Migration aplicada, checksum diferente | **ERRO** — arquivo foi alterado após aplicação |
+| Migration não aplicada | Grava `EM_ANDAMENTO` (comitado), executa pelo SQLcl, confere `ALL_ERRORS`, grava `APLICADA` |
+| Migration `APLICADA`, checksum OK | Pula silenciosamente |
+| Migration `APLICADA`, checksum diferente | **ERRO de integridade** — arquivo foi alterado após aplicação; crie nova migration |
 | Arquivo referenciado não existe | **ERRO** — interrompe deploy |
-| Erro na execução do script | **ERRO** — interrompe deploy, migrations seguintes não executadas |
+| Erro SQL, ou objeto com erro de compilação | Grava `ERRO` com `mensagem_erro` e `statement_erro`; interrompe; as seguintes não executam |
+| Processo morto no meio (timeout, runner cancelado) | A linha fica `EM_ANDAMENTO` |
+| Existe migration em `ERRO` ou `EM_ANDAMENTO` | **Bloqueia** qualquer nova execução até `--retomar <id>` ou `--marcar-resolvida <id>` |
+
+### Migrations: falha no meio e retomada
+
+**DDL comita implicitamente.** Se uma migration tem três DDLs e a segunda falha, a primeira **continua aplicada** — não existe rollback de DDL, e o `rollback()` de um driver não muda isso. O que o processo garante é **saber exatamente onde parou**: o status `EM_ANDAMENTO` é gravado antes de executar, e `ERRO` guarda a mensagem e o statement. O DML de uma migration que falha é desfeito (`WHENEVER SQLERROR EXIT FAILURE ROLLBACK`).
+
+Regras para migrations seguras:
+
+1. **Pequenas: uma DDL por arquivo.** Falha numa migration de uma DDL só deixa dois estados possíveis — aplicou ou não aplicou. DML de carga pode ir junto, num arquivo `tipo: dml` separado.
+2. **Pré-validação antes de tocar no banco.** Todo arquivo passa pelo parser (literal/comentário não fechado, último comando sem `;` ou `/` — que o SQLcl ignoraria em silêncio). Em homologação, rode `--dry-run` e aplique antes de produção; produção nunca é o primeiro ambiente.
+3. **Idempotência quando possível.** DDL que pode ser reexecutada com segurança torna a retomada trivial. Na base 19c, use bloco PL/SQL (para `IF NOT EXISTS` e a versão em que ele existe, ver `oracle-26ai-ptbr`) que ignora só o erro esperado (ex.: `ORA-00955` para objeto existente, `ORA-01430` para coluna existente) e propaga o resto com `RAISE`.
+4. **Compensação documentada.** Para DDL destrutiva (`DROP`, `MODIFY` que perde dado), deixe no cabeçalho do arquivo o script de compensação (o que desfaz) e faça backup/flashback antes. Compensação é uma **nova** migration — nunca edite a que já rodou.
+5. **Retomada segura.** Com uma migration em `ERRO`:
+   1. leia `mensagem_erro` e `statement_erro` (`python scripts/apply_changelog.py --status`);
+   2. confira no banco o que a parte anterior ao erro já aplicou;
+   3. escolha:
+      - **`--retomar <id>`** — corrija o arquivo (normalmente tornando-o idempotente) e reexecute; o checksum novo é registrado e o deploy segue com as próximas;
+      - **`--marcar-resolvida <id>`** — se o ajuste foi concluído à mão; a linha vira `APLICADA` com o checksum atual e o erro original fica registrado com o prefixo `[resolvida manualmente por ...]`.
+   Com `EM_ANDAMENTO` (processo interrompido), o procedimento é o mesmo: não há como saber até onde foi sem olhar o banco.
 
 ### Integração com deploy-full.sh
 
-`apply-changelog.sh` substitui `deploy-db.sh` em deploys incrementais (CI/CD).
-`deploy-db.sh` continua útil para setup inicial do zero (novo ambiente).
+`apply_changelog.py` substitui `deploy_db.py` em deploys incrementais (CI/CD).
+`deploy_db.py` continua útil para setup inicial do zero (novo ambiente).
 
 ```bash
 # deploy-full.sh pode chamar apply-changelog em vez de deploy-db:

@@ -2,10 +2,10 @@
 name: oracle-devops-ptbr
 description: Módulo DevOps da suíte Oracle PT-BR. Estrutura Git e CI/CD para projetos Oracle/APEX/ORDS. ATIVE em estrutura de projeto Oracle no Git, commit de objetos do banco, script de deploy, GitHub Actions ou Azure Pipelines para Oracle, export APEX split via SQLcl, versionamento de módulos ORDS, GMUD naming (001_projeto_ddl_objeto.sql), deploy-db/deploy-apex/deploy-ords, branch strategy, .gitignore Oracle, rollback, ordem de dependências, changelog Liquibase XML (databaseChangeLog/changeSet), code review e promoção entre ambientes via GitHub/Azure. Frases — "estruturar projeto no Git", "script de deploy Oracle", "export do APEX para Git", "deploy ordenado do banco", "nomenclatura GMUD", "changelog Liquibase", "pipeline Azure DevOps", "deploy com aprovação por ambiente", "enviar para homologação/produção". NÃO ATIVE em código PL/SQL (oracle-plsql-ptbr), APEX pages (oracle-apex-ptbr), ORDS handlers (oracle-ords-ptbr), DBA operacional (oracle-dba-ptbr), tuning (oracle-tuning-ptbr). Templates em assets/.
 metadata:
-  version: "3.6.2"
-  release_date: "2026-09-15"
+  version: "4.1.1"
+  release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
-  suite_size: 30
+  suite_size: 31
   author: "Maxwell da Silva Oliveira"
   contact: "contato@msbrasil.inf.br"
   organization: "M&S do Brasil LTDA"
@@ -27,14 +27,14 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo DevOps (oracle-devops-ptbr)
 
-> **Versão:** 3.6.2 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (30 recursos nesta skill)
-> **v3.6.2:** suíte com 10 skills; referência cruzada para o lab local como ambiente de teste do pipeline. Histórico em `CHANGELOG.md`.
+> **Versão:** 4.1.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (31 recursos nesta skill)
+> **v4.1.1:** `export_db.py` respeita `DB_SCHEMA`; lint dos `export_*.py` para o CI. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 26.1: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
@@ -42,8 +42,10 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
 
-Estrutura Git, scripts de deploy e CI/CD para projetos Oracle 19c + APEX 24.2/26.1 + ORDS.
+
+Estrutura Git, scripts de deploy e CI/CD para projetos Oracle 19c + APEX 24.2–26.2 + ORDS.
 
 **Desenvolvido por:** Maxwell da Silva Oliveira — [M&S do Brasil LTDA](https://msbrasil.inf.br)
 
@@ -63,11 +65,11 @@ Estrutura Git, scripts de deploy e CI/CD para projetos Oracle 19c + APEX 24.2/26
 - Export APEX split via SQLcl (`apex export -split`)
 - Export de módulos ORDS via `ORDS_EXPORT.export_schema()`
 - Versionamento de módulos ORDS (`clientes_v1/`, `clientes_v2/`)
-- Branch strategy (`main` / `hml` / `develop` / `feature/*`) — `hml` é o nome canônico da suíte para homologação; o fluxo legado (changelog.yml, `github-deploy.yml`, scripts `deploy_*.py`) usa `hom`
+- Branch strategy (`main` / `hom` / `develop` / `feature/*`) e ambientes `dev` / `hom` / `prod` — nomes únicos da suíte, iguais no fluxo Python (`github-deploy.yml`, `deploy_*.py`) e no Liquibase (Environments, Variable Groups e contexts)
 - GitHub Actions ou Azure DevOps Pipelines para Oracle/APEX/ORDS (CI-agnóstico)
 - Escolha do combo CI/CD (Git/Azure/Manual) × Liquibase (sim/não) — assistente `setup_devops.py`
 - Deploy GMUD via Liquibase (changelog XML real, `databaseChangeLog`/`changeSet`)
-- Code review e promoção entre ambientes (Aprovar/Reprovar/Enviar p/ HML/Enviar p/ PRD) com GitHub Environments protegidos
+- Code review e promoção entre ambientes (Aprovar/Reprovar/Enviar p/ HOM/Enviar p/ PROD) com GitHub Environments protegidos
 - Ordem de execução por changelog (estilo Liquibase) e rollback por tag de release
 - `.gitignore` para projetos Oracle
 - `.gitattributes` (encoding UTF-8, LF)
@@ -89,11 +91,11 @@ meu-projeto-apex/
 │   ├── packages/         ← .pks (spec) e .pkb (body) separados
 │   ├── procedures/       ← .prc
 │   ├── functions/        ← .fnc
-│   ├── triggers/         ← .trg (sempre compound)
+│   ├── triggers/         ← .trg (simples ou compound — regra 10 da oracle-plsql-ptbr)
 │   └── scripts/          ← 001_projeto_tipo_objeto.sql (GMUD)
 ├── apex/
 │   └── app_100/
-│       ├── install.sql   ← entry point
+│       ├── install.sql   ← import manual (CI roda f100/install.sql)
 │       └── f100/         ← export split (SQLcl)
 ├── ords/
 │   ├── modules/
@@ -144,15 +146,15 @@ Implementado em `assets/deploy_db.py` (subdiretórios `db/constraints/`, `db/fk/
 | Arquivo | Tipo | Descrição |
 |---|---|---|
 | **Módulo compartilhado** | | |
-| `oracle_devops_utils.py` | Python | `conectar()`, `executar_arquivo_sql()`, `split_oracle_sql()`, `checksum_sha256()`, cores, banner |
+| `oracle_devops_utils.py` | Python | `conectar()` (DB_SCHEMA), `executar_script_sqlcl()` / `executar_e_verificar()` (SQLcl + `ALL_ERRORS`), `validar_arquivo_sql()` / `split_oracle_sql()` (tokenizador), `confirmar_producao()`, `checksum_sha256()` |
 | **Scripts Python — uso direto** | | |
-| `apply_changelog.py` | Python | Lê `db/changelog.yml`, aplica migrations via oracledb. CLI: `--env`, `--dry-run`, `--status` |
-| `deploy_full.py` | Python | Orquestrador: changelog → APEX → ORDS. Suporta `--skip-db/apex/ords` |
+| `apply_changelog.py` | Python | Lê `db/changelog.yml`, aplica migrations pelo SQLcl com status `EM_ANDAMENTO`/`APLICADA`/`ERRO`. CLI: `--env`, `--dry-run`, `--status`, `--retomar`, `--marcar-resolvida`, `--confirmar-prod` |
+| `deploy_full.py` | Python | Orquestrador: changelog → APEX (export split pelo SQLcl, workspace/app id validados) → ORDS. Suporta `--skip-db/apex/ords` |
 | `deploy_db.py` | Python | Deploy ordenado: sequences → types → tables → package specs → bodies → triggers |
 | `deploy_ords.py` | Python | Deploy ORDS: security → privileges → módulos. Verifica `USER_ORDS_MODULES` pós-deploy |
 | `export_db.py` | Python | Extrai DDL via `DBMS_METADATA.GET_DDL()` → `db/` (.pks/.pkb/.vw/.trg...) |
 | `export_ords.py` | Python | Export via `ORDS_EXPORT.export_schema()` — lê CLOB nativo via oracledb |
-| `export_apex.py` | Python | Export split APEX via SQLcl subprocess — backup automático, gera `install.sql` |
+| `export_apex.py` | Python | Export split APEX via SQLcl subprocess — backup automático, gera `install.sql` para import manual |
 | **Wrappers shell (compatibilidade CI/CD)** | | |
 | `apply-changelog.sh` | Shell | `exec python3 apply_changelog.py "$@"` |
 | `deploy-full.sh` | Shell | `exec python3 deploy_full.py "$@"` |
@@ -167,14 +169,15 @@ Implementado em `assets/deploy_db.py` (subdiretórios `db/constraints/`, `db/fk/
 | `create-changelog-table.sql` | SQL | DDL idempotente da tabela `db_changelog` |
 | `module_template.sql` | SQL | Template completo de módulo ORDS (module + templates + handlers + privileges) |
 | `gitignore-oracle.txt` | Config | Copiar como `.gitignore` na raiz do projeto |
-| `github-deploy.yml` | CI/CD | Workflow GitHub Actions (fluxo legado) — branch → ambiente, aprovação prod, smoke tests |
+| `github-deploy.yml` | CI/CD | GitHub Actions (fluxo Python) — Environments `dev`/`hom`/`prod`, `DB_PASS` por ambiente, aprovação obrigatória em prod, validação offline, deploy pelo SQLcl |
 | **Liquibase e CI-agnóstico (recomendado)** | | |
 | `setup_devops.py` | Python | Assistente interativo (ou `--ci git|azure|manual --liquibase sim|não`) que gera o esqueleto do combo escolhido, sem conectar no banco |
+| `codescan_gate.py` | Python | Gate de CI com SQLcl CodeScan (SQL, PL/SQL e APEXlang `.apx`); falha se houver achado, exceções em `codescan.json` |
 | `gmud_liquibase.py` | Python | Gera `changelog-master.xml` a partir das releases e invoca liquibase/SQLcl/script |
 | `changelog-master.xml` | Liquibase | `databaseChangeLog` mestre — inclui os changelogs de release |
 | `changelog-release-exemplo.xml` | Liquibase | Exemplo de release com `changeSet`, `sqlFile`, `runOnChange`, `context`, `rollback`, `tagDatabase` |
-| `github-deploy-liquibase.yml` | CI/CD | GitHub Actions com Environments protegidos dev/hml/prd como approval gates |
-| `azure-pipelines-liquibase.yml` | CI/CD | Azure DevOps — stages dev/hml/prd com deployment jobs + Approvals and checks |
+| `github-deploy-liquibase.yml` | CI/CD | GitHub Actions com Environments protegidos dev/hom/prod como approval gates; credenciais via `LIQUIBASE_COMMAND_*` |
+| `azure-pipelines-liquibase.yml` | CI/CD | Azure DevOps — stages dev/hom/prod com deployment jobs + Approvals and checks |
 
 ## Referências cruzadas
 

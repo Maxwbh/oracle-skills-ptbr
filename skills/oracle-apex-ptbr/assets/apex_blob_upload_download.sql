@@ -91,7 +91,7 @@ BEGIN
   -- Limpa o arquivo temp da APEX (importante!)
   DELETE FROM APEX_APPLICATION_TEMP_FILES WHERE name = :P15_FILE_BROWSE;
 
-  COMMIT;
+  -- Sem COMMIT: o APEX é o dono da transação do request (fecha ao final).
 
   -- Retorna ID do documento via item
   :P15_ID_DOCUMENTO := l_id_documento;
@@ -180,6 +180,11 @@ DECLARE
   l_id_documento     NUMBER;
   l_hash       VARCHAR2(64);
 BEGIN
+  -- AJAX callback que CAPTURA o erro para responder JSON: como a exceção não
+  -- sobe, o APEX comitaria o que já foi feito — por isso SAVEPOINT +
+  -- ROLLBACK TO no handler. Sem COMMIT: o APEX fecha a transação.
+  SAVEPOINT sp_save_generated_pdf;
+
   -- Reconstrói o Base64 a partir do array F01 (chunks)
   DBMS_LOB.createtemporary(l_base64, TRUE);
   FOR i IN 1..APEX_APPLICATION.G_F01.COUNT LOOP
@@ -208,8 +213,6 @@ BEGIN
     :APP_USER
   ) RETURNING id INTO l_id_documento;
 
-  COMMIT;
-
   -- Liberar CLOB temporário
   DBMS_LOB.freetemporary(l_base64);
 
@@ -221,7 +224,7 @@ BEGIN
 
 EXCEPTION
   WHEN OTHERS THEN
-    ROLLBACK;
+    ROLLBACK TO sp_save_generated_pdf;
     APEX_DEBUG.error('Erro em ' || l_nome_unidade || ': ' || SQLERRM);
     APEX_JSON.open_object;
     APEX_JSON.write('error', SQLERRM);
