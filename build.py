@@ -196,15 +196,13 @@ def contar_recursos(skill_dir: Path) -> int:
 
 
 # Nomes de clientes reais que nunca podem ir para o repositório público.
-# Nomes adicionais sem publicá-los: variável CLIENTES_PROIBIDOS (separados por
-# vírgula; no CI, um secret) ou arquivo .clientes-proibidos.txt na raiz
-# (um por linha; está no .gitignore).
-CLIENTES_PROIBIDOS = ["IMESC", "Zitrus", "Memora", "Hapvida", "Nexdom"]
+# A lista NÃO fica no código (o repositório é público): vem da variável
+# CLIENTES_PROIBIDOS (separados por vírgula; no CI, o secret de mesmo nome)
+# e/ou do arquivo .clientes-proibidos.txt na raiz (um por linha; no .gitignore).
 
 
 def clientes_proibidos() -> list[str]:
-    termos = list(CLIENTES_PROIBIDOS)
-    termos += [t.strip() for t in os.environ.get("CLIENTES_PROIBIDOS", "").split(",") if t.strip()]
+    termos = [t.strip() for t in os.environ.get("CLIENTES_PROIBIDOS", "").split(",") if t.strip()]
     extra = ROOT / ".clientes-proibidos.txt"
     if extra.exists():
         termos += [linha.strip() for linha in extra.read_text(encoding="utf-8").splitlines()
@@ -220,6 +218,8 @@ def _sem_acento(texto: str) -> str:
 def procurar_clientes(skill_dir: Path) -> list[str]:
     """Varre TODOS os arquivos de texto da skill (não só .md)."""
     termos = [(t, re.compile(rf"\b{re.escape(_sem_acento(t))}\b")) for t in clientes_proibidos()]
+    if not termos:
+        return []
     achados: list[str] = []
     for arquivo in sorted(skill_dir.rglob("*")):
         if not arquivo.is_file() or _ignorado(arquivo.relative_to(skill_dir)):
@@ -386,6 +386,9 @@ def main() -> None:
     # ── Modo verificação ──────────────────────────────────────────────────────
     if args.check:
         log("  Verificando consistência...\n")
+        if not clientes_proibidos():
+            warn("Trava de clientes reais INATIVA: defina CLIENTES_PROIBIDOS ou "
+                 ".clientes-proibidos.txt")
         total_ok = total_err = 0
         for skill_dir in skill_dirs:
             problemas = verificar(skill_dir)
