@@ -1,5 +1,10 @@
 # Changelog — oracle-dba-ptbr
 
+## [2.4.0] - 2026-11-06
+- Fix — dicionário dizia "Premier até 2027, Extended até 2030"; agora 31/12/2029 e 31/12/2032 (Lifetime Support Policy de 02/10/2026).
+- Feature — RU 19.32: provedor OpenSSL com TLS 1.3, FIPS 140-3 e PQC (ML-KEM/ML-DSA), desligado por padrão (`set_crypto_provider.py`).
+- Docs — roteamento para oracle-26ai-helper-ptbr.
+
 ## [2.3.2] - 2026-09-15
 - Docs — suíte com 10 skills; fronteira com oracle-lab-ptbr (máquina local do dev) explicitada.
 

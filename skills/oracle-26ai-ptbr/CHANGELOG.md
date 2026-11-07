@@ -1,5 +1,9 @@
 # Changelog — oracle-26ai-ptbr
 
+## [1.1.0] - 2026-11-06
+- Feature — fronteira com oracle-26ai-helper-ptbr: Vector Search, JSON Relational Duality e RAFT vão para a skill irmã; saem do ATIVE e entram no NÃO ATIVE da description. Sintaxe nova e migração 19c→26ai ficam aqui.
+- Docs — migração: datas de suporte do 19c (31/12/2029 / 31/12/2032) e upgrade direto 19c/21c → 26ai com fonte.
+
 ## [1.0.2] - 2026-09-15
 - Docs — suíte com 10 skills; referência cruzada para subir um 26ai Free local e testar a sintaxe nova.
 

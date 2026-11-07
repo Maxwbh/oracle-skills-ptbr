@@ -66,6 +66,11 @@ CREATE OR REPLACE PACKAGE BODY heavy_job_pkg AS
   -----------------------------------------------------------------------------
   -- executar_arquivamento_faturas
   -- Procedure pesada que será chamada em background.
+  --
+  -- PONTO DE ENTRADA (job em background): é o DONO DA TRANSAÇÃO — os COMMITs
+  -- por chunk e o ROLLBACK do handler ficam aqui (regra 4 da
+  -- oracle-plsql-ptbr). Política: commit por chunk; uma falha no meio deixa
+  -- os chunks anteriores arquivados e o status FALHOU.
   -----------------------------------------------------------------------------
   PROCEDURE executar_arquivamento_faturas (
     p_id_job      IN VARCHAR2,

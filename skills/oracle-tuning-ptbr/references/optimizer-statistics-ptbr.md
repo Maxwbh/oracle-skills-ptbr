@@ -412,6 +412,14 @@ Hierarquia de "fixação" de plano, do mais leve ao mais forte: **estatísticas
 corretas** → **SQL Profile** (ajusta estimativas) → **SQL Plan Baseline** (fixa o
 plano). Prefira sempre resolver via stats antes de recorrer a profile/baseline.
 
+**Baseline aceito não garante uso.** Num caso relatado no 19c RU 19.32
+([oracle-base, 29/09/2026](https://oracle-base.com/blog/2026/09/29/sql-plan-management-spm-baseline-issue/)),
+o baseline existia e estava aceito, mas era ignorado porque o plano não podia
+ser reproduzido. Depois de criar ou transportar um baseline, confira
+`V$SQL.SQL_PLAN_BASELINE` e `DBA_SQL_PLAN_BASELINES.REPRODUCED`; o motivo
+aparece no trace `[SQL_Compiler.*]` (seção "SPM Plan Dump"). Ver
+`assets/explain_plan_workflow.sql`, etapa 9. Bug/nota MOS: a verificar.
+
 ## Checklist de diagnóstico de estatísticas
 
 1. As tabelas envolvidas têm stats? (`last_analyzed` não nulo)
