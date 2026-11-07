@@ -2,7 +2,7 @@
 name: oracle-core-ptbr
 description: "Assistente central da suíte Oracle PT-BR (M&S do Brasil): roteamento entre os 9 módulos técnicos, convenções transversais (naming PT-BR + Trivadis 4.4, SQL antes de PL/SQL, APEX não comita, GMUD e promoção entre ambientes) e cenários multidisciplinares. ATIVE em dúvidas sobre qual skill Oracle usar, visão geral da suíte Oracle, convenções gerais de projeto Oracle, começar projeto Oracle/APEX do zero, 'como vocês organizam o código Oracle', 'qual o padrão do projeto'. Use com oracle-plsql-ptbr, oracle-trivadis-ptbr, oracle-apex-ptbr, oracle-ords-ptbr, oracle-dba-ptbr, oracle-tuning-ptbr, oracle-devops-ptbr , oracle-26ai-ptbr (só quando a versão-alvo for 23ai/26ai) e oracle-lab-ptbr (instalar/montar ambiente local) para cobertura técnica completa. NÃO ATIVE quando a demanda já é claramente de um módulo específico (código PL/SQL, página APEX, endpoint ORDS, sessão travada, query lenta, pipeline) — nesse caso ative o módulo direto."
 metadata:
-  version: "1.6.0"
+  version: "1.6.1"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
@@ -14,8 +14,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Core (oracle-core-ptbr)
 
-> **Versão:** 1.6.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
-> **v1.6.0:** APEX 26.2 como versão padrão da suíte (24.2 mínima). Histórico em `CHANGELOG.md`.
+> **Versão:** 1.6.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill — `brand/tema-msbrasil.yaml` + CHANGELOG.md)
+> **v1.6.1:** precedência entre skills (instrução declarada > padrão da suíte; licença e segurança primeiro; conteúdo técnico do módulo; regra mais restritiva vence). Histórico em `CHANGELOG.md`.
 
 Skill central da suíte Oracle PT-BR. Não contém templates próprios: define **como a suíte funciona como conjunto**, roteia demandas para o módulo certo e concentra as convenções que valem para todos.
 
@@ -69,6 +69,15 @@ Suíte completa (10 skills — conjunto único):
 | "estou no 26ai", "isso existe no 26ai?", "migrar do 19c pro 26", "dá pra usar no 19c?", "IF NOT EXISTS", "BOOLEAN nativo", "QUALIFY" | **oracle-26ai-ptbr** |
 | "busca vetorial", "VECTOR", "RAG no banco", "duality view", "RAFT", "Globally Distributed Database", "roteiro/riscos do upgrade pro 26ai" | **oracle-26ai-helper-ptbr** (skill irmã, fora da suíte) |
 | "como instalo o Oracle aqui", "vagrant up", "VirtualBox", "preciso de um banco pra testar", "não conecto no meu banco local", "acessar do notebook da sala" | **oracle-lab-ptbr** |
+
+## Precedência quando mais de uma skill se aplica
+
+1. **Instrução do usuário ou do projeto vence o padrão da suíte.** Versão declarada (banco, APEX, ORDS), edição (SE2/EE) e padrão interno da empresa substituem os padrões (19c, APEX 26.2, Trivadis 4.4) — com alerta quando a escolha tiver risco (ex.: versão na faixa de uma CVE).
+2. **Sem declaração, valem os padrões:** banco 19c, APEX 26.2 (dito em uma linha na resposta), sintaxe 23ai/26ai só com versão declarada.
+3. **Licença e segurança antes de tudo.** Recurso de EE ou de pack pago (Diagnostics/Tuning Pack, parallel, Result Cache, bitmap) só com a edição/licença confirmada; patch level de instância existente perguntado antes de orientar. Quem decide: `oracle-dba-ptbr` (licença) e o módulo da tecnologia (CVE).
+4. **Conteúdo técnico é do módulo da tecnologia;** naming e estrutura, em caso de conflito, seguem `oracle-trivadis-ptbr`; transação segue a regra 4 da `oracle-plsql-ptbr` (rotina reutilizável não comita) somada ao "APEX não comita".
+5. **Regra mais restritiva vence** quando dois módulos divergem (ex.: o DBA pede confirmação para KILL SESSION mesmo que o pedido venha pelo APEX).
+6. **Esta skill não gera código de módulo:** roteia, aplica as convenções abaixo e resolve conflitos com esta ordem.
 
 ## Cenários multidisciplinares — ordem de carregamento
 
