@@ -2,7 +2,7 @@
 name: oracle-plsql-ptbr
 description: Módulo PL/SQL da suíte Oracle PT-BR. PL/SQL Oracle 19c — packages, procedures, functions, types, cursores, LOBs e EBR. ATIVE em BULK COLLECT, FORALL, NOCOPY, EXECUTE IMMEDIATE, MERGE INTO, compound trigger, editioning view, cross-edition trigger, CLOB/BLOB, Logger, exception handler, DML alternatives. Frases ambíguas com contexto PL/SQL — "criar package", "refatorar procedure", "processar LOB", "zero downtime deploy", "loop tá lento", "trigger de auditoria". NÃO ATIVE em páginas APEX, endpoints ORDS, DBA operacional (sessões/locks/tablespace), tuning de queries (explain plan/AWR/ASH). Aplica naming Trivadis automaticamente — para revisão explícita do padrão use oracle-trivadis-ptbr. Templates em assets/.
 metadata:
-  version: "3.0.2"
+  version: "3.0.3"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 11
@@ -27,14 +27,14 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo PL/SQL (oracle-plsql-ptbr)
 
-> **Versão:** 3.0.2 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (11 recursos nesta skill)
-> **v3.0.2:** roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
+> **Versão:** 3.0.3 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (11 recursos nesta skill)
+> **v3.0.3:** lista da suíte com APEX 26.2 como padrão. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 26.2 (padrão; compatível com 24.2+): páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache

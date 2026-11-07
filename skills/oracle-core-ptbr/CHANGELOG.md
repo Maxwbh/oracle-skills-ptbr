@@ -1,5 +1,8 @@
 # Changelog — oracle-core-ptbr
 
+## [1.6.0] - 2026-11-07
+- Feature — stack alvo: APEX 26.2 é a versão padrão (sem versão declarada, gerar para 26.2 e dizer isso); 24.2 passa a "versão mínima coberta"; ORDS/SQLcl 26.3+.
+
 ## [1.5.1] - 2026-11-07
 - Docs — roteamento (inclusive a tabela de frases): roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
 

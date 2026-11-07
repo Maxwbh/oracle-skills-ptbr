@@ -1,5 +1,8 @@
 # Changelog — oracle-trivadis-ptbr
 
+## [2.4.3] - 2026-11-07
+- Docs — lista da suíte: APEX 26.2 (padrão; compatível com 24.2+).
+
 ## [2.4.2] - 2026-11-07
 - Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
 

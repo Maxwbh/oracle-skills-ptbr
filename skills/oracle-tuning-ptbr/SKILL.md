@@ -2,7 +2,7 @@
 name: oracle-tuning-ptbr
 description: Módulo de tuning da suíte Oracle PT-BR. Performance tuning Oracle 19c — explain plan, análise AWR/ASH de SQL, indexes, hints, bind variables, cursor sharing, DBMS_STATS, V$SQL, V$SQLAREA, V$SESSION_WAIT. ATIVE em query lenta, full scan indesejado, hard parse alto, index strategy, plano de execução ruim, estatísticas desatualizadas, cardinality errada, AWR snapshot, ASH amostragem. Frases — "query está lenta", "qual index criar", "melhorar explain plan", "muitos hard parse", "cursor sharing", "optimizer hint", "runstats". NÃO ATIVE em DBA operacional (sessões/locks/tablespace), código PL/SQL novo, APEX, ORDS. Templates em assets/.
 metadata:
-  version: "2.7.1"
+  version: "2.7.2"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 7
@@ -26,14 +26,14 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Tuning (oracle-tuning-ptbr)
 
-> **Versão:** 2.7.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (7 recursos nesta skill)
-> **v2.7.1:** roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.7.2 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (7 recursos nesta skill)
+> **v2.7.2:** lista da suíte com APEX 26.2 como padrão. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 26.2 (padrão; compatível com 24.2+): páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache

@@ -1,5 +1,8 @@
 # Changelog — oracle-ords-ptbr
 
+## [2.5.2] - 2026-11-07
+- Docs — lista da suíte: APEX 26.2 (padrão); Network ACL: e-mail/REST/LDAP do APEX 26.2 exigem grant ao schema APEX_260200 (changed behavior 26.2).
+
 ## [2.5.1] - 2026-11-07
 - Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
 

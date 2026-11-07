@@ -1,5 +1,8 @@
 # Changelog — oracle-devops-ptbr
 
+## [4.1.3] - 2026-11-07
+- Docs — APEX 26.2 como padrão na estrutura de projeto; APEX Advisor deprecated no 26.2 (checagem de APEXlang fica no CodeScan); Export Wizard do 26.2 sempre leva supporting objects, o `apex export` do SQLcl continua escolhendo.
+
 ## [4.1.2] - 2026-11-07
 - Fix — `oracle_devops_utils.montar_script_sqlcl`: preâmbulo com `SET SQLBLANKLINES ON`. Sem ele, o SQLcl encerrava o comando numa linha em branco: `UPDATE … SET …` rodava **sem o WHERE** (todas as linhas), o resto virava "Unknown Command" e o script saía com 0 — o `WHENEVER SQLERROR` não pega. Reproduzido no SQLcl 26.1.2 e 26.3.1 contra o 26ai Free 23.26.3; teste de integração `test_linha_em_branco_dentro_do_comando_nao_corta_o_statement` e unitário `test_sqlcl_liga_sqlblanklines_antes_do_script`.
 - Docs — "Formatação dos scripts (SQLcl e SQL*Plus)" no SKILL.md: linha em branco dentro de comando, linha começando com `@` e `;` seguido de comentário (descarta o comando sem erro no SQL*Plus), com o comportamento medido nos dois clientes.
