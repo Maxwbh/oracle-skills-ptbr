@@ -2,8 +2,8 @@
 name: oracle-tuning-ptbr
 description: Módulo de tuning da suíte Oracle PT-BR. Performance tuning Oracle 19c — explain plan, análise AWR/ASH de SQL, indexes, hints, bind variables, cursor sharing, DBMS_STATS, V$SQL, V$SQLAREA, V$SESSION_WAIT. ATIVE em query lenta, full scan indesejado, hard parse alto, index strategy, plano de execução ruim, estatísticas desatualizadas, cardinality errada, AWR snapshot, ASH amostragem. Frases — "query está lenta", "qual index criar", "melhorar explain plan", "muitos hard parse", "cursor sharing", "optimizer hint", "runstats". NÃO ATIVE em DBA operacional (sessões/locks/tablespace), código PL/SQL novo, APEX, ORDS. Templates em assets/.
 metadata:
-  version: "2.6.2"
-  release_date: "2026-09-15"
+  version: "2.7.0"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 7
   author: "Maxwell da Silva Oliveira"
@@ -26,20 +26,22 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Tuning (oracle-tuning-ptbr)
 
-> **Versão:** 2.6.2 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (7 recursos nesta skill)
-> **v2.6.2:** suíte com 10 skills (oracle-lab-ptbr). Histórico em `CHANGELOG.md`.
+> **Versão:** 2.7.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (7 recursos nesta skill)
+> **v2.7.0:** baseline SPM aceito pode não ser usado (caso 19.32): conferir V$SQL.SQL_PLAN_BASELINE e REPRODUCED. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 26.1: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
 - **oracle-devops-ptbr** — Git/CI-CD: estrutura, Liquibase, pipelines, GMUD
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
+
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
 
 
 Performance tuning Oracle 19c — análise de planos de execução, índices e leitura de AWR/ASH para diagnosticar SQL.
