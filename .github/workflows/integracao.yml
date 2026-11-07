@@ -1,0 +1,66 @@
+# .github/workflows/integracao.yml — testes de integração em banco DESCARTÁVEL
+# M&S do Brasil LTDA — contato@msbrasil.inf.br
+#
+# Sobe o Oracle Free (container-registry.oracle.com/database/free) como
+# service container, instala SQLcl e roda tests/integracao/, inclusive a
+# migration que falha no meio → status ERRO → bloqueio → --retomar.
+# Nunca aponte estes testes para um banco real: cada teste cria e remove um
+# usuário temporário.
+#
+# Manual (workflow_dispatch). Leva alguns minutos: o banco precisa abrir.
+
+name: Integração (Oracle Free)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  SQLCL_URL: https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip
+
+jobs:
+  integracao:
+    name: pytest tests/integracao
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      oracle:
+        image: container-registry.oracle.com/database/free:latest-lite
+        env:
+          ORACLE_PWD: Teste_${{ github.run_id }}
+        ports:
+          - 1521:1521
+        # A imagem tem HEALTHCHECK próprio: o runner espera "healthy".
+    env:
+      ORACLE_TESTE_DSN: localhost:1521/FREEPDB1
+      ORACLE_TESTE_ADMIN_USER: system
+      ORACLE_TESTE_ADMIN_PASS: Teste_${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Instalar SQLcl
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/sqlcl.zip" "$SQLCL_URL"
+          unzip -q "$RUNNER_TEMP/sqlcl.zip" -d "$RUNNER_TEMP"
+          echo "SQLCL_BIN=$RUNNER_TEMP/sqlcl/bin/sql" >> "$GITHUB_ENV"
+
+      - name: Dependências
+        run: pip install -r requirements-dev.txt
+
+      - name: Migration que falha no meio → ERRO → bloqueio → retomada
+        run: python -m pytest -v tests/integracao/test_apply_changelog_oracle.py
+
+      - name: Demais testes de integração (SQLcl, deploy_db, templates PL/SQL, APEX)
+        run: python -m pytest -q -rs tests/integracao
