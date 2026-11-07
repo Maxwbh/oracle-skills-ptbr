@@ -39,8 +39,9 @@ Guia para planejar a saída do 19c (long term release atual) para o 26ai (próxi
 
 | Componente | Requisito com banco 26ai | Notas |
 |---|---|---|
-| APEX 26.1 | Banco ≥ 23.26.0 (out/2025) quando em 26ai; 19c ≥ 19.18 também suportado | Session state BOOLEAN só com banco 26ai; Universal Theme 26.1 |
-| APEX 24.2 / 24.1 | Suportados até jul/2027 e dez/2026 | Não exploram BOOLEAN nativo em session state |
+| APEX 26.2 (padrão da suíte) | Banco ≥ 23.26.0 (out/2025) quando em 26ai; 19c ≥ 19.18 também suportado; ORDS 26.3.0+, SQLcl 26.3.0+ | Session state BOOLEAN só com banco 26ai; Deep Data Security exige 23.26.3+ |
+| APEX 26.1 | Mesmo banco da 26.2; ORDS 26.1.1+ | Session state BOOLEAN só com banco 26ai |
+| APEX 24.2 / 24.1 | Datas de fim de suporte: a verificar (24.2 "fully supported" na página de download em 06/11/2026) | Não exploram BOOLEAN nativo em session state |
 | ORDS 26.1.x | Exigido pelo APEX 26.1 (ORDS ≥ versão do APEX); 26.1.1 obrigatório para APEXlang | VecDB REST APIs exigem 23.26.1+; export gera `DROP` de objetos removidos |
 | ORDS 26.4 (previsto inverno/2026) | Tomcat 10 / WebLogic 15 obrigatórios | Tomcat 9 deixa de ser suportado — planejar servidor de aplicação junto com o banco |
 | SQLcl | Atual (26.x); `lb` Liquibase embutido, `apex export -split`, `ARGUMENT` | Compatível com 19c e 26ai |
@@ -95,6 +96,6 @@ Nada obrigatório quebra sintaxe válida de 19c; o checklist é de **oportunidad
 |---|---|---|
 | 0 — Laboratório | 26ai Free em container/VM; rodar suíte utPLSQL e smoke tests APEX/ORDS | devops |
 | 1 — 19c ao dia | Subir para RU ≥ 19.28; adotar `IF NOT EXISTS` e Annotations já em 19c; Unified Audit | dba, devops |
-| 2 — Pré-requisitos de plataforma | ORDS 26.1.x + Tomcat 10; APEX 26.1 no 19c (compatível) — separa o risco de app do risco de banco | apex, ords |
+| 2 — Pré-requisitos de plataforma | ORDS 26.3+ (Tomcat 10 só a partir do ORDS 26.4); APEX 26.2 no 19c (compatível) — separa o risco de app do risco de banco | apex, ords |
 | 3 — Upgrade do banco | AutoUpgrade analyze/fixups/deploy; conversão non-CDB → PDB; `DBMS_HCHECK` antes e depois | dba |
 | 4 — Adoção gradual | Um item do checklist de oportunidade por release, sempre em tabelas/objetos novos primeiro | plsql, esta skill |
