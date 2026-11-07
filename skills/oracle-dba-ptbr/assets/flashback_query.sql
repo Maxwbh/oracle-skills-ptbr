@@ -18,13 +18,15 @@
 SHOW PARAMETER undo_retention;
 
 -- Undo retention efetivamente disponível (pode ser menor que configurado se
--- houve necessidade de reuse de espaço)
+-- houve necessidade de reuse de espaço). A linha mais recente é a de maior
+-- end_time — ordene ANTES de limitar (rownum aplica-se antes do ORDER BY).
 SELECT TUNED_UNDORETENTION AS available_seconds,
        TUNED_UNDORETENTION/60 AS available_minutes,
        TUNED_UNDORETENTION/3600 AS available_hours
-  FROM v$undostat
- WHERE rownum = 1
- ORDER BY end_time DESC;
+  FROM (SELECT TUNED_UNDORETENTION, end_time
+          FROM v$undostat
+         ORDER BY end_time DESC)
+ WHERE rownum = 1;
 
 -- SCN atual (referência para comparação)
 SELECT current_scn FROM v$database;
@@ -172,7 +174,7 @@ SELECT
     fxid.table_name,
     fxid.row_id
   FROM flashback_transaction_query fxid
- WHERE fxid.table_name = 'CUSTOMERS'
+ WHERE fxid.table_name = 'CLIENTES'
    AND fxid.commit_timestamp BETWEEN
        SYSTIMESTAMP - INTERVAL '2' HOUR AND SYSTIMESTAMP
  ORDER BY fxid.start_timestamp DESC;

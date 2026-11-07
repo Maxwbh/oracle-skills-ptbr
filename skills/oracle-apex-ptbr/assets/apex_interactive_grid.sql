@@ -1,7 +1,7 @@
 --==============================================================================
--- Template: APEX Interactive Grid (24.2)
+-- Template: APEX Interactive Grid (APEX 26.1; IG existe desde o 5.1/2017)
 --
--- Interactive Grid (IG) é o substituto do Tabular Form a partir do APEX 22.
+-- Interactive Grid (IG) é o substituto do Tabular Form desde o APEX 5.1.
 -- Permite edição em massa, sort/filter dinâmico, save selectivo.
 -- 
 -- Esta skill cobre os padrões mais comuns para CRUD em IG.
@@ -121,57 +121,56 @@ PROCESSING ─→ ADD PROCESS:
 */
 
 
--- OPÇÃO B: Custom PL/SQL Process (controle total)
+-- OPÇÃO B: Custom PL/SQL — process POR LINHA com :APEX$ROW_STATUS
+--
+-- O IG NÃO submete via arrays G_F01..G_F50 (isso era Tabular Form legado).
+-- O caminho suportado para custom save de IG é um Page Process com:
+--   Type:            Execute PL/SQL Code
+--   Editable Region: <a região IG>          ← ESSENCIAL
+-- Com "Editable Region" apontando para o IG, o process roda UMA VEZ POR LINHA
+-- alterada, com os valores da linha como binds :NOME_DA_COLUNA e o tipo de
+-- operação em :APEX$ROW_STATUS ('C'=created, 'U'=updated, 'D'=deleted).
+
 DECLARE
   l_nome_unidade CONSTANT VARCHAR2(60) := 'PAGE_10_IG_SAVE';
 BEGIN
-  -- Para cada linha modificada/inserida/deletada na grid
-  FOR i IN 1..APEX_APPLICATION.G_F01.COUNT LOOP
-    -- G_F01 vem do array de IDs (PK)
-    -- APEX_APPLICATION.g_request_data tem 'I' (insert), 'U' (update), 'D' (delete)
+  CASE :APEX$ROW_STATUS
+    WHEN 'D' THEN
+      -- Soft delete no lugar do delete físico do Automatic Row Processing
+      UPDATE faturas
+         SET ativo        = 'N',
+             excluido_em  = SYSDATE,
+             excluido_por = :APP_USER
+       WHERE id = :ID;
 
-    DECLARE
-      l_id_linha     NUMBER := TO_NUMBER(APEX_APPLICATION.G_F01(i));
-      l_acao_linha VARCHAR2(1);  -- 'I', 'U' ou 'D'
-    BEGIN
-      -- Action vem em outro array, depende da configuração
-      -- Em geral, prefira Automatic Row Processing.
-      -- Esta opção custom é para regras de negócio complexas.
+    WHEN 'C' THEN
+      INSERT INTO faturas (numero_fatura, id_cliente, data_emissao,
+                           data_vencimento, valor, status, criado_em, criado_por)
+      VALUES (:NUMERO_FATURA, :ID_CLIENTE,
+              TO_DATE(:DATA_EMISSAO, 'DD/MM/YYYY'),
+              TO_DATE(:DATA_VENCIMENTO, 'DD/MM/YYYY'),
+              TO_NUMBER(:VALOR), :STATUS, SYSDATE, :APP_USER)
+      RETURNING id INTO :ID;   -- devolve a PK para a linha do grid
 
-      IF l_acao_linha = 'D' THEN
-        UPDATE faturas SET ativo = 'N',
-                            excluido_em = SYSDATE,
-                            excluido_por = :APP_USER
-         WHERE id = l_id_linha;
-      
-      ELSIF l_acao_linha = 'I' THEN
-        -- INSERT lógica
-        NULL;
-      
-      ELSIF l_acao_linha = 'U' THEN
-        -- UPDATE com Lost Update check via atualizado_em
-        -- (APEX faz isso automaticamente se "Lost Update Detection" estiver ON)
-        UPDATE faturas
-           SET valor     = TO_NUMBER(APEX_APPLICATION.G_F05(i)),
-               status     = APEX_APPLICATION.G_F07(i),
-               atualizado_em = SYSDATE,
-               atualizado_por = :APP_USER
-         WHERE id = l_id_linha
-           AND atualizado_em = TO_TIMESTAMP(APEX_APPLICATION.G_F08(i),
-                                         'YYYY-MM-DD HH24:MI:SS.FF');
-        
-        IF SQL%ROWCOUNT = 0 THEN
-          raise_application_error(-20100,
-            'Linha ' || l_id_linha || ' foi alterada por outro usuário. Recarregue.');
-        END IF;
-      END IF;
-    END;
-  END LOOP;
+    WHEN 'U' THEN
+      UPDATE faturas
+         SET numero_fatura   = :NUMERO_FATURA,
+             id_cliente      = :ID_CLIENTE,
+             data_emissao    = TO_DATE(:DATA_EMISSAO, 'DD/MM/YYYY'),
+             data_vencimento = TO_DATE(:DATA_VENCIMENTO, 'DD/MM/YYYY'),
+             valor           = TO_NUMBER(:VALOR),
+             status          = :STATUS,
+             atualizado_em   = SYSDATE,
+             atualizado_por  = :APP_USER
+       WHERE id = :ID;
+      -- Lost Update: mantenha "Lost Update Detection" ligado na região — o
+      -- APEX compara os valores originais ANTES de chamar este process.
+  END CASE;
 EXCEPTION
   WHEN OTHERS THEN
     APEX_DEBUG.error('Erro em ' || l_nome_unidade || ': ' || SQLERRM);
     APEX_ERROR.add_error(
-      p_mensagem          => SQLERRM,
+      p_message          => SQLERRM,
       p_display_location => APEX_ERROR.c_inline_in_notification
     );
 END;
@@ -196,7 +195,8 @@ BEGIN
     RETURN 'Valor acima do limite. Aprovação manual necessária.';
   END IF;
 
-  IF :DUE_DATE < :INVOICE_DATE THEN
+  -- Binds de coluna em validation de IG chegam como VARCHAR2 — converta antes
+  IF TO_DATE(:DATA_VENCIMENTO, 'DD/MM/YYYY') < TO_DATE(:DATA_EMISSAO, 'DD/MM/YYYY') THEN
     RETURN 'Data de vencimento não pode ser anterior à emissão.';
   END IF;
 
@@ -322,18 +322,23 @@ DYNAMIC ACTION:
 
 
 -- AJAX Callback "MARK_AS_PAID"
+-- Captura o erro para responder JSON; como a exceção não sobe, o APEX
+-- comitaria o que já foi feito — por isso SAVEPOINT + ROLLBACK TO. Sem
+-- COMMIT: o APEX é o dono da transação do request.
 DECLARE
   l_ids       APEX_T_NUMBER;
   l_qtd     NUMBER;
 BEGIN
+  SAVEPOINT sp_mark_as_paid;
+
   -- Converte CSV de IDs em coleção
   SELECT TO_NUMBER(REGEXP_SUBSTR(APEX_APPLICATION.G_X01, '[^,]+', 1, LEVEL))
     BULK COLLECT INTO l_ids
     FROM dual
  CONNECT BY REGEXP_SUBSTR(APEX_APPLICATION.G_X01, '[^,]+', 1, LEVEL) IS NOT NULL;
 
-  -- Bulk update
-  FORALL i IN l_ids.FIRST..l_ids.LAST
+  -- Bulk update (INDICES OF: lista vazia não quebra)
+  FORALL i IN INDICES OF l_ids
     UPDATE faturas
        SET status     = 'PAGO',
            pago_em    = SYSDATE,
@@ -343,14 +348,13 @@ BEGIN
        AND status <> 'PAGO';
 
   l_qtd := SQL%ROWCOUNT;
-  COMMIT;
 
   APEX_JSON.open_object;
   APEX_JSON.write('count', l_qtd);
   APEX_JSON.close_object;
 EXCEPTION
   WHEN OTHERS THEN
-    ROLLBACK;
+    ROLLBACK TO sp_mark_as_paid;
     APEX_JSON.open_object;
     APEX_JSON.write('error', SQLERRM);
     APEX_JSON.close_object;

@@ -21,8 +21,15 @@ import oracledb
 
 sys.path.insert(0, str(Path(__file__).parent))
 from oracle_devops_utils import (
-    GREEN, YELLOW, RED, CYAN, BOLD, RESET, SEP2,
-    banner, carregar_dotenv, conectar, log,
+    CYAN,
+    GREEN,
+    RED,
+    RESET,
+    YELLOW,
+    banner,
+    carregar_dotenv,
+    conectar,
+    log,
 )
 
 
@@ -113,11 +120,13 @@ def main() -> None:
             sys.exit(0)
 
         # Escrever arquivo com cabeçalho
+        gerado_em = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        separador = "─" * 60
         cabecalho = (
             f"-- Export ORDS — schema {schema.upper()}\n"
-            f"-- Gerado em: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"-- Gerado em: {gerado_em}\n"
             f"-- por export_ords.py — M&S do Brasil LTDA\n"
-            f"-- {'─' * 60}\n\n"
+            f"-- {separador}\n\n"
         )
 
         saida.write_text(cabecalho + ddl, encoding="utf-8")
@@ -130,8 +139,9 @@ def main() -> None:
 
     log.info("")
     log.info("Próximos passos:")
-    log.info(f"  git add ords/")
-    log.info(f"  git commit -m 'ords: export schema {schema.upper()} — {datetime.now().strftime('%Y-%m-%d')}'")
+    data_commit = datetime.now().strftime("%Y-%m-%d")
+    log.info("  git add ords/")
+    log.info(f"  git commit -m 'ords: export schema {schema.upper()} — {data_commit}'")
 
 
 if __name__ == "__main__":

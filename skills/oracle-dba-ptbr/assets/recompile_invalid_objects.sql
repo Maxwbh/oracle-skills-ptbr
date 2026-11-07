@@ -16,7 +16,7 @@
 
 SELECT object_name, object_type, status, last_ddl_time
   FROM user_objects
- WHERE status = 'INVALIDO'
+ WHERE status = 'INVALID'
  ORDER BY object_type, object_name;
 
 
@@ -26,7 +26,7 @@ SELECT object_name, object_type, status, last_ddl_time
 
 SELECT owner, object_name, object_type, status, last_ddl_time
   FROM dba_objects
- WHERE status = 'INVALIDO'
+ WHERE status = 'INVALID'
    AND owner = 'MS_APP'  -- ← substitua pelo schema
  ORDER BY object_type, object_name;
 
@@ -38,7 +38,7 @@ SELECT owner, object_name, object_type, status, last_ddl_time
 SELECT owner, object_type,
        COUNT(*) AS qty_invalid
   FROM dba_objects
- WHERE status = 'INVALIDO'
+ WHERE status = 'INVALID'
    AND owner NOT IN ('SYS', 'SYSTEM', 'XDB', 'CTXSYS', 'MDSYS', 'ORDDATA',
                      'OUTLN', 'GSMADMIN_INTERNAL', 'AUDSYS', 'WMSYS',
                      'OJVMSYS', 'DBSNMP', 'APPQOSSYS', 'DVF', 'DVSYS',
@@ -65,7 +65,7 @@ END;
 SELECT object_name, object_type, status
   FROM dba_objects
  WHERE owner = 'MS_APP'
-   AND status = 'INVALIDO'
+   AND status = 'INVALID'
  ORDER BY object_name;
 
 
@@ -102,20 +102,20 @@ ALTER SYNONYM ms_app.faturas COMPILE;
 --==============================================================================
 
 -- Erros do schema atual (após recompile)
-SELECT nome, type, line, position, text
+SELECT name, type, line, position, text
   FROM user_errors
- ORDER BY nome, sequence;
+ ORDER BY name, sequence;
 
 -- Erros em outro schema (precisa privilégio)
-SELECT owner, nome, type, line, position, text
+SELECT owner, name, type, line, position, text
   FROM dba_errors
  WHERE owner = 'MS_APP'
- ORDER BY owner, nome, sequence;
+ ORDER BY owner, name, sequence;
 
 -- Erros de UM objeto específico
 SELECT line, position, text
   FROM user_errors
- WHERE nome = 'PAYMENT_PKG'
+ WHERE name = 'PAYMENT_PKG'
    AND type = 'PACKAGE BODY'
  ORDER BY sequence;
 
@@ -140,17 +140,17 @@ SELECT line, position, text
 -- Objetos dos quais MEU PACKAGE depende
 SELECT referenced_owner, referenced_name, referenced_type
   FROM user_dependencies
- WHERE nome = 'PAYMENT_PKG'
+ WHERE name = 'PAYMENT_PKG'
    AND type = 'PACKAGE BODY'
  ORDER BY referenced_owner, referenced_name;
 
 -- Objetos que dependem do MEU PACKAGE (impactados se eu alterar)
-SELECT owner, nome, type
+SELECT owner, name, type
   FROM dba_dependencies
  WHERE referenced_owner = 'MS_APP'
    AND referenced_name = 'PAYMENT_PKG'
    AND referenced_type = 'PACKAGE'
- ORDER BY owner, nome;
+ ORDER BY owner, name;
 
 
 --==============================================================================
@@ -162,10 +162,13 @@ SELECT owner, nome, type
    - Solução: ALTER PACKAGE ... COMPILE BODY
 
 2. Privilégio revogado
-   - Identificar:
-     SELECT grantee, privilege, granted_role 
+   - Roles concedidas ao schema:
+     SELECT grantee, granted_role
        FROM dba_role_privs WHERE grantee = 'MS_APP';
-   - Solução: regrant
+   - Privilégios de OBJETO (o que mais invalida package por dependência):
+     SELECT grantee, owner, table_name, privilege
+       FROM dba_tab_privs WHERE grantee = 'MS_APP';
+   - Solução: regrant do privilégio/role faltante
 
 3. TYPE alterado (ALTER TYPE)
    - Cascade de invalidação: package usando o type também invalida
@@ -195,17 +198,17 @@ SELECT owner, nome, type
 Após deploy de mudanças no schema:
 
 1. Identifique invalid objects:
-   SELECT object_name, object_type FROM user_objects WHERE status = 'INVALIDO';
+   SELECT object_name, object_type FROM user_objects WHERE status = 'INVALID';
 
 2. Recompile schema:
    EXEC DBMS_UTILITY.compile_schema(schema => USER, compile_all => FALSE);
 
 3. Verifique se algo restou inválido:
-   SELECT object_name, object_type FROM user_objects WHERE status = 'INVALIDO';
+   SELECT object_name, object_type FROM user_objects WHERE status = 'INVALID';
 
 4. Para cada objeto restante, veja erros específicos:
    SELECT line, position, text FROM user_errors 
-    WHERE nome = '...' ORDER BY sequence;
+    WHERE name = '...' ORDER BY sequence;
 
 5. Corrija a causa raiz (não tente compilar repetidamente esperando milagre):
    - Se é privilégio: regrant

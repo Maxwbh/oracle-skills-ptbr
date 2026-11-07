@@ -4,21 +4,43 @@ Referência para consulta e uso correto das views do dicionário do Oracle APEX.
 
 ---
 
+## Índice
+
+- [1. Como funciona o dicionário APEX](#1-como-funciona-o-dicionário-apex)
+- [2. Hierarquia de prefixos](#2-hierarquia-de-prefixos)
+- [3. Nomenclatura interna de colunas APEX](#3-nomenclatura-interna-de-colunas-apex)
+- [4. Mapa por categoria — views mais importantes](#4-mapa-por-categoria-views-mais-importantes)
+- [5. Queries práticas de auditoria](#5-queries-práticas-de-auditoria)
+- [6. Evolução por versão — APEX 19 a 26.1](#6-evolução-por-versão-apex-19-a-261)
+- [7. Impacto Oracle Edition nas views APEX](#7-impacto-oracle-edition-nas-views-apex)
+- [8. Fontes confiáveis para atualização](#8-fontes-confiáveis-para-atualização)
+- [Linkagem interna](#linkagem-interna)
+
 ## 1. Como funciona o dicionário APEX
 
 ### Schema versionado
 
-Cada versão do APEX instala seu próprio schema. As views públicas são sinônimos apontando para o schema ativo.
+Cada versão do APEX instala seu próprio schema, com o número da versão no nome:
+`APEX_` + maior (2 dígitos) + menor (2 dígitos) + `00` — `APEX_240200` (24.2),
+`APEX_260100` (26.1, pelo padrão — a verificar), **`APEX_260200` (26.2, confirmado nas release notes)**. Num upgrade, o schema novo é
+criado ao lado do antigo e os sinônimos públicos passam a apontar para ele; o
+schema anterior fica até ser removido. Por isso **não fixe o nome do schema**
+em código: descubra o ativo.
+
+As views públicas são sinônimos apontando para o schema ativo.
 
 ```sql
--- Descobrir o schema APEX instalado
-SELECT schema, version FROM apex_release;
--- Exemplo de retorno: APEX_240200 / 24.2.0
+-- Versão do APEX (com patch set, ex.: 24.2.22)
+SELECT version_no FROM apex_release;
+
+-- Schema ativo do APEX (componente APEX no registro do banco)
+SELECT schema, version FROM dba_registry WHERE comp_id = 'APEX';
+-- Exemplo de retorno: APEX_260200 / 26.2.x
 
 -- Listar todas as views do dicionário APEX no schema ativo
 SELECT view_name, comments
   FROM dba_views
- WHERE owner = 'APEX_240200'    -- substitua pelo schema ativo
+ WHERE owner = 'APEX_260200'    -- substitua pelo schema ativo (DBA_REGISTRY acima)
    AND view_name LIKE 'APEX%'
  ORDER BY view_name;
 ```
@@ -414,11 +436,13 @@ SELECT application_id, page_id, page_name
 
 ```sql
 -- Items hidden sem VALUE_PROTECTED (risco mass assignment)
+-- Nota: o domínio de VALUE_PROTECTED varia por versão ('N'/'No') — confirme
+-- antes com SELECT DISTINCT value_protected FROM apex_application_page_items;
 SELECT application_id, page_id, item_name, display_as
   FROM apex_application_page_items
  WHERE application_id = :APP_ID
    AND display_as = 'NATIVE_HIDDEN'
-   AND value_protected = 'N'
+   AND value_protected IN ('N', 'No')
  ORDER BY page_id, item_name;
 ```
 
@@ -541,7 +565,7 @@ ORDER BY 1;
 
 ---
 
-### APEX 24.2 (versão LTS atual — foco da skill)
+### APEX 24.2
 
 **Introduzido: JSON Sources**
 - `APEX_APPL_JSON_SOURCES` — JSON Sources component
@@ -563,9 +587,15 @@ ORDER BY 1;
 
 ---
 
-### APEX 26.1 (preview — não usar em produção ainda)
+### APEX 26.2 (versão atual — GA em 06/10/2026)
 
-**APEXlang:** nova linguagem declarativa de especificação de aplicações — impacto futuro em como aplicações são definidas e exportadas.
+- **REST Workshop removido:** as views `APEX_REST_RESOURCE_*` continuam existindo por compatibilidade, mas **não expõem mais dados do REST Workshop** — para inventário de serviços REST use o dicionário do ORDS (`USER_ORDS_*` / `DBA_ORDS_*`, ver `oracle-ords-ptbr`).
+- **APIs novas** em `APEX_APPLICATION_ADMIN`: `LOCK_APPLICATION`, `UNLOCK_APPLICATION`, `CREATE_WORKING_COPY`, e as de Deep Data Security (`SET_DEEP_SEC` e correlatas).
+- Schema: `APEX_260200`. Detalhes e fontes: `apex-version-matrix-ptbr.md`.
+
+### APEX 26.1 (GA em 14/05/2026)
+
+**APEXlang:** linguagem declarativa de especificação de aplicações (`.apx`), **já disponível** desde a 26.1 (ORDS 26.1.1+): export/import pelo SQLcl (comando `apex`, com `generate`, `export`, `validate`, `import`) e pela extensão SQL Developer do VS Code; na 26.2 ganhou import por arquivo, traduções e subscription mapping. Para versionamento em Git e CI, ver `oracle-devops-ptbr`.
 
 **Breaking changes documentados:**
 - `APEX_APPL_AI_CONFIGS` e `APEX_APPL_AI_CONFIG_RAG_SRCS`: atributo `p_config_static_id` depreciado — migrar para `p_agent_static_id`
@@ -656,7 +686,7 @@ https://apex.oracle.com/en/learn/documentation/release-notes/
 https://connor-mcdonald.com/2025/02/26/the-apex-data-dictionary/
 ```
 
-Inclui script SQL que gera guia HTML navegável de todas as views do `APEX_240200` com hierarquia. **Referência prática essencial.**
+Inclui script SQL que gera guia HTML navegável de todas as views do schema APEX ativo (ex.: `APEX_240200`) com hierarquia. **Referência prática essencial.**
 
 ### oracle-base.com — APEX por versão
 

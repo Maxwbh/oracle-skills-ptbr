@@ -2,6 +2,20 @@
 
 Operações que desenvolvedor sênior Oracle faz no dia-a-dia: monitorar sessões, identificar bloqueios, recompilar objetos inválidos, recuperar dados com flashback. Foco em **diagnóstico e correção rápida**, não administração profunda (DBA dedicado).
 
+## Índice
+
+- [Pré-requisitos de privilégios](#pré-requisitos-de-privilégios)
+- [Sessões — V$SESSION e relacionadas](#sessões-vsession-e-relacionadas)
+- [Bloqueios (Locks)](#bloqueios-locks)
+- [RAC — Particularidades](#rac-particularidades)
+- [Objetos Inválidos](#objetos-inválidos)
+- [Flashback Query — Recuperação](#flashback-query-recuperação)
+- [Tablespaces e espaço](#tablespaces-e-espaço)
+- [Statistics](#statistics)
+- [DBMS_REDEFINITION (mover/renomear tabelas online)](#dbms_redefinition-moverrenomear-tabelas-online)
+- [Anti-patterns DBA](#anti-patterns-dba)
+- [Linkagem](#linkagem)
+
 ## Pré-requisitos de privilégios
 
 A maioria dessas operações exige roles além de DBA básico:
@@ -38,7 +52,7 @@ SELECT
   LEFT JOIN v$sql sq ON s.sql_id = sq.sql_id
                    AND sq.child_number = s.sql_child_number
  WHERE s.username IS NOT NULL
-   AND s.status = 'ATIVO'
+   AND s.status = 'ACTIVE'
    AND s.type = 'USER'
  ORDER BY s.last_call_et DESC;
 ```
@@ -62,7 +76,7 @@ SELECT s.sid, s.serial#, s.username, s.last_call_et, s.sql_id,
   FROM v$session s
   JOIN v$sql sq ON s.sql_id = sq.sql_id
                 AND sq.child_number = s.sql_child_number
- WHERE s.status = 'ATIVO'
+ WHERE s.status = 'ACTIVE'
    AND s.last_call_et > 60
    AND s.username IS NOT NULL
  ORDER BY s.last_call_et DESC;
@@ -285,10 +299,12 @@ FLASHBACK TABLE clientes TO TIMESTAMP (SYSTIMESTAMP - INTERVAL '30' MINUTE);
 -- Undo retention atual
 SHOW PARAMETER undo_retention;  -- valor em segundos
 
--- Quanto undo está disponível
-SELECT TUNED_UNDORETENTION FROM v$undostat
- WHERE rownum = 1
- ORDER BY end_time DESC;
+-- Quanto undo está disponível (linha mais recente = maior end_time)
+SELECT TUNED_UNDORETENTION
+  FROM (SELECT TUNED_UNDORETENTION, end_time
+          FROM v$undostat
+         ORDER BY end_time DESC)
+ WHERE rownum = 1;
 
 -- Tentar query, se falhar com ORA-01555 "snapshot too old", undo expirou
 ```

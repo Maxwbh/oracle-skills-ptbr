@@ -1,6 +1,11 @@
 --==============================================================================
 -- Template: APEX Dynamic Action
 --
+-- Compatibilidade: padrões base de Dynamic Actions valem em 24.1/24.2/26.1.
+--   Itens Select One/Select Many existem desde 24.1; partials client-side de
+--   Template Components só no 26.1. Em dúvida sobre a versão-alvo, pergunte.
+--   Matriz: references/apex-version-matrix-ptbr.md
+--
 -- Uso: copie estes blocos no APEX Builder para configurar Dynamic Actions
 --      comuns. Substitua marcadores <P1_ITEM> pelos items reais da página.
 --
@@ -101,14 +106,19 @@ if (totalDue > 0) {
 --   True Action 2:         Execute PL/SQL Code (com Stop Execution on Error)
 --==============================================================================
 
+-- ATENÇÃO: em Dynamic Action "Execute Server-side Code" NÃO existe x01/G_X01 —
+-- esses parâmetros são exclusivos de apex.server.process (AJAX Callback).
+-- Em DA, o valor chega via item listado em "Items to Submit" (ex.: hidden
+-- P10_ID_REGISTRO populado por uma action "Set Value" anterior ou pelo JS
+-- que leu o data-id do botão clicado).
 DECLARE
-  l_id NUMBER := APEX_APPLICATION.G_X01;  -- ID passado via X01
+  l_id NUMBER := TO_NUMBER(:P10_ID_REGISTRO);  -- Items to Submit: P10_ID_REGISTRO
 BEGIN
   -- Soft delete (recomendado para auditoria)
   UPDATE registros
      SET excluido_em  = SYSDATE,
-         excluido_por  = :APP_USER,
-         ativo   = 'N'
+         excluido_por = :APP_USER,
+         ativo        = 'N'
    WHERE id = l_id;
 
   IF SQL%ROWCOUNT = 0 THEN
@@ -116,10 +126,9 @@ BEGIN
       'Registro não encontrado para exclusão: ID ' || l_id);
   END IF;
 
-  COMMIT;
+  -- Sem COMMIT explícito: o APEX gerencia a transação do server-side code.
 EXCEPTION
   WHEN OTHERS THEN
-    ROLLBACK;
     raise_application_error(-20999,
       'Erro ao excluir: ' || SQLERRM);
 END;
