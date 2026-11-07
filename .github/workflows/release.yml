@@ -3,7 +3,7 @@
 # M&S do Brasil LTDA — contato@msbrasil.inf.br
 #
 # Dispara em:
-#   - push de tag v* (ex: git tag v3.1.0 && git push origin v3.1.0)
+#   - push de tag v* (ex: git tag v4.0.0 && git push origin v4.0.0)
 #   - workflow_dispatch (manual, para builds de teste)
 #
 # O que faz:
