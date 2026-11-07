@@ -134,7 +134,7 @@ SELECT table_name,
        stale_stats
   FROM dba_tab_statistics
  WHERE owner = USER
-   AND table_name IN ('CUSTOMERS', 'INVOICES')
+   AND table_name IN ('CLIENTES', 'FATURAS')
  ORDER BY table_name;
 
 -- Stats das colunas usadas em WHERE/JOIN/GROUP BY
@@ -146,8 +146,8 @@ SELECT table_name, column_name,
        last_analyzed
   FROM dba_tab_col_statistics
  WHERE owner = USER
-   AND table_name IN ('CUSTOMERS', 'INVOICES')
-   AND column_name IN ('STATUS', 'CUSTOMER_ID', 'INVOICE_DATE')
+   AND table_name IN ('CLIENTES', 'FATURAS')
+   AND column_name IN ('STATUS', 'ID_CLIENTE', 'DATA_EMISSAO')
  ORDER BY table_name, column_name;
 
 -- Indexes das tabelas
@@ -160,7 +160,7 @@ SELECT i.index_name, i.index_type, i.uniqueness,
   JOIN dba_ind_columns c ON i.owner = c.index_owner
                          AND i.index_name = c.index_name
  WHERE i.owner = USER
-   AND i.table_name IN ('CUSTOMERS', 'INVOICES')
+   AND i.table_name IN ('CLIENTES', 'FATURAS')
  GROUP BY i.index_name, i.index_type, i.uniqueness, i.last_analyzed,
           i.distinct_keys, i.clustering_factor
  ORDER BY i.table_name;
@@ -173,7 +173,7 @@ SELECT i.index_name, i.index_type, i.uniqueness,
 -- Tabela única
 EXEC DBMS_STATS.gather_table_stats(
   ownname          => USER,
-  tabname          => 'INVOICES',
+  tabname          => 'FATURAS',
   estimate_percent => DBMS_STATS.auto_sample_size,
   method_opt       => 'FOR ALL COLUMNS SIZE AUTO',
   cascade          => TRUE,                    -- inclui indexes
@@ -183,7 +183,7 @@ EXEC DBMS_STATS.gather_table_stats(
 -- Coluna específica com histograma forçado (para distribuição skewed)
 EXEC DBMS_STATS.gather_table_stats(
   ownname    => USER,
-  tabname    => 'INVOICES',
+  tabname    => 'FATURAS',
   method_opt => 'FOR COLUMNS status SIZE 254'
 );
 
@@ -276,6 +276,25 @@ EXEC DBMS_SPM.alter_sql_plan_baseline(
   attribute_value => 'YES'
 );
 
+-- Conferir se o baseline está SENDO USADO (não basta existir e estar ACCEPTED).
+-- Caso relatado no 19c RU 19.32 (oracle-base, 29/09/2026): baseline aceito
+-- ignorado porque o plano "couldn't be reproduced"; o contorno do autor foi
+-- evoluir/aceitar outro plano e descartar o original. Não há bug/nota MOS
+-- publicada sobre isso (a verificar) — por isso, sempre confira:
+SELECT sql_id, child_number, plan_hash_value, sql_plan_baseline
+  FROM v$sql
+ WHERE sql_id = 'abcd1234efgh5';      -- sql_plan_baseline NULL = baseline não usado
+
+SELECT plan_name, enabled, accepted, fixed, reproduced
+  FROM dba_sql_plan_baselines
+ WHERE sql_handle = 'SQL_abcd1234efgh5';   -- reproduced = 'NO' explica o descarte
+
+-- Se não estiver em uso, o trace do compilador mostra o motivo
+-- (procure "SPM Plan Dump" no arquivo de trace da sessão):
+ALTER SESSION SET EVENTS 'trace [SQL_Compiler.*]';
+-- ... executar o SQL ...
+ALTER SESSION SET EVENTS 'trace [SQL_Compiler.*] off';
+
 
 --==============================================================================
 -- WORKFLOW RESUMO — checklist de query lenta
@@ -301,5 +320,5 @@ EXEC DBMS_SPM.alter_sql_plan_baseline(
 7. ✅ Bind variables sendo usadas? (não há literais que causam hard parse)
 8. ✅ Stats atualizadas em todas as tabelas envolvidas?
 9. ✅ Privilégios de leitura em V$ views ok? (SELECT_CATALOG_ROLE)
-10. ✅ Resultado satisfatório? Salvar baseline se sim.
+10. ✅ Resultado satisfatório? Salvar baseline se sim — e confirmar em V$SQL.SQL_PLAN_BASELINE que ele é usado.
 */

@@ -2,6 +2,19 @@
 
 Padrões para desenvolvimento Oracle APEX (Application Express). Foco em práticas que funcionam consistentemente em APEX 19+ e que evitam armadilhas comuns.
 
+## Índice
+
+- [Tipos de objetos APEX e quando usar cada um](#tipos-de-objetos-apex-e-quando-usar-cada-um)
+- [Pagination — padrão correto](#pagination-padrão-correto)
+- [Dynamic Actions](#dynamic-actions)
+- [AJAX Callback (On-Demand Process)](#ajax-callback-on-demand-process)
+- [Validations](#validations)
+- [Authorization Schemes](#authorization-schemes)
+- [Items APEX](#items-apex)
+- [Session State](#session-state)
+- [Anti-patterns APEX](#anti-patterns-apex)
+- [Linkagem](#linkagem)
+
 ## Tipos de objetos APEX e quando usar cada um
 
 | Objeto | Quando usar |
@@ -166,7 +179,7 @@ apex.server.process('GET_INVOICE_TOTAL', {
 
 ### Convenções
 
-- **APEX_APPLICATION.G_X01 a G_X10**: parâmetros simples passados via AJAX
+- **APEX_APPLICATION.G_X01 a G_X20**: parâmetros simples passados via AJAX
 - **APEX_APPLICATION.G_F01 a G_F50**: arrays (multi-row submit, checkbox lists)
 - **APEX_JSON**: sempre prefira para retorno estruturado
 - **HTP.p()**: ainda válido para retorno texto puro, mas raro
@@ -226,9 +239,11 @@ CREATE OR REPLACE FUNCTION user_has_role(
 ) RETURN BOOLEAN IS
   l_qtd NUMBER;
 BEGIN
+  -- Em função ARMAZENADA não existe bind :APP_USER (não compila fora do APEX).
+  -- Use o contexto de sessão APEX:
   SELECT COUNT(*) INTO l_qtd
     FROM user_roles
-   WHERE username = :APP_USER
+   WHERE username = SYS_CONTEXT('APEX$SESSION', 'APP_USER')
      AND role_name = p_role;
 
   RETURN l_qtd > 0;

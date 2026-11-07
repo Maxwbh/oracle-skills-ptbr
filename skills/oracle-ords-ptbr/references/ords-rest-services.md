@@ -2,6 +2,23 @@
 
 Padrões para Oracle REST Data Services (ORDS). Foco em estrutura modular usando `ORDS.define_module` / `define_template` / `define_handler`.
 
+## Índice
+
+- [Arquitetura básica](#arquitetura-básica)
+- [Habilitar schema (uma vez por schema)](#habilitar-schema-uma-vez-por-schema)
+- [Definir módulo](#definir-módulo)
+- [Definir template](#definir-template)
+- [Definir handler](#definir-handler)
+- [Bind variables ORDS](#bind-variables-ords)
+- [Source types disponíveis](#source-types-disponíveis)
+- [Autenticação](#autenticação)
+- [Códigos HTTP padronizados](#códigos-http-padronizados)
+- [CORS](#cors)
+- [Versionamento](#versionamento)
+- [SQL Injection em handlers PL/SQL](#sql-injection-em-handlers-plsql)
+- [Anti-patterns](#anti-patterns)
+- [Linkagem](#linkagem)
+
 ## Arquitetura básica
 
 ORDS expõe banco Oracle como REST. Hierarquia:
@@ -99,6 +116,10 @@ Handler é o método HTTP + a lógica:
 
 ```sql
 -- GET de laudo individual
+-- Para 1 linha, o caminho mais simples é source_type_collection_item.
+-- Abaixo, a variante PL/SQL (quando há lógica extra): lê em variáveis
+-- LOCAIS e monta o JSON a partir delas — NÃO use SELECT INTO :bind, pois
+-- mistura path param (entrada) com saída e confunde o binding.
 BEGIN
   ORDS.define_handler(
     p_module_name    => 'laudos.v1',
@@ -108,25 +129,28 @@ BEGIN
     p_mimes_allowed  => 'application/json',
     p_source         => q'[
 DECLARE
-  l_status_code NUMBER := 200;
+  l_numero       laudos.numero%TYPE;
+  l_paciente     laudos.paciente%TYPE;
+  l_data_emissao laudos.data_emissao%TYPE;
+  l_status       laudos.status%TYPE;
 BEGIN
-  SELECT id, numero, paciente, data_emissao, status
-    INTO :id, :numero, :paciente, :data_emissao, :status
+  SELECT numero, paciente, data_emissao, status
+    INTO l_numero, l_paciente, l_data_emissao, l_status
     FROM laudos
    WHERE id = :id;
 
   -- Headers
   OWA_UTIL.mime_header('application/json', FALSE);
-  OWA_UTIL.status_line(l_status_code);
+  OWA_UTIL.status_line(200);
   OWA_UTIL.http_header_close;
 
-  -- Body em JSON
+  -- Body em JSON (a partir das variáveis locais)
   APEX_JSON.open_object;
   APEX_JSON.write('id', :id);
-  APEX_JSON.write('numero', :numero);
-  APEX_JSON.write('paciente', :paciente);
-  APEX_JSON.write('data_emissao', :data_emissao);
-  APEX_JSON.write('status', :status);
+  APEX_JSON.write('numero', l_numero);
+  APEX_JSON.write('paciente', l_paciente);
+  APEX_JSON.write('data_emissao', l_data_emissao);
+  APEX_JSON.write('status', l_status);
   APEX_JSON.close_object;
 
 EXCEPTION
@@ -163,14 +187,15 @@ ORDS injeta automaticamente:
 
 ## Source types disponíveis
 
-| Source type | Quando usar |
-|---|---|
-| `ORDS.source_type_plsql` | Lógica PL/SQL completa (mais flexível) |
-| `ORDS.source_type_collection_query` | SELECT que retorna JSON automaticamente |
-| `ORDS.source_type_collection_item` | Item individual de uma collection |
-| `ORDS.source_type_query_one_row` | SELECT que retorna 1 linha como JSON |
-| `ORDS.source_type_csv_query` | SELECT que retorna CSV |
-| `ORDS.source_type_media` | BLOB (imagens, PDFs) |
+| Source type (constante ORDS) | Valor interno | Quando usar |
+|---|---|---|
+| `ORDS.source_type_plsql` | `plsql/block` | Lógica PL/SQL completa (mais flexível) |
+| `ORDS.source_type_collection_feed` | `collection/query` | SELECT → coleção JSON (lista paginada) |
+| `ORDS.source_type_collection_item` | `collection/item` | SELECT → 1 item JSON |
+| `ORDS.source_type_media` | `media/blob` | BLOB (imagens, PDFs) |
+| `ORDS.source_type_csv_query` | `csv/query` | SELECT → CSV |
+
+> Não existem as constantes `source_type_query_one_row` nem `source_type_collection_query`. Para 1 linha use `source_type_collection_item`; para listas, `source_type_collection_feed`. (Há ainda `source_type_query`/`source_type_feed`, que produzem JSON legacy — prefira as Standard acima.)
 
 ### Collection query (mais simples para listas)
 
@@ -180,7 +205,7 @@ BEGIN
     p_module_name => 'laudos.v1',
     p_pattern     => 'laudo',
     p_method      => 'GET',
-    p_source_type => ORDS.source_type_collection_query,
+    p_source_type => ORDS.source_type_collection_feed,
     p_source      => q'[
 SELECT id, numero, paciente, data_emissao, status
   FROM laudos
@@ -230,9 +255,11 @@ BEGIN
 END;
 /
 
--- Cria client OAuth
+-- Cria client OAuth (ORDS_SECURITY — ORDS 24.3+)
+-- OAUTH/OAUTH_ADMIN foram depreciados em 24.3 e removidos em 25.3.
+-- O client secret é exibido só uma vez na criação; capture-o nesse momento.
 BEGIN
-  OAUTH.create_client(
+  ORDS_SECURITY.create_client(
     p_name            => 'sistema_externo',
     p_grant_type      => 'client_credentials',
     p_owner           => 'MS_BRASIL',

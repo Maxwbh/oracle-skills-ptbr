@@ -127,9 +127,12 @@ CREATE BITMAP INDEX idx_eventos_status_bm ON eventos(status);
 */
 
 -- ATENÇÃO:
---   - Bitmap só em data warehouse / OLAP (poucas escritas)
---   - Em OLTP, bitmap causa locks pesados em INSERT/UPDATE
+--   - Bitmap só em data warehouse / OLAP (carga em lote, leitura intensa)
+--   - Em OLTP, bitmap causa contenção severa: uma entrada de bitmap cobre um
+--     RANGE de rowids; ao alterar a coluna, o Oracle trava TODAS as linhas do
+--     fragmento (não a linha única) → enq: TX e até deadlocks sob concorrência
 --   - Em tabelas transacionais de alta carga, prefira FULL SCAN ou rever modelagem
+--   - Disponível apenas na Enterprise Edition
 
 
 --==============================================================================
@@ -177,24 +180,29 @@ Query C (ambos):
 
 
 --==============================================================================
--- CASO 6: Covering index (não precisa ler a tabela)
+-- CASO 6: Índice de cobertura — todas as colunas da query no índice
 --
 -- Query: SELECT id_cliente, total FROM faturas WHERE data_emissao > X
+--
+-- NOTA: "covering index" é terminologia do SQL Server. No Oracle NÃO é um tipo
+-- de índice — é apenas um índice (composite) que contém todas as colunas da
+-- query, fazendo o optimizer evitar o acesso à tabela. O sinal no plano é a
+-- ausência de TABLE ACCESS BY INDEX ROWID.
 --==============================================================================
 
 -- ANTES — index só em data_emissao, lookup na tabela para id_cliente, total
 CREATE INDEX idx_fat_data ON faturas(data_emissao);
 
 /*
-| TABLE ACCESS BY INDEX ROWID | INVOICES     | 1000 | 1005 |
+| TABLE ACCESS BY INDEX ROWID | FATURAS      | 1000 | 1005 |
 |  INDEX RANGE SCAN           | IDX_FAT_DATA | 1000 | 5    |
 */
 
--- AÇÃO: covering index (todas as colunas da query no índice)
+-- AÇÃO: incluir todas as colunas da query no índice (índice de cobertura)
 DROP INDEX idx_fat_data;
 CREATE INDEX idx_fat_cobertura ON faturas(data_emissao, id_cliente, total);
 
--- DEPOIS — só lê o índice, não toca a tabela
+-- DEPOIS — só lê o índice, não toca a tabela (sem TABLE ACCESS BY INDEX ROWID)
 /*
 | INDEX RANGE SCAN | IDX_FAT_COBERTURA | 1000 | 5 |
 */
@@ -272,7 +280,7 @@ SELECT * FROM faturas WHERE processado_em IS NULL;
 BEGIN
   FOR r IN (
     SELECT index_name FROM user_indexes
-     WHERE table_name = 'INVOICES'
+     WHERE table_name = 'FATURAS'
   ) LOOP
     EXECUTE IMMEDIATE 'ALTER INDEX ' || r.index_name || ' MONITORING USAGE';
   END LOOP;
@@ -281,10 +289,11 @@ END;
 
 -- Aguarde uns dias de uso normal
 
--- Consulta resultados
+-- Consulta resultados (USER_OBJECT_USAGE substituiu V$OBJECT_USAGE,
+-- deprecada desde 12.1; mostra apenas índices do schema corrente)
 SELECT index_name, used, monitoring, start_monitoring, end_monitoring
-  FROM v$object_usage
- WHERE table_name = 'INVOICES';
+  FROM user_object_usage
+ WHERE table_name = 'FATURAS';
 
 -- Indexes com used = 'NO' são candidatos a remoção
 -- ATENÇÃO: confirme em vários dias e horários (alguns só usados em fim de mês)
@@ -326,7 +335,7 @@ EXEC DBMS_STATS.gather_index_stats(
 -- Ou cascade ao criar/alterar tabela
 EXEC DBMS_STATS.gather_table_stats(
   ownname => USER,
-  tabname => 'INVOICES',
+  tabname => 'FATURAS',
   cascade => TRUE  -- inclui todos os indexes
 );
 
@@ -338,7 +347,7 @@ SELECT index_name,
        num_rows / NULLIF(distinct_keys, 0) AS avg_rows_per_key,
        last_analyzed
   FROM user_indexes
- WHERE table_name = 'INVOICES'
+ WHERE table_name = 'FATURAS'
  ORDER BY index_name;
 
 -- Clustering factor:
@@ -386,11 +395,24 @@ Coluna FK
   → SEMPRE crie índice (evita lock em DELETE da parent)
 
 Coluna com 90%+ NULL
-  → Considere index parcial: WHERE coluna IS NOT NULL
+  → Oracle NÃO tem índice parcial com WHERE (como o PostgreSQL). Para indexar
+    só as linhas com valor, use function-based index, ex.:
+    CREATE INDEX idx_fat_proc_fbi ON faturas (CASE WHEN processado_em IS NOT NULL
+      THEN processado_em END);
+    ou um composite com coluna NOT NULL para que IS NULL também use índice
+    (ver Caso 7).
 
 Coluna com poucos valores distintos em DW
   → BITMAP INDEX
 
 Coluna com poucos valores distintos em OLTP
-  → Geralmente NÃO indexar (bitmap causa locks)
+  → Geralmente NÃO indexar (bitmap causa locks de fragmento; ver Caso 4)
+
+PK de sequence com inserts concorrentes sofrendo "hot block"
+  → REVERSE KEY INDEX (espalha os inserts; perde range scan, só igualdade)
+
+Testar a remoção de um índice OU introduzir um novo sem afetar planos
+  → INVISIBLE INDEX (mantido por DML, ignorado pelo optimizer):
+    CREATE INDEX ... INVISIBLE;  depois ALTER INDEX ... VISIBLE; quando validado.
+    NÃO confundir com UNUSABLE (esse não é mantido por DML e não tem segmento).
 */

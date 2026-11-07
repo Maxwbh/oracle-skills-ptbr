@@ -27,8 +27,18 @@ import oracledb
 
 sys.path.insert(0, str(Path(__file__).parent))
 from oracle_devops_utils import (
-    GREEN, YELLOW, RED, CYAN, BOLD, RESET, DIM, SEP, SEP2,
-    banner, carregar_dotenv, conectar, log,
+    CYAN,
+    DIM,
+    GREEN,
+    RED,
+    RESET,
+    SEP,
+    SEP2,
+    YELLOW,
+    banner,
+    carregar_dotenv,
+    conectar,
+    log,
 )
 
 # ─── Mapeamento: tipo Oracle → (subdir, extensão) ────────────────────────────
@@ -53,7 +63,7 @@ CABECALHO_TEMPLATE = """\
 -- export_db.py — M&S do Brasil LTDA — contato@msbrasil.inf.br
 -- ATENÇÃO: Arquivo gerado automaticamente.
 --          Altere no banco e execute export_db.py para sincronizar.
--- {'─' * 60}
+-- {separador}
 
 """
 
@@ -140,6 +150,7 @@ def escrever_arquivo(
         tipo=tipo,
         schema=schema.upper(),
         data=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        separador="─" * 60,
     )
     destino.write_text(cabecalho + ddl.strip() + "\n", encoding="utf-8")
 
@@ -289,9 +300,9 @@ def main() -> None:
 
     carregar_dotenv(root)
 
-    schema = args.schema or os.environ.get("DB_USER", "")
+    schema = args.schema or os.environ.get("DB_SCHEMA") or os.environ.get("DB_USER", "")
     if not schema:
-        log.error(f"{RED}Schema não informado. Use --schema ou defina DB_USER.{RESET}")
+        log.error(f"{RED}Schema não informado. Use --schema ou defina DB_SCHEMA/DB_USER.{RESET}")
         sys.exit(1)
 
     banner("export_db.py — Extração de DDL para Git", "local")
@@ -308,14 +319,15 @@ def main() -> None:
             for oracle_type in MAPA_TIPOS:
                 if oracle_type in ("TABLE", "VIEW", "PROCEDURE", "FUNCTION",
                                    "TRIGGER", "TYPE", "SEQUENCE", "SYNONYM"):
-                    label = MAPA_TIPOS[oracle_type][0]
                     log.info(f"\n{SEP}\n  {CYAN}{oracle_type}S{RESET}")
                     ok, erro = exportar_tipo(conn, db_dir, oracle_type, schema)
-                    total_ok += ok; total_erro += erro
+                    total_ok += ok
+                    total_erro += erro
 
             log.info(f"\n{SEP}\n  {CYAN}PACKAGES (spec + body){RESET}")
             ok, erro = exportar_packages(conn, db_dir, schema)
-            total_ok += ok; total_erro += erro
+            total_ok += ok
+            total_erro += erro
 
         elif args.tipo == "packages":
             ok, erro = exportar_packages(conn, db_dir, schema)
@@ -323,7 +335,8 @@ def main() -> None:
         else:
             for oracle_type in MAPA_TIPO_CLI[args.tipo]:
                 ok, erro = exportar_tipo(conn, db_dir, oracle_type, schema)
-                total_ok += ok; total_erro += erro
+                total_ok += ok
+                total_erro += erro
 
         # Detectar objetos inválidos
         invalidos = detectar_invalidos(conn, schema)
@@ -331,7 +344,7 @@ def main() -> None:
             log.info(f"\n{YELLOW}⚠  Objetos INVÁLIDOS (não exportados):{RESET}")
             for obj in invalidos:
                 log.info(f"   - {obj}")
-            log.info(f"   Recompile antes de exportar → oracle-dba-ptbr")
+            log.info("   Recompile antes de exportar → oracle-dba-ptbr")
 
     finally:
         conn.close()
@@ -343,8 +356,9 @@ def main() -> None:
     log.info(SEP2)
     log.info("")
     log.info("Próximos passos:")
-    log.info(f"  git add db/")
-    log.info(f"  git commit -m 'db: export DDL {schema.upper()} — {datetime.now().strftime('%Y-%m-%d')}'")
+    data_commit = datetime.now().strftime("%Y-%m-%d")
+    log.info("  git add db/")
+    log.info(f"  git commit -m 'db: export DDL {schema.upper()} — {data_commit}'")
 
 
 if __name__ == "__main__":
