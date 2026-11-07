@@ -4,6 +4,8 @@
 
 10 Skills do Claude cobrindo toda a stack Oracle (roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis Guidelines, DevOps/CI-CD, ambiente local e novidades 23ai/26ai), desenvolvidas pela **M&S do Brasil LTDA** para uso profissional em projetos Oracle 19c + APEX 24.2–26.2 + ORDS.
 
+**Versão da coleção: 4.1.0** — histórico em [CHANGELOG.md](./CHANGELOG.md) · pacotes em [Releases](https://github.com/maxwbh/oracle-skills-ptbr/releases/latest) e em [`dist/`](./dist/)
+
 ---
 
 ## Desenvolvedor
@@ -35,9 +37,17 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 
 ### Via arquivo `.skill` (Claude.ai)
 
-1. Baixe os arquivos `.skill` da pasta [`dist/`](./dist/)
+1. Baixe os arquivos `.skill` da pasta [`dist/`](./dist/) ou da [última release](https://github.com/maxwbh/oracle-skills-ptbr/releases/latest) (com `checksums.sha256`)
 2. No Claude.ai → **Settings** → **Skills** → arraste ou clique em **Upload**
 3. Repita para cada skill desejada
+
+### Atualizando da 3.x
+
+A 4.x tem mudanças incompatíveis (detalhes no [CHANGELOG](./CHANGELOG.md)):
+
+- **oracle-devops-ptbr:** scripts SQL passam a rodar pelo **SQLcl** (obrigatório); a tabela `db_changelog` ganha status e é atualizada sozinha na primeira execução; deploy em prod fora de terminal exige `--confirmar-prod`; contexts do Liquibase passam a `dev`/`hom`/`prod` (renomeie `hml`/`prd` nos changelogs).
+- **oracle-plsql-ptbr:** rotina reutilizável não comita (SAVEPOINT + ROLLBACK TO + RAISE); compound trigger só quando há estado entre linha e statement.
+- Suíte com **10 skills**: instale também `oracle-core-ptbr`, `oracle-lab-ptbr` e `oracle-26ai-ptbr`.
 
 ### Stack completa (recomendado)
 
@@ -124,7 +134,7 @@ Revisão explícita do padrão · prefixos `g_/l_/p_/r_/t_/co_/e_` · naming PT-
 > As demais skills aplicam Trivadis automaticamente — `oracle-trivadis-ptbr` é para consultas e revisões explícitas.
 
 ### oracle-devops-ptbr
-Estrutura Git · changelog Oracle (`db/changelog.yml` + `db_changelog`) · scripts Python com `oracledb` · GitHub Actions · GMUD naming · export APEX split · versionamento ORDS · `DB_SCHEMA` para deploy via DBA
+Estrutura Git · changelog Oracle (`db/changelog.yml` + `db_changelog`) · Liquibase · deploy pelo SQLcl com checagem de `ALL_ERRORS` · GitHub Actions (Environments `dev`/`hom`/`prod`) e Azure Pipelines · gate SQLcl CodeScan (SQL, PL/SQL e APEXlang) · GMUD naming · export APEX split · versionamento ORDS · `DB_SCHEMA` para deploy via DBA
 
 ```
 "Como estruturar meu projeto Oracle no Git?"
@@ -142,7 +152,7 @@ Instalar Oracle na própria máquina · Vagrant + VirtualBox · container Free �
 ```
 
 ### oracle-26ai-ptbr
-Só quando a versão-alvo declarada for 23ai/26ai · migração 19c → 26ai · backports 19.28 · BOOLEAN em SQL · Domains · JSON duality views
+Só quando a versão-alvo declarada for 23ai/26ai · migração 19c → 26ai (checklist de código) · backports 19.28 · BOOLEAN em SQL · Domains · Assertions
 
 ```
 "Estou no 26ai, isso muda?"
@@ -196,26 +206,31 @@ oracle-devops-ptbr ←→  oracle-ords-ptbr          (ords/modules/)
 | Oracle APEX | 24.2 (baseline) → 26.2 | Development + Data Dictionary (APEX_APPLICATION_* etc.) |
 | Oracle ORDS | 24.4 → 26.3 | REST services + Data Dictionary (USER/DBA_ORDS_*) |
 | Trivadis Guidelines | 4.4 | Nomenclatura PT-BR + checklist |
-| Python oracledb | 2.0+ (Thin Mode) | Scripts DevOps sem Oracle Client |
-| GitHub Actions | — | CI/CD com deploy por ambiente e aprovação prod |
+| SQLcl | 26.3.0+ para APEX 26.2 e CodeScan de `.apx` | Execução dos scripts SQL no deploy, export APEX, CodeScan |
+| Python oracledb | 2.0+ (Thin Mode) | Scripts DevOps sem Oracle Client (controle, `db_changelog`, `ALL_ERRORS`) |
+| Liquibase | 4.33 (Community) | Changelog XML por GMUD, contexts `dev`/`hom`/`prod` |
+| GitHub Actions / Azure Pipelines | — | CI/CD com Environments por ambiente e aprovação obrigatória em prod |
 
 ---
 
 ## oracle-devops-ptbr — Scripts Python
 
-A skill DevOps inclui 7 scripts Python + módulo compartilhado:
+A skill DevOps inclui 10 scripts Python + módulo compartilhado. **Pré-requisito:** SQLcl (`sql` no PATH ou `SQLCL_BIN`) — os scripts SQL são executados por ele; o python-oracledb fica para controle.
 
 ```
 scripts/
-├── oracle_devops_utils.py   # shared: connect, run_sql, colors, DB_SCHEMA
-├── apply_changelog.py       # migrations (changelog.yml + db_changelog)
+├── oracle_devops_utils.py   # compartilhado: conexão, execução pelo SQLcl, ALL_ERRORS, DB_SCHEMA
+├── apply_changelog.py       # migrations com status EM_ANDAMENTO/APLICADA/ERRO, --retomar
 ├── deploy_full.py           # orquestrador changelog → APEX → ORDS
-├── deploy_db.py             # objetos banco em ordem de dependência
-├── deploy_ords.py           # módulos ORDS (security→privileges→modules)
+├── deploy_db.py             # objetos do banco em ordem de dependência
+├── deploy_ords.py           # módulos ORDS (security → privileges → modules)
 ├── export_db.py             # DDL via DBMS_METADATA → db/
 ├── export_ords.py           # schema ORDS via ORDS_EXPORT
 ├── export_apex.py           # export split APEX via SQLcl
-└── requirements-devops.txt  # oracledb>=2.0.0, PyYAML>=6.0.0
+├── codescan_gate.py         # gate de CI com SQLcl CodeScan (SQL, PL/SQL, .apx)
+├── gmud_liquibase.py        # master.xml Liquibase a partir das releases GMUD
+├── setup_devops.py          # assistente: combo CI/CD × Liquibase
+└── requirements-devops.txt  # oracledb, PyYAML
 ```
 
 ### Deploy em schema diferente do usuário de conexão
@@ -302,8 +317,9 @@ python -m pytest -q tests/integracao
 
 Nunca aponte essas variáveis para um banco real.
 
-**Release:** `git tag vX.Y.Z && git push origin vX.Y.Z` dispara o
+**Release:** `git tag -s vX.Y.Z -m "..." && git push origin vX.Y.Z` dispara o
 `release.yml`, que roda o mesmo CI e só publica os `.skill` com tudo verde.
+Antes da tag: versão da coleção no `marketplace.yml` e entrada no `CHANGELOG.md`.
 
 ---
 
