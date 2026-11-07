@@ -203,6 +203,9 @@ CREATE OR REPLACE PACKAGE BODY exemplo_pkg AS
     lc_nome_unidade CONSTANT VARCHAR2(60) := gc_nome_pacote || '.processar_exemplo';
     l_status        VARCHAR2(20);
   BEGIN
+    -- Rotina reutilizável: não comita; desfaz só o próprio trabalho em erro
+    SAVEPOINT sp_processar_exemplo;
+
     -- Valida estado antes de processar
     validar_estado(p_id);
 
@@ -215,17 +218,17 @@ CREATE OR REPLACE PACKAGE BODY exemplo_pkg AS
 
     UPDATE exemplos SET status = 'PROCESSADO', processado_em = SYSDATE
      WHERE id = p_id;
-
-    COMMIT;
+    -- SEM COMMIT: o dono da transação (job, endpoint, process) decide
 
   EXCEPTION
     WHEN e_estado_invalido THEN
+      ROLLBACK TO sp_processar_exemplo;
       raise_application_error(-20100,
         'Estado inválido em ' || lc_nome_unidade || ' para ID ' || p_id);
     WHEN OTHERS THEN
-      ROLLBACK;
-      raise_application_error(-20999,
-        'Erro inesperado em ' || lc_nome_unidade || ': ' || SQLERRM);
+      ROLLBACK TO sp_processar_exemplo;
+      logger.log_error('Erro inesperado em ' || lc_nome_unidade, lc_nome_unidade);
+      RAISE;  -- preserva código e pilha originais
   END processar_exemplo;
 
 
@@ -259,26 +262,31 @@ END exemplo_pkg;
 
 ### Padrão completo
 
-Todo procedure tem três blocos de exception:
+Todo procedure tem três blocos de exception (rotina reutilizável com DML
+abre `SAVEPOINT sp_<nome>` como primeiro comando):
 
 ```sql
 EXCEPTION
   WHEN e_specific_known THEN
-    -- Logging contextual + re-raise específico
+    -- Erro de negócio conhecido: contexto + código próprio
+    ROLLBACK TO sp_<nome>;
     raise_application_error(-20001,
-      'Contexto específico em ' || lc_nome_unidade || ': ' || ...);
+      'Contexto específico em ' || lc_nome_unidade || ': ' || ..., TRUE);  -- TRUE mantém a pilha
 
   WHEN NO_DATA_FOUND THEN
     -- Tratamento esperado (pode ser RETURN NULL, default value, etc.)
     NULL;
 
   WHEN OTHERS THEN
-    -- Captura último, com ROLLBACK se houve DML
-    ROLLBACK;
-    raise_application_error(-20999,
-      'Erro inesperado em ' || lc_nome_unidade || ': ' || SQLERRM);
+    -- Captura último: desfaz só o trabalho desta unidade e propaga o ORIGINAL
+    ROLLBACK TO sp_<nome>;
+    logger.log_error('Erro inesperado em ' || lc_nome_unidade, lc_nome_unidade);
+    RAISE;
 END;
 ```
+
+Não troque o erro inesperado por `raise_application_error(-20999, SQLERRM)`:
+perde o código Oracle e a pilha, e o chamador não consegue mais tratá-lo.
 
 ### Constante `lc_nome_unidade`
 
@@ -411,8 +419,9 @@ END;
 ### Princípios
 
 - **Uma unidade lógica = uma transação.** Não commit dentro de loop sem razão.
-- **Procedures não comitam por default.** Caller decide quando commitar (autonomous transaction é exceção).
-- **ROLLBACK em exception handler:** se a procedure fez DML, rollback antes de re-raise.
+- **Procedures não comitam.** Rotina reutilizável não faz `COMMIT` nem `ROLLBACK` total (autonomous transaction de log é a exceção).
+- **Desfaça só a sua unidade:** `SAVEPOINT` no início e `ROLLBACK TO` no handler, seguido de `RAISE`. Um `ROLLBACK` total desfaria também o trabalho do chamador.
+- **Dono da transação:** `COMMIT`/`ROLLBACK` total só no ponto de entrada (job, endpoint, script de carga), documentado no cabeçalho. No APEX, o dono é o próprio APEX. Detalhes: regra 4 da `oracle-plsql-ptbr`.
 
 ### Autonomous transaction
 

@@ -2,8 +2,8 @@
 name: oracle-trivadis-ptbr
 description: Módulo de padrões Trivadis da suíte Oracle PT-BR. Trivadis PL/SQL Guidelines 4.4 — nomenclatura, estrutura de código e revisão. ATIVE em revisar código Oracle com padrão Trivadis, validar prefixos (g_, gc_, l_, lc_, p_, r_, t_, co_, e_), naming PT-BR em variáveis/tabelas/colunas, checklist antes de deploy/GMUD, "esse código segue Trivadis?", "qual prefixo usar?", "como nomear essa variável?", "revisa esse package", dbLinter, db* CODECOP, IslandSQL, regras G-92xx (naming de tabelas/constraints/assertions), "Trivadis ainda existe?". NÃO ATIVE em geração de código (use oracle-plsql-ptbr), APEX development, ORDS endpoints, DBA operacional, tuning. As demais oracle-*-ptbr aplicam Trivadis automaticamente — esta skill foca em consultas e revisões explícitas do padrão.
 metadata:
-  version: "2.3.1"
-  release_date: "2026-09-15"
+  version: "2.4.1"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
   author: "Maxwell da Silva Oliveira"
@@ -24,20 +24,22 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Padrões Trivadis (oracle-trivadis-ptbr)
 
-> **Versão:** 2.3.1 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill)
-> **v2.3.1:** suíte com 10 skills (oracle-lab-ptbr). Histórico em `CHANGELOG.md`.
+> **Versão:** 2.4.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill)
+> **v2.4.1:** roteamento para oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
 - **oracle-plsql-ptbr** — PL/SQL 19c: packages, BULK, LOBs, triggers, EBR
 - **oracle-trivadis-ptbr** — Trivadis 4.4: naming, prefixos, revisão de código
-- **oracle-apex-ptbr** — APEX 26.1: páginas, DA, IG, APIs APEX_*, metadata
+- **oracle-apex-ptbr** — APEX 24.2–26.2: páginas, DA, IG, APIs APEX_*, metadata
 - **oracle-ords-ptbr** — ORDS: REST modules/handlers, OAuth, Network ACL
 - **oracle-dba-ptbr** — DBA operacional: sessões, locks, flashback, scripts ad-hoc
 - **oracle-tuning-ptbr** — performance: explain plan, índices, stats, result cache
 - **oracle-devops-ptbr** — Git/CI-CD: estrutura, Liquibase, pipelines, GMUD
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
+
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
 
 
 Trivadis PL/SQL Guidelines 4.4 — padrão de nomenclatura, estrutura de código e checklist de revisão.

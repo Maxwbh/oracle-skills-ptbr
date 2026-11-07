@@ -1,9 +1,9 @@
 ---
 name: oracle-26ai-ptbr
-description: "Módulo 26ai da suíte Oracle PT-BR. Novidades de Oracle Database 23ai/26ai (SQL, PL/SQL, segurança, JSON, migração) isoladas do restante da suíte, que é 19c. ATIVE quando a versão-alvo declarada for 23ai ou 26ai, ou em perguntas sobre migrar de 19c para 26ai, o que muda no código, backports 19.28 (IF NOT EXISTS, Annotations, DBMS_DEVELOPER), BOOLEAN em SQL, SELECT sem FROM, UPDATE/DELETE com JOIN, RETURNING OLD/NEW, GROUP BY ALL, INSERT BY NAME, QUALIFY, FILTER, calendar functions, UUID(), Domains, Assertions, RESETTABLE, transpiler PL/SQL→SQL, lock-free reservations, priority transactions, JSON duality views, schema privileges, SQL Firewall, MLE JavaScript, Vector Search, AutoUpgrade. Frases — 'estou no 26ai', 'quando migrarmos pro 26', 'isso existe no 26ai?', 'dá pra usar no 19c?'. NÃO ATIVE quando a versão for 19c ou não estiver declarada — o módulo específico responde em 19c e só cita esta skill se houver alternativa 26ai relevante."
+description: "Módulo 26ai da suíte Oracle PT-BR. Novidades de Oracle Database 23ai/26ai (SQL, PL/SQL, segurança, JSON, migração) isoladas do restante da suíte, que é 19c. ATIVE quando a versão-alvo declarada for 23ai ou 26ai, ou em perguntas sobre migrar de 19c para 26ai, o que muda no código, backports 19.28 (IF NOT EXISTS, Annotations, DBMS_DEVELOPER), BOOLEAN em SQL, SELECT sem FROM, UPDATE/DELETE com JOIN, RETURNING OLD/NEW, GROUP BY ALL, INSERT BY NAME, QUALIFY, FILTER, calendar functions, UUID(), Domains, Assertions, RESETTABLE, transpiler PL/SQL→SQL, lock-free reservations, priority transactions, schema privileges, SQL Firewall, MLE JavaScript, AutoUpgrade. Frases — 'estou no 26ai', 'quando migrarmos pro 26', 'isso existe no 26ai?', 'dá pra usar no 19c?'. NÃO ATIVE quando a versão for 19c ou não estiver declarada — o módulo específico responde em 19c e só cita esta skill se houver alternativa 26ai relevante — nem em Vector Search, JSON duality views ou RAFT (use oracle-26ai-helper-ptbr)."
 metadata:
-  version: "1.0.2"
-  release_date: "2026-09-15"
+  version: "1.1.0"
+  release_date: "2026-11-06"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 6
   author: "Maxwell da Silva Oliveira"
@@ -25,10 +25,14 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo 26ai (oracle-26ai-ptbr)
 
-> **Versão:** 1.0.2 · **Atualizada em:** setembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
-> **v1.0.2:** suíte com 10 skills; referência cruzada para subir um 26ai Free local e testar a sintaxe nova. Histórico em `CHANGELOG.md`.
+> **Versão:** 1.1.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
+> **v1.1.0:** fronteira com a skill irmã oracle-26ai-helper-ptbr (Vector/Duality/RAFT); datas de suporte do 19c e upgrade direto com fonte. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único): ver `oracle-core-ptbr`.
+
+**Fronteira com a skill irmã `oracle-26ai-helper-ptbr`** (repositório separado, fora da suíte):
+- **Vector Search, JSON Relational Duality e RAFT** (replicação do Globally Distributed Database) → **oracle-26ai-helper-ptbr**, que traz o aprofundamento e os templates. Aqui esses recursos só aparecem como item da lista "o que muda" e com o encaminhamento.
+- **Sintaxe nova do 23ai/26ai e migração 19c→26ai** (o que muda no código, checklist, compatibilidade) → **esta skill**.
 
 Novidades de **Oracle Database 23ai/26ai** organizadas pelo que muda na prática para quem escreve SQL/PL/SQL e mantém sistemas hoje em **19c**. 26ai é o *long term release* sucessor do 19c; 23ai → 26ai é patch, não upgrade.
 
@@ -99,7 +103,7 @@ Detalhes, restrições e exemplos completos nos references.
 2. **Backport primeiro.** Se a feature existe em 19.28 (IF NOT EXISTS, Annotations), prefira-a à emulação — mas confirme o RU do cliente.
 3. **BOOLEAN nativo ≠ BOOLEAN do APEX.** Colunas `BOOLEAN` funcionam em qualquer 23ai+; *session state* BOOLEAN no APEX 26.1 exige banco 26ai e ORDS 26.1.1+. Em items APEX de bancos 19c, continue com `'Y'/'N'`.
 4. **Priority transactions: o default é `TXN_PRIORITY = HIGH`** para todas as sessões — nada é rollbackado até você baixar a prioridade de sessões de lote. Não ative `PRIORITY_TXNS_MODE = ROLLBACK` em produção sem período em `TRACK`.
-5. **Duality views são API, não atalho.** Exigem PK/FK íntegras e definem quais tabelas aceitam `INSERT/UPDATE/DELETE`; não substituem package de negócio.
+5. **Duality views são API, não atalho.** Exigem PK/FK íntegras e definem quais tabelas aceitam `INSERT/UPDATE/DELETE`; não substituem package de negócio. Modelagem e templates: `oracle-26ai-helper-ptbr`.
 6. **Transpiler PL/SQL→SQL é automático, mas limitado.** Só funções simples (sem SQL interno, loops, exceções) são transpiladas; `SQL_TRANSPILER = ON` na sessão para testar. Continue aplicando "SQL puro antes de PL/SQL".
 7. **Non-CDB acabou.** 26ai só existe como CDB/PDB; todo plano de upgrade 19c non-CDB inclui conversão para PDB (AutoUpgrade faz).
 8. **Naming Trivadis 4.4 + PT-BR continua valendo.** O Trivadis foi encerrado na 4.4 (fev/2026); para objetos novos a referência de naming é o bloco G-92xx do **dbLinter** (sucessor oficial) — ex.: G-9208 assertions. Domains, assertions e annotations recebem nomes PT-BR como qualquer objeto (`dom_email`, `asr_salario_presidente`). Detalhes em `oracle-trivadis-ptbr`.
@@ -116,3 +120,4 @@ Detalhes, restrições e exemplos completos nos references.
 | Plano de execução, stats, transpiler na prática | **oracle-tuning-ptbr** |
 | Scripts GMUD idempotentes com `IF NOT EXISTS` | **oracle-devops-ptbr** |
 | Subir um 26ai Free local para testar a sintaxe nova | **oracle-lab-ptbr** |
+| Vector Search, JSON Relational Duality, RAFT (aprofundamento e templates) | **oracle-26ai-helper-ptbr** (fora da suíte) |
