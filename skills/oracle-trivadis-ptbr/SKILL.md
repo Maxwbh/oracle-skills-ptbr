@@ -2,8 +2,8 @@
 name: oracle-trivadis-ptbr
 description: Módulo de padrões Trivadis da suíte Oracle PT-BR. Trivadis PL/SQL Guidelines 4.4 — nomenclatura, estrutura de código e revisão. ATIVE em revisar código Oracle com padrão Trivadis, validar prefixos (g_, gc_, l_, lc_, p_, r_, t_, co_, e_), naming PT-BR em variáveis/tabelas/colunas, checklist antes de deploy/GMUD, "esse código segue Trivadis?", "qual prefixo usar?", "como nomear essa variável?", "revisa esse package", dbLinter, db* CODECOP, IslandSQL, regras G-92xx (naming de tabelas/constraints/assertions), "Trivadis ainda existe?". NÃO ATIVE em geração de código (use oracle-plsql-ptbr), APEX development, ORDS endpoints, DBA operacional, tuning. As demais oracle-*-ptbr aplicam Trivadis automaticamente — esta skill foca em consultas e revisões explícitas do padrão.
 metadata:
-  version: "2.4.1"
-  release_date: "2026-11-06"
+  version: "2.4.2"
+  release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 2
   author: "Maxwell da Silva Oliveira"
@@ -24,8 +24,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Padrões Trivadis (oracle-trivadis-ptbr)
 
-> **Versão:** 2.4.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill)
-> **v2.4.1:** roteamento para oracle-26ai-helper-ptbr. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.4.2 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (2 recursos nesta skill)
+> **v2.4.2:** roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
@@ -39,7 +39,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
-> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality, RAFT (replicação do Globally Distributed Database) e roteiro do upgrade 19c→26ai. Roteamento: Vector / Duality / RAFT e roteiro do upgrade (fases, riscos, Vector Pool na janela) → **oracle-26ai-helper-ptbr**; sintaxe nova e checklist de código da migração (o que muda, caminhos, compatibilidade APEX/ORDS/SQLcl) → **oracle-26ai-ptbr**; operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 
 Trivadis PL/SQL Guidelines 4.4 — padrão de nomenclatura, estrutura de código e checklist de revisão.

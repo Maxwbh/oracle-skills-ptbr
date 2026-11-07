@@ -2,8 +2,8 @@
 name: oracle-ords-ptbr
 description: Módulo ORDS da suíte Oracle PT-BR. Oracle ORDS — REST services e dicionário USER_ORDS_*/DBA_ORDS_*. ATIVE em define_module, define_template, define_handler, AutoREST, OAuth, ORDS_SECURITY, ORDS_SECURITY_ADMIN, JWT, PAR via ORDS_PAR, ORDS_EXPORT_ADMIN, delete_module/drop_rest_for_schema, privilege, role ORDS, ORDS_EXPORT, USER_ORDS_MODULES, USER_ORDS_HANDLERS, USER_ORDS_SCHEMAS, DBA_ORDS_*, source_type_collection_feed, source_type_collection_item, CORS, versionamento de API, depreciação OAUTH package. Frases — "criar endpoint REST", "módulo ORDS", "autenticar API", "inventário de handlers ORDS", "OAUTH deprecated". NÃO ATIVE em APEX pages, PL/SQL puro, DBA operacional. Templates em assets/.
 metadata:
-  version: "2.5.0"
-  release_date: "2026-11-06"
+  version: "2.5.1"
+  release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 6
   author: "Maxwell da Silva Oliveira"
@@ -25,8 +25,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo ORDS (oracle-ords-ptbr)
 
-> **Versão:** 2.5.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
-> **v2.5.0:** ORDS 26.3.x, par APEX × ORDS (26.2 → 26.3.0+), 35 CVEs do CPU out/2026 e fronteira APEX/ORDS (REST Workshop removido no APEX 26.2). Histórico em `CHANGELOG.md`.
+> **Versão:** 2.5.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (6 recursos nesta skill)
+> **v2.5.1:** roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
@@ -40,7 +40,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
-> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality, RAFT (replicação do Globally Distributed Database) e roteiro do upgrade 19c→26ai. Roteamento: Vector / Duality / RAFT e roteiro do upgrade (fases, riscos, Vector Pool na janela) → **oracle-26ai-helper-ptbr**; sintaxe nova e checklist de código da migração (o que muda, caminhos, compatibilidade APEX/ORDS/SQLcl) → **oracle-26ai-ptbr**; operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 
 Oracle REST Data Services — padrões de desenvolvimento e dicionário completo de views de metadados.

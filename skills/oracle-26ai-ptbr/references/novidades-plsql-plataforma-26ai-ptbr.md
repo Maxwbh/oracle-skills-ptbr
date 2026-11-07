@@ -174,6 +174,7 @@ Health check do dicionário (`DBMS_HCHECK.full`, `critical`) — rode antes de u
 - Tipo `VECTOR`, funções `VECTOR_EMBEDDING`, `VECTOR_DISTANCE`, índices `INMEMORY NEIGHBOR GRAPH` (HNSW) / `NEIGHBOR PARTITIONS` (IVF); modelos ONNX carregados via `DBMS_VECTOR.load_onnx_model`.
 - Base do RAG declarativo do APEX 24.2+ e das VecDB REST APIs do ORDS 26.1 (exige 23.26.1+).
 - Licenciamento: incluído no banco; índices HNSW usam In-Memory (área `VECTOR_MEMORY_SIZE`).
+- **`VECTOR_MEMORY_SIZE` — restart só para ligar.** Medido no 26ai Free 23.26.3: no CDB com o pool em 0 no startup, aumentar exige `SCOPE=SPFILE` + restart (sem restart → ORA-51950); com o pool já alocado no startup, cresce sem restart e não reduz abaixo do valor inicial (ORA-51953); no PDB é cota dinâmica (`SCOPE=BOTH`), limitada ao pool do CDB (ORA-51955). Em produção, defina o pool já na janela do upgrade.
 - Fora do escopo da suíte gerar pipelines de embedding; cobrir só integração (coluna VECTOR + busca por similaridade em APEX/ORDS).
 
 ### 4.2 Multitenant: PDB priority (26ai), hybrid read-only, DRCP

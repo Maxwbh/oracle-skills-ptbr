@@ -2,8 +2,8 @@
 name: oracle-apex-ptbr
 description: Módulo APEX da suíte Oracle PT-BR. Oracle APEX 26.2 (padrões válidos de 24.2+) — desenvolvimento e dicionário de metadados. ATIVE em Dynamic Actions, Interactive Report, Interactive Grid, Classic Report, Page Process, AJAX Callback, Validations, Authorization Schemes, pagination, LOV, APEX_APPLICATION_*, APEX_APPLICATION_PAGE_*, APEX_WORKSPACE_*, APEX_APPL_*, Workflows, Tasks, AI configs, ACL, JSON Sources, APEX_ACTIVITY_LOG. Frases — "página APEX", "region IR", "IG editável", "process no submit", "qual view APEX usar", "auditar paginação APEX". NÃO ATIVE em PL/SQL puro, ORDS endpoints, DBA operacional. Para naming use oracle-trivadis-ptbr. Templates em assets/.
 metadata:
-  version: "2.6.0"
-  release_date: "2026-11-06"
+  version: "2.6.1"
+  release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 21
   author: "Maxwell da Silva Oliveira"
@@ -25,8 +25,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo APEX (oracle-apex-ptbr)
 
-> **Versão:** 2.6.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (21 recursos nesta skill)
-> **v2.6.0:** APEX 26.2 (GA 06/10/2026): matriz, requisitos (ORDS 26.3.0+, SQLcl 26.3.0+), APEXlang, REST Workshop removido, IA e Deep Data Security; alerta da CVE-2026-101521. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.6.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (21 recursos nesta skill)
+> **v2.6.1:** roteamento do roteiro de upgrade 19c→26ai. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
@@ -40,7 +40,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
-> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality, RAFT (replicação do Globally Distributed Database) e roteiro do upgrade 19c→26ai. Roteamento: Vector / Duality / RAFT e roteiro do upgrade (fases, riscos, Vector Pool na janela) → **oracle-26ai-helper-ptbr**; sintaxe nova e checklist de código da migração (o que muda, caminhos, compatibilidade APEX/ORDS/SQLcl) → **oracle-26ai-ptbr**; operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 
 Oracle APEX 26.2 (padrões válidos de 24.2+; 24.2 é a baseline suportada) — padrões de desenvolvimento e dicionário completo de views de metadados.

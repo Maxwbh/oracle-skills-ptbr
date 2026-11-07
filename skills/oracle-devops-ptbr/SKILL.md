@@ -2,7 +2,7 @@
 name: oracle-devops-ptbr
 description: Módulo DevOps da suíte Oracle PT-BR. Estrutura Git e CI/CD para projetos Oracle/APEX/ORDS. ATIVE em estrutura de projeto Oracle no Git, commit de objetos do banco, script de deploy, GitHub Actions ou Azure Pipelines para Oracle, export APEX split via SQLcl, versionamento de módulos ORDS, GMUD naming (001_projeto_ddl_objeto.sql), deploy-db/deploy-apex/deploy-ords, branch strategy, .gitignore Oracle, rollback, ordem de dependências, changelog Liquibase XML (databaseChangeLog/changeSet), code review e promoção entre ambientes via GitHub/Azure. Frases — "estruturar projeto no Git", "script de deploy Oracle", "export do APEX para Git", "deploy ordenado do banco", "nomenclatura GMUD", "changelog Liquibase", "pipeline Azure DevOps", "deploy com aprovação por ambiente", "enviar para homologação/produção". NÃO ATIVE em código PL/SQL (oracle-plsql-ptbr), APEX pages (oracle-apex-ptbr), ORDS handlers (oracle-ords-ptbr), DBA operacional (oracle-dba-ptbr), tuning (oracle-tuning-ptbr). Templates em assets/.
 metadata:
-  version: "4.1.1"
+  version: "4.1.2"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 31
@@ -27,8 +27,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo DevOps (oracle-devops-ptbr)
 
-> **Versão:** 4.1.1 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (31 recursos nesta skill)
-> **v4.1.1:** `export_db.py` respeita `DB_SCHEMA`; lint dos `export_*.py` para o CI. Histórico em `CHANGELOG.md`.
+> **Versão:** 4.1.2 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (31 recursos nesta skill)
+> **v4.1.2:** deploy pelo SQLcl com `SET SQLBLANKLINES ON` (linha em branco não corta mais UPDATE/DELETE); regras de formatação de scripts GMUD. Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
@@ -42,7 +42,7 @@ Suíte completa (10 skills — conjunto único):
 - **oracle-26ai-ptbr** — 23ai/26ai: novidades SQL/PL/SQL, backports 19.28, migração 19c→26ai (só com versão declarada)
 - **oracle-lab-ptbr** — instalação e ambiente local (VM/container) para quem não é DBA; rede de casa
 
-> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality e RAFT (replicação do Globally Distributed Database). Roteamento: Vector / Duality / RAFT → **oracle-26ai-helper-ptbr**; sintaxe nova e migração 19c→26ai → **oracle-26ai-ptbr**.
+> Fora da suíte (repositório separado): **oracle-26ai-helper-ptbr** — Vector Search, JSON Relational Duality, RAFT (replicação do Globally Distributed Database) e roteiro do upgrade 19c→26ai. Roteamento: Vector / Duality / RAFT e roteiro do upgrade (fases, riscos, Vector Pool na janela) → **oracle-26ai-helper-ptbr**; sintaxe nova e checklist de código da migração (o que muda, caminhos, compatibilidade APEX/ORDS/SQLcl) → **oracle-26ai-ptbr**; operação do upgrade (AutoUpgrade, PDB, Data Guard) → **oracle-dba-ptbr**.
 
 
 Estrutura Git, scripts de deploy e CI/CD para projetos Oracle 19c + APEX 24.2–26.2 + ORDS.
@@ -129,6 +129,18 @@ meu-projeto-apex/
 ```
 
 Tipos: `ddl` `dml` `pkg` `prc` `fnc` `trg` `vw` `page` `fix`
+
+### Formatação dos scripts (SQLcl e SQL*Plus)
+
+Três armadilhas medidas no SQLcl 26.1.2/26.3.1 e no SQL*Plus 23.26.3 (26ai Free). Todas fazem o cliente quebrar o comando, às vezes **sem erro**:
+
+| Armadilha | SQLcl | SQL*Plus | Regra |
+|---|---|---|---|
+| Linha em branco dentro de um comando SQL | Encerra o comando: `UPDATE … SET …` roda **sem o WHERE** e o script sai com 0 | Comando descartado (SP2-0042) | Sem linhas em branco dentro de SQL. O `deploy_db.py` já liga `SET SQLBLANKLINES ON` |
+| Linha começando com `@` dentro de um comando | Comando perdido (ORA-17104) | Executa `@arquivo` como script | Nunca comece linha com `@` dentro de comando (ex.: `@link` de duality view em GraphQL) |
+| `;` seguido de comentário na mesma linha | Executa normal | Comando **descartado sem erro** | Comentário na linha de cima, não depois do `;` |
+
+Linha em branco dentro de bloco PL/SQL (até o `/`) é segura nos dois clientes.
 
 ## Ordem de deploy de objetos do banco
 

@@ -5,6 +5,20 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [4.1.0] — 2026-11-07
+
+Ajustes vindos do teste de integração do oracle-26ai-helper-ptbr no **26ai Free 23.26.3** (SQLcl 26.1.2/26.3.1, SQL*Plus 23.26.3, ORDS 26.3.1, APEX 26.2).
+
+### Corrigido
+- **oracle-devops-ptbr 4.1.1 → 4.1.2:** o deploy pelo SQLcl passa a ligar `SET SQLBLANKLINES ON`. Sem isso, um `UPDATE … SET …` com o `WHERE` depois de uma linha em branco rodava **sem o WHERE** (todas as linhas), o resto virava "Unknown Command" e o script saía com 0 — o `WHENEVER SQLERROR` não pega. Reproduzido com o `executar_script_sqlcl` da suíte; teste de integração e unitário novos. Seção "Formatação dos scripts (SQLcl e SQL*Plus)" no SKILL.md.
+
+### Adicionado
+- **oracle-lab-ptbr 1.1.0 → 1.2.0:** caminho "Docker Compose: 26ai Free + imagem oficial do ORDS" (a imagem instala o APEX montado), com tempos medidos e troubleshooting (`ORACLE_USER_PWD`, senha do APEX, `startup` × `setup`, cookie no `curl`).
+
+### Alterado
+- **oracle-26ai-ptbr 1.1.0 → 1.1.1:** regra medida do `VECTOR_MEMORY_SIZE` (restart só para ligar no CDB; ORA-51950/51953/51955) e armadilha na migração.
+- **Roteamento** (core 1.5.1, plsql 3.0.2, apex 2.6.1, ords 2.5.1, dba 2.4.1, tuning 2.7.1, trivadis 2.4.2, devops, lab, 26ai): roteiro do upgrade 19c→26ai (fases, riscos, Vector Pool na janela) → oracle-26ai-helper-ptbr; checklist de código da migração → oracle-26ai-ptbr; operação do upgrade → oracle-dba-ptbr.
+
 ## [4.0.0] — 2026-11-07
 
 Revisão consolidada 2026-11 (Passo 0 + Fases 1–4). **Breaking:** DevOps exige SQLcl e muda o `db_changelog`; regras 3, 4 e 10 do PL/SQL mudam de sentido; contexts do Liquibase passam a `dev`/`hom`/`prod`.

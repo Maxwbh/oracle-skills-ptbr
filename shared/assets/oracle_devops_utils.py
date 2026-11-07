@@ -397,6 +397,13 @@ def validar_arquivo_sql(arquivo: Path) -> list[str]:
 #   (sai com 0) — por isso verificar_erros_compilacao() após o script;
 # - no python-oracledb, o mesmo CREATE também não lança exceção: só
 #   preenche cursor.warning (DPY-7000).
+# - linha em branco DENTRO de um comando SQL (fora de PL/SQL) encerra o
+#   comando: o trecho anterior roda sozinho (ex.: UPDATE sem o WHERE), o resto
+#   vira "Unknown Command" e o script sai com 0 — por isso SET SQLBLANKLINES ON
+#   (verificado no SQLcl 26.1.2 e 26.3.1 contra o 26ai Free 23.26.3).
+#   Linha começando com '@' dentro de um comando também o quebra (ORA-17104,
+#   exit != 0). ';' seguido de comentário na mesma linha funciona no SQLcl,
+#   mas faz o SQL*Plus descartar o comando sem erro.
 
 class ErroSQLcl(RuntimeError):
     """Falha ao executar script pelo SQLcl (ou erro de compilação após ele)."""
@@ -439,6 +446,11 @@ def montar_script_sqlcl(arquivo: Path, cfg: dict,
         "WHENEVER SQLERROR EXIT FAILURE ROLLBACK",
         "WHENEVER OSERROR EXIT FAILURE ROLLBACK",
         "SET DEFINE OFF",
+        # Sem isto o SQLcl encerra o comando numa linha em branco: um UPDATE
+        # com o WHERE depois de uma linha em branco roda SEM o WHERE, o resto
+        # vira "Unknown Command" e o script ainda sai com 0 (o WHENEVER
+        # SQLERROR não pega). Medido no SQLcl 26.1.2/26.3.1.
+        "SET SQLBLANKLINES ON",
         "SET VERIFY OFF",
         "SET FEEDBACK ON",
         "SET SERVEROUTPUT ON SIZE UNLIMITED",

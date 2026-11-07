@@ -1,5 +1,8 @@
 # Changelog — oracle-apex-ptbr
 
+## [2.6.1] - 2026-11-07
+- Docs — roteamento: roteiro do upgrade 19c→26ai também vai para oracle-26ai-helper-ptbr; checklist de código fica na oracle-26ai-ptbr; operação na oracle-dba-ptbr.
+
 ## [2.6.0] - 2026-11-06
 - Feature — APEX 26.2 (GA 06/10/2026) na matriz de versões: requisitos (ORDS 26.3.0+, SQLcl 26.3.0+, 19c RU 19.18+ ou 26ai 23.26.0+), schema APEX_260200, APEXlang com import por arquivo (só SQLcl/VS Code, só dev), traduções e subscription mapping, APIs APEX_APPLICATION_ADMIN de lock e Working Copy, REST Workshop removido (→ SQL Developer Web; serviços existentes continuam), IA (reasoning effort, provedores, colunas por linguagem natural no IR, navigation targets), Deep Data Security (23.26.3+). Fontes com data de consulta (06/11/2026).
 - Feature — segurança: CVE-2026-101521 (CVSS 9.8, sem autenticação, afetadas 24.1.0–24.1.21, 24.2.0–24.2.20, 26.1.0–26.1.4) e CVE-2026-66010; novo asset `apex_verificar_patch_seguranca.sql` (testado com APEX_RELEASE simulada) e regra de checar o patch level antes de orientar uma instância. `suite_size` 20 → 21.
