@@ -369,8 +369,9 @@ Veja `assets/github-deploy.yml` (copiar para `.github/workflows/deploy.yml`). Fl
 ```
 resolve   → ambiente pelo input (workflow_dispatch) ou pelo branch:
             develop → dev · hom → hom · main → prod   (sem segredos nos outputs)
-validate  → offline, sem banco: nomenclatura GMUD, changelog.yml e todos os
-            .sql (UTF-8, literais/comentários fechados, terminadores)
+validate  → offline, sem banco: CodeScan do SQLcl (SQL, PL/SQL e .apx),
+            nomenclatura GMUD, changelog.yml e todos os .sql (UTF-8,
+            literais/comentários fechados, terminadores)
 deploy    → environment: <dev|hom|prod>   ← em prod, aguarda os "Required reviewers"
             └── deploy_full.py: changelog → APEX → ORDS (SQLcl + ALL_ERRORS)
             └── apply_changelog.py --status, healthcheck, Newman (opcionais)
@@ -392,6 +393,34 @@ Regras que o workflow segue:
 - Em prod o script recebe `--confirmar-prod`: a confirmação é a aprovação do Environment. Os scripts nunca chamam `input()` em CI.
 - Expressões do Actions não têm `upper()`/`lower()`; o segredo por ambiente vem do Environment (`secrets.DB_PASS`), não de `format('DB_PASS_{0}', ...)`.
 - Validado com `actionlint` (+ `shellcheck` nos blocos `run:`).
+
+### Gate de qualidade — SQLcl CodeScan
+
+`scripts/codescan_gate.py db apex ords` roda `codescan -path <pasta>` do SQLcl
+em cada pasta e **falha o job se houver achado**. O wrapper existe porque o
+`codescan` sai com código **0 mesmo encontrando violações** (verificado no
+SQLcl 26.3.1): o gate lê o relatório JSON.
+
+- Arquivos analisados (help do SQLcl 26.3.1): `.sql`, `.pks`, `.pkb`, `.pkh`,
+  `.pls`, `.plb`, `.pck`, `.tps`, `.tpb` e **`.apx`** (APEXlang). Não existe
+  opção `-ext`: a extensão é reconhecida sozinha.
+- Regras para `.apx` (APEX-001 em diante: autorização de páginas, processos,
+  AI tools, session state protection…) existem desde o **SQLcl 26.3.0**
+  ([changelog](https://www.oracle.com/tools/sqlcl/sqlcl-changelog.html)); o
+  26.3.1 estendeu a análise a SQL e PL/SQL dentro dos componentes APEXlang.
+- Exceções aceitas ficam versionadas em `codescan.json`, no formato do próprio
+  SQLcl: `{"ignore":[{"ruleNo":"G-7310","reason":"..."}]}`. Cada exceção com
+  motivo, revisada no PR como código.
+
+### APEXlang no pipeline (APEX 26.1+)
+
+- Export e versionamento: comando `apex` do SQLcl (APEXlang desde o SQLcl
+  26.1.2; SQLcl Projects com APEXlang desde o 26.2). Exige ORDS 26.1.1+.
+- **Deploy em homologação/produção é da aplicação inteira.** A doc do SQLcl
+  26.3 diz que, com arquivo único, ele "must contain the entire application";
+  o import **por arquivo** do APEX 26.2 (`apex import -files ...`) é suportado
+  **só pelo SQLcl e pelo VS Code e só em desenvolvimento**. Não use import por
+  arquivo como deploy incremental entre ambientes.
 
 ---
 
