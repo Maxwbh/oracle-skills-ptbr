@@ -25,7 +25,7 @@ M&S do Brasil LTDA — [msbrasil.inf.br](https://msbrasil.inf.br)
 | `oracle-dba-ptbr` | 2.4.0 | DBA operacional + Oracle Data Dictionary (V$, DBA_*, CDB_*) | 15 |
 | `oracle-tuning-ptbr` | 2.7.0 | Performance tuning, AWR, ASH, explain plan, indexes, estatísticas | 7 |
 | `oracle-trivadis-ptbr` | 2.4.1 | Trivadis Guidelines 4.4 — nomenclatura e revisão de código | 2 |
-| `oracle-devops-ptbr` | 4.1.0 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 31 |
+| `oracle-devops-ptbr` | 4.1.1 | Git, CI/CD, changelog Oracle, Liquibase, deploy Python + oracledb | 31 |
 | `oracle-lab-ptbr` | 1.1.0 | Ambiente local (Vagrant/VirtualBox, container) para desenvolvedor | 8 |
 | `oracle-26ai-ptbr` | 1.1.0 | Novidades 23ai/26ai e migração 19c → 26ai (só com versão-alvo declarada) | 6 |
 
@@ -271,22 +271,39 @@ oracle-skills-ptbr/
 
 ---
 
-## Publicar no GitHub
+## Desenvolvimento e release
 
 ```bash
-# Extrair o ZIP
-unzip oracle-skills-ptbr-v3.1.0-git.zip
-
-cd oracle-skills-ptbr
-git init
-git add .
-git commit -m "feat: oracle-skills-ptbr v3.1.0 — 10 skills stack Oracle completa"
-git remote add origin https://github.com/maxwbh/oracle-skills-ptbr.git
-git push -u origin main
-
-git tag -a v3.1.0 -m "10 skills + devops Python oracledb v3.1.0"
-git push origin v3.1.0
+pip install -r requirements-dev.txt
+python build.py --check      # frontmatter, suite_size, CHANGELOG, marketplace, clientes reais
+python build.py              # regenera dist/*.skill + checksums — commite junto com a mudança
+python build.py --check-dist # dist/ igual a um build novo (o CI exige)
+python -m pytest -q          # unitários (integração é pulada sem banco)
+ruff check .
 ```
+
+**CI** (`.github/workflows/ci.yml`, em todo PR): `build.py --check`,
+`build.py --check-dist`, `pytest`, `ruff`, `shellcheck` e `actionlint`.
+
+**Clientes reais:** a trava do `--check` lê os nomes do secret
+`CLIENTES_PROIBIDOS` (no CI) ou do arquivo local `.clientes-proibidos.txt`
+(fora do git). A lista não fica no código.
+
+**Integração** (`.github/workflows/integracao.yml`, manual): sobe o Oracle Free
+em container descartável, instala SQLcl e roda `tests/integracao/` — inclusive
+a migration que falha no meio, fica em `ERRO` e é retomada. Para rodar local:
+
+```bash
+docker run -d --name orafree -p 1521:1521 -e ORACLE_PWD=<senha> container-registry.oracle.com/database/free:latest-lite
+export ORACLE_TESTE_DSN=localhost:1521/FREEPDB1 ORACLE_TESTE_ADMIN_USER=system ORACLE_TESTE_ADMIN_PASS=<senha>
+export SQLCL_BIN=/caminho/do/sqlcl/bin/sql
+python -m pytest -q tests/integracao
+```
+
+Nunca aponte essas variáveis para um banco real.
+
+**Release:** `git tag vX.Y.Z && git push origin vX.Y.Z` dispara o
+`release.yml`, que roda o mesmo CI e só publica os `.skill` com tudo verde.
 
 ---
 
