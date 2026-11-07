@@ -122,3 +122,42 @@ def test_marketplace_divergente(build, tmp_path):
     mk.write_text('skills:\n  - name: "oracle-x-ptbr"\n    version: "0.1.0"\n')
     problemas = build.verificar_marketplace(mk)
     assert any("0.1.0" in p for p in problemas)
+
+
+# ─── dist/ versionado em dia ─────────────────────────────────────────────────
+
+def _dist(build, tmp_path, monkeypatch):
+    dist = tmp_path / "dist"
+    monkeypatch.setattr(build, "DIST", dist)
+    monkeypatch.setattr(build, "BUILD_TMP", tmp_path / ".build_tmp")
+    return dist
+
+
+def test_dist_em_dia_passa(build, tmp_path, monkeypatch):
+    _dist(build, tmp_path, monkeypatch)
+    d = _skill(tmp_path)
+    build.empacotar_skill(d)
+    build.gerar_checksums()
+    assert build.verificar_dist([d]) == []
+
+
+def test_dist_desatualizado_ou_ausente_ou_sobrando(build, tmp_path, monkeypatch):
+    dist = _dist(build, tmp_path, monkeypatch)
+    d = _skill(tmp_path)
+    build.empacotar_skill(d)
+    (dist / "oracle-velha-ptbr.skill").write_bytes(b"PK")          # sobra
+    build.gerar_checksums()
+    (d / "assets" / "a.sql").write_text("SELECT 2 FROM dual;\n")   # fonte mudou
+    problemas = build.verificar_dist([d])
+    assert any("desatualizado" in p for p in problemas)
+    assert any("oracle-velha-ptbr.skill" in p for p in problemas)
+    (dist / "oracle-x-ptbr.skill").unlink()
+    assert any("ausente" in p for p in build.verificar_dist([d]))
+
+
+def test_dist_checksum_divergente(build, tmp_path, monkeypatch):
+    dist = _dist(build, tmp_path, monkeypatch)
+    d = _skill(tmp_path)
+    build.empacotar_skill(d)
+    (dist / "checksums.sha256").write_text("0" * 64 + "  oracle-x-ptbr.skill\n")
+    assert any("checksums" in p for p in build.verificar_dist([d]))
