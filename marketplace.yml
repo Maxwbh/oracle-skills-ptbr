@@ -124,7 +124,7 @@ skills:
 
   - name: "oracle-devops-ptbr"
     display_name: "Oracle DevOps PT-BR"
-    version: "4.1.0"
+    version: "4.1.1"
     icon: "⚙️"
     category: "devops"
     description: "Git, CI/CD, changelog Oracle, deploy Python + oracledb Thin Mode"
