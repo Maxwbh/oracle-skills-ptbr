@@ -2,7 +2,7 @@
 name: oracle-tuning-ptbr
 description: Módulo de tuning da suíte Oracle PT-BR. Performance tuning Oracle 19c — explain plan, análise AWR/ASH de SQL, indexes, hints, bind variables, cursor sharing, DBMS_STATS, V$SQL, V$SQLAREA, V$SESSION_WAIT. ATIVE em query lenta, full scan indesejado, hard parse alto, index strategy, plano de execução ruim, estatísticas desatualizadas, cardinality errada, AWR snapshot, ASH amostragem. Frases — "query está lenta", "qual index criar", "melhorar explain plan", "muitos hard parse", "cursor sharing", "optimizer hint", "runstats". NÃO ATIVE em DBA operacional (sessões/locks/tablespace), código PL/SQL novo, APEX, ORDS. Templates em assets/.
 metadata:
-  version: "2.7.2"
+  version: "2.8.0"
   release_date: "2026-11-07"
   repository: "https://github.com/maxwbh/oracle-skills-ptbr"
   suite_size: 7
@@ -26,8 +26,8 @@ metadata:
 
 # Suíte Oracle PT-BR — Módulo Tuning (oracle-tuning-ptbr)
 
-> **Versão:** 2.7.2 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (7 recursos nesta skill)
-> **v2.7.2:** lista da suíte com APEX 26.2 como padrão. Histórico em `CHANGELOG.md`.
+> **Versão:** 2.8.0 · **Atualizada em:** novembro/2026 · **Repositório:** oracle-skills-ptbr · **Suíte:** 10 skills (7 recursos nesta skill)
+> **v2.8.0:** recursos de Enterprise Edition marcados (Diagnostics/Tuning Pack, parallel, online index rebuild, Result Cache, bitmap) e regra "edição antes de recomendar". Histórico em `CHANGELOG.md`.
 
 Suíte completa (10 skills — conjunto único):
 - **oracle-core-ptbr** — roteamento central, convenções transversais, cenários multidisciplinares
@@ -79,10 +79,11 @@ Performance tuning Oracle 19c — análise de planos de execução, índices e l
 - **Medir antes de otimizar.** Baseline com `SET TIMING ON` + `AUTOTRACE`. Sem medição, otimização é placebo.
 - **Bind variables primeiro.** Hard parse elevado em `V$SQLAREA` resolve antes de qualquer tuning de index.
 - **Index ≠ sempre melhor.** Full scan em tabela pequena ou query retornando > 10% das linhas geralmente vence B-Tree.
-- **AWR requer licença.** `DBA_HIST_*` e ASH → Diagnostics Pack obrigatório. Cheque o parâmetro `control_management_pack_access` em `V$PARAMETER` (`NONE`/`DIAGNOSTIC`/`DIAGNOSTIC+TUNING`) e o uso real em `DBA_FEATURE_USAGE_STATISTICS`.
+- **AWR requer licença.** `DBA_HIST_*` e ASH → Diagnostics Pack obrigatório (opção paga do Enterprise Edition; não existe no SE2). Cheque o parâmetro `control_management_pack_access` em `V$PARAMETER` (`NONE`/`DIAGNOSTIC`/`DIAGNOSTIC+TUNING`) e o uso real em `DBA_FEATURE_USAGE_STATISTICS`.
 - **Histogram nas colunas com skew.** Sem histogram, optimizer usa densidade plana → plano errado em distribuição assimétrica.
-- **CREATE INDEX ONLINE** em produção — sem `ONLINE`, bloqueia DML.
-- **Paralelismo é para volume, não OLTP.** Ajuda em full scans/joins grandes e ETL; atrapalha em lookups de poucas linhas e tabelas pequenas. Parallel DML está desabilitado por padrão — exige `ALTER SESSION ENABLE PARALLEL DML` (ou hint `ENABLE_PARALLEL_DML`), senão o DML roda serial mesmo com hint `PARALLEL`.
+- **CREATE INDEX ONLINE** em produção — sem `ONLINE`, bloqueia DML. Operações ONLINE de índice são de **Enterprise Edition** (a tabela de licenciamento lista "Online index rebuild" como EE); em SE2, crie/reconstrua o índice em janela de manutenção.
+- **Paralelismo é para volume, não OLTP.** Ajuda em full scans/joins grandes e ETL; atrapalha em lookups de poucas linhas e tabelas pequenas. Parallel DML está desabilitado por padrão — exige `ALTER SESSION ENABLE PARALLEL DML` (ou hint `ENABLE_PARALLEL_DML`), senão o DML roda serial mesmo com hint `PARALLEL`. Parallel query/DML são **só Enterprise Edition**.
+- **Edição antes de recomendar.** Em **SE2 não existem**: Diagnostics Pack e Tuning Pack (AWR, ASH, SQL Tuning Advisor, SQL Profiles — no EE são opções pagas, e o Tuning Pack exige o Diagnostics), parallel query/DML, online index rebuild, Result Cache (de query e de function PL/SQL) e índice bitmap. SQL Plan Management existe no SE2, limitado a uma baseline por instrução e sem evolução de plano. Quando a recomendação depender disso e a edição não estiver clara, pergunte (ou consulte `V$VERSION`) antes. Fonte: [Database Licensing Information 19c](https://docs.oracle.com/en/database/oracle/oracle-database/19/dblic/Licensing-Information.html), consultada em 07/11/2026.
 
 ## Referências cruzadas
 

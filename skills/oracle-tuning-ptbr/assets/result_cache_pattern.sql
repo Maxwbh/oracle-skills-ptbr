@@ -5,6 +5,11 @@
 -- query SQL em memória SGA compartilhada entre sessões. A segunda chamada com
 -- os mesmos parâmetros retorna em microssegundos, sem executar o corpo.
 --
+-- EDIÇÃO: Query Results Cache e PL/SQL Function Result Cache são só
+-- Enterprise Edition (Database Licensing Information 19c, consultado em
+-- 07/11/2026). Em SE2, cache de resultado fica na aplicação ou em coleção
+-- de package (por sessão).
+--
 -- Trade-off central: invalidação. O cache é DESCARTADO automaticamente quando:
 --   - Qualquer DML é feita em tabela "Result Cache dependente"
 --   - Estatísticas mudam (DBMS_STATS.gather_*)
