@@ -1,0 +1,85 @@
+# .github/workflows/ci.yml — verificação de cada PR (e de cada release)
+# M&S do Brasil LTDA — contato@msbrasil.inf.br
+#
+# Jobs (todos sem banco de dados):
+#   build     → python build.py --check (frontmatter, suite_size, CHANGELOG,
+#               marketplace, clientes reais)
+#   testes    → pytest (os testes de integração se pulam sem banco)
+#   lint      → ruff, shellcheck (*.sh) e actionlint (workflows do repo e os
+#               templates de workflow das skills)
+#
+# Também é chamado pelo release.yml (workflow_call): release só publica se
+# este CI passar.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+    secrets:
+      CLIENTES_PROIBIDOS:
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  ACTIONLINT_VERSION: "v1.7.7"
+
+jobs:
+  build:
+    name: build.py --check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Dependências
+        run: pip install -r requirements-dev.txt
+      - name: Verificar consistência das skills
+        env:
+          # Nomes de clientes extras, sem publicá-los no repositório (opcional).
+          CLIENTES_PROIBIDOS: ${{ secrets.CLIENTES_PROIBIDOS }}
+        run: python build.py --check
+
+  testes:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Dependências
+        run: pip install -r requirements-dev.txt
+      - name: Testes (unitários; integração é pulada sem ORACLE_TESTE_DSN)
+        run: python -m pytest -q -rs
+
+  lint:
+    name: ruff, shellcheck e actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Dependências
+        run: |
+          pip install -r requirements-dev.txt
+          go install "github.com/rhysd/actionlint/cmd/actionlint@${ACTIONLINT_VERSION}"
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: ruff
+        run: ruff check .
+      - name: shellcheck
+        run: git ls-files -z '*.sh' | xargs -0 -r shellcheck -S warning
+      - name: actionlint (workflows do repositório)
+        run: actionlint
+      - name: actionlint (templates de workflow das skills)
+        run: actionlint skills/oracle-devops-ptbr/assets/github-deploy.yml skills/oracle-devops-ptbr/assets/github-deploy-liquibase.yml
