@@ -5,9 +5,10 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
-## [Não lançado] — revisão 2026-11 (branch `revisao/2026-11`)
+## [4.0.0] — 2026-11-07
 
-> Versão da coleção a definir antes da tag.
+Revisão consolidada 2026-11 (Passo 0 + Fases 1–4). **Breaking:** DevOps exige SQLcl e muda o `db_changelog`; regras 3, 4 e 10 do PL/SQL mudam de sentido; contexts do Liquibase passam a `dev`/`hom`/`prod`.
+
 
 ### Passo 0 — sincronização da versão instalada → repo
 
@@ -55,7 +56,8 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 - `ci.yml` em todo PR (build, pytest, ruff, shellcheck, actionlint); `integracao.yml` manual com Oracle Free; `release.yml` só publica com o CI verde e gera a tabela de skills do `marketplace.yml`.
 - `requirements-dev.txt` e `pyproject.toml` (ruff) fixam as ferramentas.
 - oracle-devops-ptbr 4.1.0 → 4.1.1 (`export_db.py` com `DB_SCHEMA`; lint).
-- **Versão da coleção: a definir** (proposta no PR da Fase 4; `marketplace.yml` segue 3.1.0 até a decisão).
+- Versão da coleção **4.0.0** (`marketplace.yml`).
+- `dist/` com os pacotes `.skill` da 4.0.0 (instalação direta no Claude) e `build.py --check-dist` no CI para não deixar a pasta desatualizada.
 
 ---
 
