@@ -5,6 +5,21 @@ Formato: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [4.2.1] — 2026-11-07
+
+Revisão crítica do site e precisão da documentação.
+
+### Corrigido
+- **oracle-tuning-ptbr 2.7.2 → 2.8.0:** CREATE INDEX ONLINE, paralelismo e Result Cache eram recomendados sem dizer que são de Enterprise Edition; Diagnostics Pack descrito como opção paga do EE. Novo princípio "Edição antes de recomendar" (SE2 sem packs, parallel, online index rebuild, Result Cache e bitmap; SQL Plan Management no SE2 com uma baseline por instrução). Fonte: Database Licensing Information 19c (07/11/2026).
+- **Site (`docs/`):** menu some no celular → botão de menu acessível (`aria-expanded`, Esc fecha); contraste do texto secundário (`--muted` #64748b → #a3b1c6, links e botão primário com contraste AA); `:focus-visible`, link "pular para o conteúdo" e `prefers-reduced-motion`; semântica (`main`, `section`, `h2`/`h3`, listas, `nav` com rótulo); botão "Baixar todas as skills" levava à página de releases → "Ver downloads da versão mais recente"; `rel="noopener noreferrer"` nos links externos; `_config.yml` dizia 7 skills.
+
+### Adicionado
+- **Site:** "Qual skill usar" (problema → skill), busca e filtro por finalidade, links de documentação e histórico por skill, matriz de compatibilidade (padrão × mínimo × testado × condicional), exemplos de uso com o comportamento esperado de cada skill (não respostas gravadas), seções de atualização, dependências e verificação de integridade (`checksums.sha256`); URL canônica, Open Graph/Twitter com imagem social (`og-image.png`).
+- **oracle-core-ptbr 1.6.0 → 1.6.1:** precedência quando mais de uma skill se aplica.
+
+### Alterado
+- README e `marketplace.yml`: tuning sem "AWR/ASH em tempo real" (AWR histórico e ASH exigem Diagnostics Pack); DevOps com SQLcl obrigatório; APEX "26.2 padrão" explicado como padrão de geração, não versão do ambiente.
+
 ## [4.2.0] — 2026-11-07
 
 **APEX 26.2 passa a ser a versão padrão da suíte** e a skill APEX foi revisada contra as release notes da 26.2 (New Features, Changed Behavior, Deprecated e Desupported, consultadas em 07/11/2026).

@@ -4,48 +4,94 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Oracle Skills PT-BR — Skills Claude para Oracle</title>
-  <meta name="description" content="10 Skills Claude para toda a stack Oracle em português: roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis, DevOps, ambiente local e 26ai.">
-  <meta property="og:title" content="Oracle Skills PT-BR">
-  <meta property="og:description" content="10 Skills Claude para Oracle em português — M&S do Brasil LTDA">
-  <meta property="og:url" content="https://maxwbh.github.io/oracle-skills-ptbr">
+  <meta name="description" content="10 Skills Claude para a stack Oracle em português: roteamento central, PL/SQL, APEX, ORDS, DBA, Performance, Trivadis, DevOps, ambiente local e 26ai. Oracle Database 19c e APEX 26.2 como padrão.">
+  <link rel="canonical" href="https://maxwbh.github.io/oracle-skills-ptbr/">
+  <meta name="theme-color" content="#0a0e17">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Oracle Skills PT-BR">
+  <meta property="og:title" content="Oracle Skills PT-BR — Skills Claude para Oracle">
+  <meta property="og:description" content="10 Skills Claude para Oracle em português — Database 19c, APEX 26.2, ORDS, PL/SQL, DBA, tuning e DevOps. M&amp;S do Brasil LTDA.">
+  <meta property="og:url" content="https://maxwbh.github.io/oracle-skills-ptbr/">
+  <meta property="og:image" content="https://maxwbh.github.io/oracle-skills-ptbr/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Oracle Skills PT-BR: 10 skills Claude para a stack Oracle em português">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Oracle Skills PT-BR — Skills Claude para Oracle">
+  <meta name="twitter:description" content="10 Skills Claude para Oracle em português — Database 19c, APEX 26.2, ORDS, PL/SQL, DBA, tuning e DevOps.">
+  <meta name="twitter:image" content="https://maxwbh.github.io/oracle-skills-ptbr/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:        #0a0e17;
       --surface:   #111827;
+      --surface-2: #151f30;
       --border:    #1e2d42;
       --oracle:    #C74634;
-      --oracle-lt: #e05a42;
+      --oracle-lt: #f07a63;
       --gold:      #f59e0b;
       --cyan:      #22d3ee;
       --text:      #e2e8f0;
-      --muted:     #64748b;
+      --muted:     #a3b1c6;
       --tag-bg:    #1e2d42;
+      --focus:     #fbbf24;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'IBM Plex Sans', sans-serif;
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
       line-height: 1.6;
       min-height: 100vh;
     }
 
+    a { color: var(--oracle-lt); }
+    a:hover { color: var(--gold); }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0.5rem;
+      background: var(--focus);
+      color: #000;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      z-index: 200;
+      font-weight: 600;
+    }
+    .skip-link:focus { left: 0.5rem; }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
     /* ── Header ─────────────────────────────────── */
-    header {
+    .site-header {
       border-bottom: 1px solid var(--border);
-      padding: 1.25rem 2rem;
+      padding: 1rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 1rem;
       position: sticky;
       top: 0;
-      background: rgba(10,14,23,0.92);
+      background: rgba(10,14,23,0.95);
       backdrop-filter: blur(8px);
       z-index: 100;
+      flex-wrap: wrap;
     }
     .logo {
       display: flex;
@@ -64,7 +110,18 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 0.85rem;
     }
-    .nav-links { display: flex; gap: 1.5rem; }
+    .menu-toggle {
+      display: none;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      font: inherit;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; flex-wrap: wrap; }
     .nav-links a {
       color: var(--muted);
       text-decoration: none;
@@ -77,7 +134,7 @@
     .hero {
       max-width: 860px;
       margin: 0 auto;
-      padding: 6rem 2rem 4rem;
+      padding: 5rem 2rem 3.5rem;
       text-align: center;
     }
     .badge {
@@ -85,7 +142,7 @@
       align-items: center;
       gap: 0.4rem;
       background: rgba(199,70,52,0.12);
-      border: 1px solid rgba(199,70,52,0.3);
+      border: 1px solid rgba(199,70,52,0.35);
       color: var(--oracle-lt);
       padding: 0.3rem 0.85rem;
       border-radius: 100px;
@@ -100,11 +157,11 @@
       margin-bottom: 1.25rem;
       letter-spacing: -0.02em;
     }
-    h1 .accent { color: var(--oracle); }
+    h1 .accent { color: var(--oracle-lt); }
     .hero-sub {
       font-size: 1.1rem;
       color: var(--muted);
-      max-width: 580px;
+      max-width: 620px;
       margin: 0 auto 2.5rem;
     }
     .cta-row {
@@ -122,21 +179,14 @@
       font-size: 0.9rem;
       font-weight: 600;
       text-decoration: none;
-      transition: all .2s;
+      transition: background .2s, border-color .2s, transform .2s;
       cursor: pointer;
     }
-    .btn-primary {
-      background: var(--oracle);
-      color: #fff;
-      border: none;
-    }
-    .btn-primary:hover { background: var(--oracle-lt); transform: translateY(-1px); }
-    .btn-ghost {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-ghost:hover { border-color: var(--muted); transform: translateY(-1px); }
+    .btn-primary { background: #b33d2c; color: #fff; border: none; }
+    .btn-primary:hover { background: var(--oracle); color: #fff; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--muted); color: var(--text); transform: translateY(-1px); }
+    .hero-note { margin-top: 1rem; font-size: 0.85rem; color: var(--muted); }
 
     /* ── Stats bar ─────────────────────────────── */
     .stats {
@@ -148,27 +198,84 @@
       border-bottom: 1px solid var(--border);
       margin-bottom: 4rem;
       flex-wrap: wrap;
+      list-style: none;
     }
     .stat { text-align: center; }
     .stat-n {
       font-size: 2rem;
       font-weight: 700;
       font-family: 'IBM Plex Mono', monospace;
-      color: var(--oracle);
+      color: var(--oracle-lt);
       display: block;
     }
     .stat-l { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 
-    /* ── Skills grid ───────────────────────────── */
-    .section { max-width: 1100px; margin: 0 auto; padding: 0 2rem 5rem; }
+    /* ── Sections ──────────────────────────────── */
+    .section { max-width: 1100px; margin: 0 auto; padding: 0 2rem 4.5rem; }
     .section-title {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
       font-family: 'IBM Plex Mono', monospace;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: .12em;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.5rem;
     }
+    .section-lead { color: var(--muted); font-size: 0.95rem; margin-bottom: 1.5rem; max-width: 760px; }
+    .section-lead strong { color: var(--text); }
+
+    /* ── Tables ────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    caption { text-align: left; padding: 1rem 1.25rem 0; color: var(--muted); font-size: 0.85rem; }
+    th, td { text-align: left; vertical-align: top; padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); }
+    thead th { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+    tbody th { font-weight: 600; color: var(--text); white-space: nowrap; }
+    td { color: var(--muted); }
+    td strong { color: var(--text); }
+    .note { margin-top: 1rem; color: var(--muted); font-size: 0.85rem; max-width: 860px; }
+    .note strong { color: var(--text); }
+
+    /* ── Filters ───────────────────────────────── */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .filters input[type="search"] {
+      flex: 1 1 260px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      font: inherit;
+      font-size: 0.9rem;
+    }
+    .filters input::placeholder { color: var(--muted); opacity: 1; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 100px;
+      padding: 0.35rem 0.85rem;
+      font: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .chip[aria-pressed="true"] { background: var(--tag-bg); color: var(--text); border-color: var(--muted); }
+    .filter-status { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; }
+
+    /* ── Skills grid ───────────────────────────── */
     .skills-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -177,6 +284,7 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
+      list-style: none;
     }
     .skill-card {
       background: var(--surface);
@@ -186,8 +294,9 @@
       gap: 0.75rem;
       transition: background .2s;
     }
-    .skill-card:hover { background: #151f30; }
-    .skill-header { display: flex; align-items: flex-start; justify-content: space-between; }
+    .skill-card[hidden] { display: none; }
+    .skill-card:hover { background: var(--surface-2); }
+    .skill-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
     .skill-icon {
       font-size: 1.5rem;
       width: 42px; height: 42px;
@@ -195,7 +304,8 @@
       border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
     }
-    .skill-version {
+    .skill-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; }
+    .skill-version, .skill-group {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.72rem;
       color: var(--muted);
@@ -203,14 +313,11 @@
       padding: 0.2rem 0.5rem;
       border-radius: 4px;
     }
-    .skill-name {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.82rem;
-      color: var(--cyan);
-    }
-    .skill-title { font-size: 1rem; font-weight: 600; }
-    .skill-desc { font-size: 0.85rem; color: var(--muted); flex: 1; }
-    .skill-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .skill-name { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: var(--cyan); }
+    .skill-title { font-size: 1.05rem; font-weight: 600; }
+    .skill-desc { font-size: 0.875rem; color: var(--muted); flex: 1; }
+    .skill-desc strong { color: var(--text); font-weight: 600; }
+    .skill-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; list-style: none; }
     .tag {
       background: var(--tag-bg);
       color: var(--muted);
@@ -219,18 +326,35 @@
       padding: 0.18rem 0.45rem;
       border-radius: 4px;
     }
-    .skill-dl {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.8rem;
+    .skill-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin-top: 0.25rem; }
+    .skill-links a {
+      font-size: 0.82rem;
       color: var(--oracle-lt);
       text-decoration: none;
-      margin-top: 0.25rem;
       font-weight: 600;
-      transition: color .2s;
     }
-    .skill-dl:hover { color: var(--gold); }
+    .skill-links a:hover { color: var(--gold); text-decoration: underline; }
+
+    /* ── Examples ──────────────────────────────── */
+    .examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+    .example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .example-skill { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--cyan); text-transform: uppercase; letter-spacing: .06em; }
+    .example h3 { font-size: 1rem; margin: 0.35rem 0 0.75rem; }
+    .example blockquote {
+      border-left: 3px solid var(--oracle);
+      padding: 0.25rem 0 0.25rem 0.85rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      margin-bottom: 0.85rem;
+    }
+    .example p.label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 0.35rem; }
+    .example ul { padding-left: 1.1rem; color: var(--muted); font-size: 0.875rem; }
+    .example li + li { margin-top: 0.25rem; }
 
     /* ── Install section ───────────────────────── */
     .install-box {
@@ -238,39 +362,54 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 2rem;
-      margin-bottom: 4rem;
+      margin-bottom: 1.5rem;
     }
     .install-box h3 {
       font-size: 1rem;
       margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
     }
-    .steps { display: flex; flex-direction: column; gap: 0.75rem; }
-    .step {
+    .steps { display: flex; flex-direction: column; gap: 0.75rem; list-style: none; counter-reset: passo; }
+    .steps li {
       display: flex;
       align-items: flex-start;
       gap: 0.85rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+      counter-increment: passo;
     }
-    .step-n {
+    .steps li::before {
+      content: counter(passo);
       width: 24px; height: 24px;
-      background: var(--oracle);
+      background: #b33d2c;
+      color: #fff;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 0.75rem;
       font-weight: 700;
       flex-shrink: 0;
+      margin-top: 1px;
     }
-    .step-text { font-size: 0.9rem; color: var(--muted); padding-top: 1px; }
-    .step-text strong { color: var(--text); }
+    .steps strong, .install-box li strong { color: var(--text); }
+    .install-box ul.plain { padding-left: 1.1rem; color: var(--muted); font-size: 0.9rem; }
+    .install-box ul.plain li + li { margin-top: 0.4rem; }
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
     code {
       font-family: 'IBM Plex Mono', monospace;
       background: var(--tag-bg);
       padding: 0.1rem 0.35rem;
       border-radius: 3px;
       font-size: 0.85em;
+      color: var(--text);
     }
+    pre code { background: none; padding: 0; }
 
     /* ── Footer ────────────────────────────────── */
     footer {
@@ -278,10 +417,10 @@
       padding: 2.5rem 2rem;
       text-align: center;
       color: var(--muted);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
     }
     footer a { color: var(--muted); text-decoration: none; transition: color .2s; }
-    footer a:hover { color: var(--text); }
+    footer a:hover { color: var(--text); text-decoration: underline; }
     .footer-inner {
       max-width: 860px;
       margin: 0 auto;
@@ -291,310 +430,577 @@
       flex-wrap: wrap;
       gap: 1rem;
     }
-    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; list-style: none; }
 
-    @media (max-width: 600px) {
-      .nav-links { display: none; }
-      .stats { gap: 1.5rem; }
+    @media (max-width: 720px) {
+      .site-header { padding: 0.85rem 1rem; }
+      .js .menu-toggle { display: inline-flex; }
+      .js .nav-links { display: none; }
+      .js .nav-links.open { display: flex; }
+      .site-header nav { width: 100%; }
+      .nav-links { width: 100%; flex-direction: column; gap: 0; }
+      .nav-links a { display: block; padding: 0.7rem 0.25rem; border-top: 1px solid var(--border); font-size: 0.95rem; }
+      .hero { padding: 3.5rem 1rem 2.5rem; }
+      .section { padding: 0 1rem 3.5rem; }
+      .stats { gap: 1.5rem; padding: 1.5rem 1rem; }
+      .skills-grid, .examples { grid-template-columns: 1fr; }
+      .install-box { padding: 1.25rem; }
+      th, td { padding: 0.6rem 0.75rem; }
       .footer-inner { flex-direction: column; text-align: center; }
+      .matriz caption { display: block; width: 100%; padding: 1rem 1rem 0.5rem; }
+      .matriz thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+      .matriz, .matriz tbody, .matriz tr, .matriz th, .matriz td { display: block; width: 100%; }
+      .matriz tr { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+      .matriz tbody tr:last-child { border-bottom: none; }
+      .matriz th, .matriz td { border: none; padding: 0.2rem 0; white-space: normal; }
+      .matriz tbody th { font-size: 1rem; padding-bottom: 0.4rem; }
+      .matriz td::before { content: attr(data-label) ": "; color: var(--text); font-weight: 600; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+      .btn:hover { transform: none; }
     }
   </style>
 </head>
 <body>
+<script>document.documentElement.className = 'js';</script>
 
-<header>
-  <a class="logo" href="#">
-    <span>🗄️</span>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="site-header">
+  <a class="logo" href="#topo" aria-label="oracle-skills-ptbr — início">
+    <span aria-hidden="true">🗄️</span>
     oracle-skills-ptbr
   </a>
-  <nav class="nav-links">
-    <a href="#skills">Skills</a>
-    <a href="#install">Instalar</a>
-    <a href="https://github.com/maxwbh/oracle-skills-ptbr" target="_blank">GitHub</a>
-    <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest" target="_blank">Releases</a>
+  <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-principal">
+    ☰ Menu
+  </button>
+  <nav aria-label="Principal">
+    <ul class="nav-links" id="menu-principal">
+      <li><a href="#escolher">Qual usar</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#compatibilidade">Compatibilidade</a></li>
+      <li><a href="#exemplos">Exemplos</a></li>
+      <li><a href="#instalar">Instalar</a></li>
+      <li><a href="https://github.com/maxwbh/oracle-skills-ptbr" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      <li><a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest" target="_blank" rel="noopener noreferrer">Releases</a></li>
+    </ul>
   </nav>
 </header>
 
-<section class="hero">
-  <div class="badge">⚡ Skills Claude · Stack Oracle Completa</div>
-  <h1>Oracle em Português<br>para o <span class="accent">Claude</span></h1>
+<main id="conteudo" tabindex="-1">
+
+<section class="hero" id="topo" aria-labelledby="titulo-principal">
+  <p class="badge">⚡ Coleção v4.2.1 · 10 skills Claude</p>
+  <h1 id="titulo-principal">Oracle em Português<br>para o <span class="accent">Claude</span></h1>
   <p class="hero-sub">
-    10 Skills especializadas cobrindo toda a stack Oracle — roteamento central, PL/SQL, APEX, ORDS,
-    DBA, Performance, Trivadis Guidelines, DevOps com Python, ambiente local e novidades 26ai.
+    10 skills especializadas para a stack Oracle: roteamento central, PL/SQL, APEX, ORDS,
+    DBA, performance, Trivadis Guidelines, DevOps com SQLcl e Python, ambiente local e novidades 23ai/26ai.
   </p>
   <div class="cta-row">
     <a class="btn btn-primary"
        href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest"
-       target="_blank">
-      ⬇ Baixar todas as skills
+       target="_blank" rel="noopener noreferrer">
+      ⬇ Ver downloads da versão mais recente
     </a>
+    <a class="btn btn-ghost" href="#escolher">Qual skill usar?</a>
     <a class="btn btn-ghost"
        href="https://github.com/maxwbh/oracle-skills-ptbr"
-       target="_blank">
-      ☆ Ver no GitHub
+       target="_blank" rel="noopener noreferrer">
+      Ver no GitHub
     </a>
+  </div>
+  <p class="hero-note">
+    A página de releases lista um arquivo <code>.skill</code> por skill e o <code>checksums.sha256</code>.
+    Histórico em <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">CHANGELOG.md</a>.
+  </p>
+</section>
+
+<ul class="stats" aria-label="Resumo da coleção">
+  <li class="stat"><span class="stat-n">10</span><span class="stat-l">Skills</span></li>
+  <li class="stat"><span class="stat-n">pt-BR</span><span class="stat-l">Idioma</span></li>
+  <li class="stat"><span class="stat-n">19c</span><span class="stat-l">Oracle DB padrão</span></li>
+  <li class="stat"><span class="stat-n">26.2</span><span class="stat-l">APEX padrão</span></li>
+  <li class="stat"><span class="stat-n">MIT</span><span class="stat-l">Licença</span></li>
+</ul>
+
+<!-- ── Qual skill usar ─────────────────────────────── -->
+<section class="section" id="escolher" aria-labelledby="titulo-escolher">
+  <h2 class="section-title" id="titulo-escolher">// qual skill usar</h2>
+  <p class="section-lead">
+    Com todas instaladas, o Claude escolhe sozinho pela descrição de cada skill; a
+    <strong>oracle-core-ptbr</strong> faz o roteamento quando a dúvida mistura áreas.
+    A tabela abaixo é o mesmo roteamento, para você saber o que esperar.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <caption>Problema → skill que responde</caption>
+      <thead>
+        <tr><th scope="col">Você precisa de</th><th scope="col">Skill</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Criar ou refatorar package, procedure, trigger, BULK COLLECT, LOB, EBR</td><td><strong>oracle-plsql-ptbr</strong></td></tr>
+        <tr><td>Revisar nomenclatura e prefixos, checklist antes da GMUD</td><td><strong>oracle-trivadis-ptbr</strong></td></tr>
+        <tr><td>Página APEX, Dynamic Action, Interactive Grid, views <code>APEX_*</code></td><td><strong>oracle-apex-ptbr</strong></td></tr>
+        <tr><td>Endpoint REST, OAuth, AutoREST, Network ACL (ORA-24247)</td><td><strong>oracle-ords-ptbr</strong></td></tr>
+        <tr><td>Sessão travada, lock, flashback, tablespace, licença de packs</td><td><strong>oracle-dba-ptbr</strong></td></tr>
+        <tr><td>Query lenta, plano de execução, índice, estatísticas</td><td><strong>oracle-tuning-ptbr</strong></td></tr>
+        <tr><td>Projeto no Git, pipeline, changelog, deploy por ambiente</td><td><strong>oracle-devops-ptbr</strong></td></tr>
+        <tr><td>Instalar Oracle, APEX e ORDS na própria máquina</td><td><strong>oracle-lab-ptbr</strong></td></tr>
+        <tr><td>Banco 23ai/26ai declarado, migração 19c → 26ai</td><td><strong>oracle-26ai-ptbr</strong></td></tr>
+        <tr><td>Dúvida que cruza áreas, convenções do projeto</td><td><strong>oracle-core-ptbr</strong></td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
-<div class="stats">
-  <div class="stat">
-    <span class="stat-n">10</span>
-    <span class="stat-l">Skills</span>
+<!-- ── Skills ──────────────────────────────────────── -->
+<section class="section" id="skills" aria-labelledby="titulo-skills">
+  <h2 class="section-title" id="titulo-skills">// skills disponíveis</h2>
+  <p class="section-lead">Cada card leva ao pacote, à documentação (SKILL.md, referências e templates) e ao histórico da skill.</p>
+
+  <div class="filters" role="search">
+    <label class="sr-only" for="busca">Buscar skill</label>
+    <input type="search" id="busca" placeholder="Buscar: apex, lock, pipeline, explain plan…" autocomplete="off">
+    <div class="chip-row" role="group" aria-label="Filtrar por finalidade">
+      <button type="button" class="chip" data-grupo="todas" aria-pressed="true">Todas</button>
+      <button type="button" class="chip" data-grupo="base" aria-pressed="false">Base</button>
+      <button type="button" class="chip" data-grupo="desenvolvimento" aria-pressed="false">Desenvolvimento</button>
+      <button type="button" class="chip" data-grupo="operacao" aria-pressed="false">Operação</button>
+      <button type="button" class="chip" data-grupo="ambiente" aria-pressed="false">Ambiente e versões</button>
+    </div>
   </div>
-  <div class="stat">
-    <span class="stat-n">pt-BR</span>
-    <span class="stat-l">Idioma</span>
+  <p class="filter-status" id="filtro-status" aria-live="polite"></p>
+
+  <ul class="skills-grid" id="lista-skills">
+
+    <li class="skill-card" data-grupo="base" data-busca="core roteamento convenções gmud qual skill padrão projeto precedência">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">🧭</div>
+        <div class="skill-meta"><span class="skill-version">v1.6.1</span><span class="skill-group">Base</span></div>
+      </div>
+      <p class="skill-name">oracle-core-ptbr</p>
+      <h3 class="skill-title">Oracle Core</h3>
+      <p class="skill-desc">Assistente central: roteamento entre os módulos, <strong>precedência</strong> quando duas skills se aplicam (versão declarada &gt; padrão da suíte; naming pela Trivadis; licença e segurança primeiro) e convenções transversais (naming PT-BR + Trivadis, SQL antes de PL/SQL, APEX não comita, GMUD).</p>
+      <ul class="skill-tags"><li class="tag">roteamento</li><li class="tag">convenções</li><li class="tag">gmud</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-core-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-core-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-core-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="desenvolvimento" data-busca="plsql pl/sql package procedure function lob clob blob ebr trigger bulk collect forall logger">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">🗄️</div>
+        <div class="skill-meta"><span class="skill-version">v3.0.3</span><span class="skill-group">Desenvolvimento</span></div>
+      </div>
+      <p class="skill-name">oracle-plsql-ptbr</p>
+      <h3 class="skill-title">Oracle PL/SQL</h3>
+      <p class="skill-desc">PL/SQL 19c: packages, procedures, functions, LOBs, triggers, EBR e Trivadis 4.4, com templates SQL prontos. Rotina reutilizável não comita (SAVEPOINT + ROLLBACK TO + RAISE).</p>
+      <ul class="skill-tags"><li class="tag">plsql</li><li class="tag">packages</li><li class="tag">lob</li><li class="tag">ebr</li><li class="tag">trivadis</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-plsql-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-plsql-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-plsql-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="desenvolvimento" data-busca="apex dynamic action interactive report grid ig ir page process workflow apexlang universal theme ai json sources">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">⚡</div>
+        <div class="skill-meta"><span class="skill-version">v2.7.0</span><span class="skill-group">Desenvolvimento</span></div>
+      </div>
+      <p class="skill-name">oracle-apex-ptbr</p>
+      <h3 class="skill-title">Oracle APEX</h3>
+      <p class="skill-desc">Padrões de desenvolvimento e Data Dictionary (<code>APEX_APPLICATION_*</code>, Workflows, IA, JSON Sources). Gera código para <strong>APEX 26.2 quando você não informa a versão</strong> — isso não é a versão do seu ambiente: diga "estou no 24.2" e o código sai para 24.2. Para instância existente, pede a versão com patch set.</p>
+      <ul class="skill-tags"><li class="tag">apex</li><li class="tag">interactive-grid</li><li class="tag">workflow</li><li class="tag">apexlang</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-apex-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-apex-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-apex-ptbr/references/apex-version-matrix-ptbr.md" target="_blank" rel="noopener noreferrer">Matriz de versões</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-apex-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="desenvolvimento" data-busca="ords rest api oauth autorest jwt endpoint handler module network acl ords_security">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">🌐</div>
+        <div class="skill-meta"><span class="skill-version">v2.5.2</span><span class="skill-group">Desenvolvimento</span></div>
+      </div>
+      <p class="skill-name">oracle-ords-ptbr</p>
+      <h3 class="skill-title">Oracle ORDS</h3>
+      <p class="skill-desc">REST services, OAuth, AutoREST, JWT e Data Dictionary (<code>USER_ORDS_*</code> / <code>DBA_ORDS_*</code>). Alerta de depreciação OAUTH → ORDS_SECURITY e Network ACL.</p>
+      <ul class="skill-tags"><li class="tag">ords</li><li class="tag">rest-api</li><li class="tag">oauth</li><li class="tag">jwt</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-ords-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-ords-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-ords-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="operacao" data-busca="dba sessão lock bloqueio kill flashback rac tablespace awr diagnostics pack se2 ee licença inválidos">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">🛡️</div>
+        <div class="skill-meta"><span class="skill-version">v2.4.2</span><span class="skill-group">Operação</span></div>
+      </div>
+      <p class="skill-name">oracle-dba-ptbr</p>
+      <h3 class="skill-title">Oracle DBA</h3>
+      <p class="skill-desc">DBA operacional 19c e Data Dictionary (V$, GV$, DBA_*, CDB_*): sessões, locks, flashback, RAC, tablespace, SE2 × EE e licença do Diagnostics Pack antes de usar AWR/ASH.</p>
+      <ul class="skill-tags"><li class="tag">dba</li><li class="tag">rac</li><li class="tag">flashback</li><li class="tag">licença</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-dba-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-dba-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-dba-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="operacao" data-busca="tuning performance query lenta explain plan dbms_xplan índice index estatísticas dbms_stats hint awr ash hard parse">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">🚀</div>
+        <div class="skill-meta"><span class="skill-version">v2.8.0</span><span class="skill-group">Operação</span></div>
+      </div>
+      <p class="skill-name">oracle-tuning-ptbr</p>
+      <h3 class="skill-title">Oracle Tuning</h3>
+      <p class="skill-desc">Plano de execução (<code>DBMS_XPLAN</code>), estado atual em <code>V$SQL</code>/<code>V$SESSION</code>, índices, <code>DBMS_STATS</code> e hints. Histórico em AWR (<code>DBA_HIST_*</code>) e amostras de ASH <strong>exigem Diagnostics Pack</strong> (licença à parte do EE): a skill confere <code>control_management_pack_access</code> antes.</p>
+      <ul class="skill-tags"><li class="tag">tuning</li><li class="tag">explain-plan</li><li class="tag">indexes</li><li class="tag">dbms_stats</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-tuning-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-tuning-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-tuning-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="base" data-busca="trivadis naming prefixo nomenclatura code review revisão checklist gmud dblinter">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">📐</div>
+        <div class="skill-meta"><span class="skill-version">v2.4.3</span><span class="skill-group">Base</span></div>
+      </div>
+      <p class="skill-name">oracle-trivadis-ptbr</p>
+      <h3 class="skill-title">Trivadis Guidelines</h3>
+      <p class="skill-desc">Trivadis PL/SQL &amp; SQL Guidelines 4.4: prefixos, naming PT-BR, revisão de código e checklist pré-deploy/GMUD. As outras skills já aplicam o padrão; esta é para revisão explícita.</p>
+      <ul class="skill-tags"><li class="tag">trivadis</li><li class="tag">naming</li><li class="tag">code-review</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-trivadis-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-trivadis-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-trivadis-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="operacao" data-busca="devops git ci cd pipeline github actions azure liquibase changelog deploy sqlcl python oracledb codescan gmud export apex">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">⚙️</div>
+        <div class="skill-meta"><span class="skill-version">v4.1.3</span><span class="skill-group">Operação</span></div>
+      </div>
+      <p class="skill-name">oracle-devops-ptbr</p>
+      <h3 class="skill-title">Oracle DevOps</h3>
+      <p class="skill-desc">Estrutura Git, changelog versionado, Liquibase, GitHub Actions (Environments dev/hom/prod) e Azure Pipelines. Os scripts de deploy <strong>exigem SQLcl</strong> (executa os .sql e checa <code>ALL_ERRORS</code>) e Python 3 com <code>oracledb</code> Thin (controle). Prod fora de terminal exige <code>--confirmar-prod</code>.</p>
+      <ul class="skill-tags"><li class="tag">devops</li><li class="tag">sqlcl</li><li class="tag">liquibase</li><li class="tag">python</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-devops-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-devops-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-devops-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="ambiente" data-busca="lab instalar vagrant virtualbox container docker free apex ords local ora-12541 ora-12514 ora-01017">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">🧪</div>
+        <div class="skill-meta"><span class="skill-version">v1.2.1</span><span class="skill-group">Ambiente e versões</span></div>
+      </div>
+      <p class="skill-name">oracle-lab-ptbr</p>
+      <h3 class="skill-title">Oracle Lab</h3>
+      <p class="skill-desc">Ambiente local para desenvolvedor: Vagrant + VirtualBox, container Free, APEX/ORDS locais e troubleshooting de conexão. Não é para banco de cliente ou produção.</p>
+      <ul class="skill-tags"><li class="tag">lab</li><li class="tag">vagrant</li><li class="tag">container</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-lab-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-lab-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-lab-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+    <li class="skill-card" data-grupo="ambiente" data-busca="26ai 23ai migração upgrade boolean domains assertions if not exists 19.28 qualify">
+      <div class="skill-header">
+        <div class="skill-icon" aria-hidden="true">🆕</div>
+        <div class="skill-meta"><span class="skill-version">v1.1.2</span><span class="skill-group">Ambiente e versões</span></div>
+      </div>
+      <p class="skill-name">oracle-26ai-ptbr</p>
+      <h3 class="skill-title">Oracle 23ai/26ai</h3>
+      <p class="skill-desc">Novidades de SQL/PL/SQL 23ai/26ai e checklist de código da migração 19c → 26ai. Só atua com a versão 23ai/26ai declarada; o resto da suíte é 19c.</p>
+      <ul class="skill-tags"><li class="tag">26ai</li><li class="tag">migração</li><li class="tag">sql</li></ul>
+      <div class="skill-links">
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-26ai-ptbr.skill">⬇ .skill</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-26ai-ptbr/SKILL.md" target="_blank" rel="noopener noreferrer">Documentação</a>
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-26ai-ptbr/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Histórico</a>
+      </div>
+    </li>
+
+  </ul>
+</section>
+
+<!-- ── Compatibilidade ─────────────────────────────── -->
+<section class="section" id="compatibilidade" aria-labelledby="titulo-compat">
+  <h2 class="section-title" id="titulo-compat">// compatibilidade</h2>
+  <p class="section-lead">
+    <strong>Padrão</strong> é a versão para a qual o código sai quando você não informa outra.
+    <strong>Mínimo</strong> é a menor versão que as skills tratam. <strong>Testado</strong> diz o que
+    foi executado de fato — o resto é revisão contra a documentação oficial, não garantia de
+    funcionamento em qualquer combinação.
+  </p>
+  <div class="table-wrap">
+    <table class="matriz">
+      <caption>Matriz da coleção v4.2.1 (revisada em 07/11/2026)</caption>
+      <thead>
+        <tr>
+          <th scope="col">Tecnologia</th>
+          <th scope="col">Padrão</th>
+          <th scope="col">Mínimo</th>
+          <th scope="col">Testado</th>
+          <th scope="col">Condicional</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Oracle Database</th>
+          <td data-label="Padrão"><strong>19c</strong></td>
+          <td data-label="Mínimo">19c (o APEX 26.x pede RU 19.18+)</td>
+          <td data-label="Testado">Scripts DevOps: teste de integração em Oracle AI Database 26ai Free (container, disparo manual). 19c não roda no CI.</td>
+          <td data-label="Condicional">Sintaxe 23ai/26ai só com versão declarada (<code>oracle-26ai-ptbr</code>)</td>
+        </tr>
+        <tr>
+          <th scope="row">Oracle APEX</th>
+          <td data-label="Padrão"><strong>26.2</strong></td>
+          <td data-label="Mínimo">24.2, no patch set mais recente</td>
+          <td data-label="Testado">Sem teste automatizado de APEX. APEX 26.2 em 26ai Free 23.26.3 verificado manualmente na v4.1.0.</td>
+          <td data-label="Condicional">Session state BOOLEAN e Deep Data Security exigem banco 26ai</td>
+        </tr>
+        <tr>
+          <th scope="row">Oracle ORDS</th>
+          <td data-label="Padrão"><strong>26.3+</strong> (exigido pelo APEX 26.2)</td>
+          <td data-label="Mínimo">26.1.1 com APEX 26.1</td>
+          <td data-label="Testado">ORDS 26.3.1 no mesmo teste manual da v4.1.0</td>
+          <td data-label="Condicional">REST Workshop do APEX removido na 26.2 → SQL Developer Web</td>
+        </tr>
+        <tr>
+          <th scope="row">SQLcl</th>
+          <td data-label="Padrão"><strong>26.3+</strong></td>
+          <td data-label="Mínimo">Obrigatório nos scripts DevOps 4.x</td>
+          <td data-label="Testado">Instalado e usado no teste de integração</td>
+          <td data-label="Condicional">CodeScan de APEXlang (<code>.apx</code>) só a partir do 26.3.0</td>
+        </tr>
+        <tr>
+          <th scope="row">Python / oracledb</th>
+          <td data-label="Padrão">Python 3, <code>oracledb</code> Thin</td>
+          <td data-label="Mínimo"><code>oracledb</code> 2.0</td>
+          <td data-label="Testado">Testes unitários (pytest) em todo PR</td>
+          <td data-label="Condicional">Sem Oracle Client (modo Thin)</td>
+        </tr>
+        <tr>
+          <th scope="row">Trivadis</th>
+          <td data-label="Padrão"><strong>Guidelines 4.4</strong></td>
+          <td data-label="Mínimo">—</td>
+          <td data-label="Testado">—</td>
+          <td data-label="Condicional">Versão final; catálogo vivo é o dbLinter</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-  <div class="stat">
-    <span class="stat-n">19c</span>
-    <span class="stat-l">Oracle DB</span>
-  </div>
-  <div class="stat">
-    <span class="stat-n">26.2</span>
-    <span class="stat-l">APEX</span>
-  </div>
-  <div class="stat">
-    <span class="stat-n">MIT</span>
-    <span class="stat-l">Licença</span>
-  </div>
-</div>
+  <p class="note">
+    <strong>APEX:</strong> "padrão 26.2" vale para a geração de código, não descreve o seu ambiente.
+    Informe a versão instalada (ex.: "estou no 24.2.22") para receber código daquela versão.
+    Detalhe por recurso na <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/skills/oracle-apex-ptbr/references/apex-version-matrix-ptbr.md" target="_blank" rel="noopener noreferrer">matriz de versões do APEX</a>.
+    Datas de fim de suporte do APEX estão marcadas como <strong>a verificar</strong>.
+  </p>
+</section>
 
-<div class="section" id="skills">
-  <div class="section-title">// skills disponíveis</div>
-  <div class="skills-grid">
+<!-- ── Exemplos ────────────────────────────────────── -->
+<section class="section" id="exemplos" aria-labelledby="titulo-exemplos">
+  <h2 class="section-title" id="titulo-exemplos">// exemplos de uso</h2>
+  <p class="section-lead">
+    Pedidos típicos e o que cada skill está instruída a entregar. Os itens vêm das regras
+    escritas no SKILL.md de cada uma — <strong>não são respostas gravadas</strong>; a resposta real
+    depende do seu código e do contexto.
+  </p>
+  <div class="examples">
 
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">🧭</div>
-        <span class="skill-version">v1.6.0</span>
-      </div>
-      <div class="skill-name">oracle-core-ptbr</div>
-      <div class="skill-title">Oracle Core</div>
-      <div class="skill-desc">Assistente central: roteamento entre os módulos, convenções transversais (naming PT-BR + Trivadis, SQL antes de PL/SQL, APEX não comita, GMUD).</div>
-      <div class="skill-tags">
-        <span class="tag">roteamento</span><span class="tag">convenções</span><span class="tag">gmud</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-core-ptbr.skill">
-        ⬇ oracle-core-ptbr.skill
-      </a>
-    </div>
+    <article class="example">
+      <p class="example-skill">oracle-tuning-ptbr</p>
+      <h3>Query lenta sem recurso pago</h3>
+      <blockquote>"Analise o plano desta consulta no 19c, aponte os gargalos e recomende melhorias. Não tenho Diagnostics Pack."</blockquote>
+      <p class="label">A skill deve</p>
+      <ul>
+        <li>medir antes de otimizar: tempo e plano real do cursor (<code>DBMS_XPLAN.DISPLAY_CURSOR</code>);</li>
+        <li>olhar bind variables e hard parse antes de propor índice;</li>
+        <li>checar estatísticas e histogramas quando a cardinalidade estimada destoa da real;</li>
+        <li>não usar AWR/ASH: sem Diagnostics Pack, fica em <code>V$SQL</code> e <code>V$SESSION</code>.</li>
+      </ul>
+    </article>
 
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">🗄️</div>
-        <span class="skill-version">v3.0.3</span>
-      </div>
-      <div class="skill-name">oracle-plsql-ptbr</div>
-      <div class="skill-title">Oracle PL/SQL</div>
-      <div class="skill-desc">Packages, procedures, functions, LOBs, EBR e Trivadis 4.4. 9 templates SQL prontos.</div>
-      <div class="skill-tags">
-        <span class="tag">plsql</span><span class="tag">packages</span>
-        <span class="tag">lob</span><span class="tag">ebr</span>
-        <span class="tag">trivadis</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-plsql-ptbr.skill">
-        ⬇ oracle-plsql-ptbr.skill
-      </a>
-    </div>
+    <article class="example">
+      <p class="example-skill">oracle-apex-ptbr</p>
+      <h3>Código APEX sem versão informada</h3>
+      <blockquote>"Crie um processo que bloqueie a aplicação antes do deploy e libere depois."</blockquote>
+      <p class="label">A skill deve</p>
+      <ul>
+        <li>avisar em uma linha que considerou APEX 26.2;</li>
+        <li>usar <code>APEX_APPLICATION_ADMIN.LOCK_APPLICATION</code> / <code>UNLOCK_APPLICATION</code> (novas no 26.2);</li>
+        <li>dar a alternativa para 24.2/26.1, onde essas APIs não existem;</li>
+        <li>não fazer COMMIT dentro do processo APEX.</li>
+      </ul>
+    </article>
 
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">⚡</div>
-        <span class="skill-version">v2.7.0</span>
-      </div>
-      <div class="skill-name">oracle-apex-ptbr</div>
-      <div class="skill-title">Oracle APEX</div>
-      <div class="skill-desc">APEX 26.2 como padrão (compatível com 24.2+): development patterns e Data Dictionary completo (APEX_APPLICATION_*, APEX_WORKSPACE_*, Workflows, AI, JSON Sources).</div>
-      <div class="skill-tags">
-        <span class="tag">apex</span><span class="tag">interactive-report</span>
-        <span class="tag">workflow</span><span class="tag">dynamic-action</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-apex-ptbr.skill">
-        ⬇ oracle-apex-ptbr.skill
-      </a>
-    </div>
+    <article class="example">
+      <p class="example-skill">oracle-dba-ptbr</p>
+      <h3>Sessão travada em produção</h3>
+      <blockquote>"Tem uma sessão bloqueando o fechamento. Quem é e posso matar?"</blockquote>
+      <p class="label">A skill deve</p>
+      <ul>
+        <li>montar a árvore de bloqueio (em RAC, com <code>GV$SESSION</code> e <code>INST_ID</code>);</li>
+        <li>identificar módulo e usuário da sessão bloqueadora;</li>
+        <li>pedir confirmação antes do <code>KILL SESSION</code> e explicar o rollback que ele causa.</li>
+      </ul>
+    </article>
 
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">🌐</div>
-        <span class="skill-version">v2.5.2</span>
-      </div>
-      <div class="skill-name">oracle-ords-ptbr</div>
-      <div class="skill-title">Oracle ORDS</div>
-      <div class="skill-desc">REST services, OAuth, AutoREST, JWT e Data Dictionary (USER_ORDS_* / DBA_ORDS_*). Alerta de depreciação OAUTH→ORDS_SECURITY.</div>
-      <div class="skill-tags">
-        <span class="tag">ords</span><span class="tag">rest-api</span>
-        <span class="tag">oauth</span><span class="tag">jwt</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-ords-ptbr.skill">
-        ⬇ oracle-ords-ptbr.skill
-      </a>
-    </div>
-
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">🛡️</div>
-        <span class="skill-version">v2.4.2</span>
-      </div>
-      <div class="skill-name">oracle-dba-ptbr</div>
-      <div class="skill-title">Oracle DBA</div>
-      <div class="skill-desc">DBA operacional e Data Dictionary (V$, GV$, DBA_*, CDB_*). Sessões, locks, flashback, RAC, AWR, SE2 vs EE.</div>
-      <div class="skill-tags">
-        <span class="tag">dba</span><span class="tag">rac</span>
-        <span class="tag">awr</span><span class="tag">flashback</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-dba-ptbr.skill">
-        ⬇ oracle-dba-ptbr.skill
-      </a>
-    </div>
-
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">🚀</div>
-        <span class="skill-version">v2.7.2</span>
-      </div>
-      <div class="skill-name">oracle-tuning-ptbr</div>
-      <div class="skill-title">Oracle Tuning</div>
-      <div class="skill-desc">Performance tuning — explain plan, AWR/ASH em tempo real, index strategy, DBMS_STATS e hints.</div>
-      <div class="skill-tags">
-        <span class="tag">tuning</span><span class="tag">explain-plan</span>
-        <span class="tag">ash</span><span class="tag">indexes</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-tuning-ptbr.skill">
-        ⬇ oracle-tuning-ptbr.skill
-      </a>
-    </div>
-
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">📐</div>
-        <span class="skill-version">v2.4.3</span>
-      </div>
-      <div class="skill-name">oracle-trivadis-ptbr</div>
-      <div class="skill-title">Trivadis Guidelines</div>
-      <div class="skill-desc">Trivadis PL/SQL Guidelines 4.4 — prefixos, naming PT-BR e checklist pré-deploy/GMUD.</div>
-      <div class="skill-tags">
-        <span class="tag">trivadis</span><span class="tag">naming</span>
-        <span class="tag">code-review</span><span class="tag">gmud</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-trivadis-ptbr.skill">
-        ⬇ oracle-trivadis-ptbr.skill
-      </a>
-    </div>
-
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">⚙️</div>
-        <span class="skill-version">v4.1.3</span>
-      </div>
-      <div class="skill-name">oracle-devops-ptbr</div>
-      <div class="skill-title">Oracle DevOps</div>
-      <div class="skill-desc">Git, CI/CD, changelog Oracle (db_changelog + SHA-256), deploy Python + oracledb Thin Mode. Suporte DB_SCHEMA para deploy via DBA.</div>
-      <div class="skill-tags">
-        <span class="tag">devops</span><span class="tag">git</span>
-        <span class="tag">python</span><span class="tag">oracledb</span>
-        <span class="tag">changelog</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-devops-ptbr.skill">
-        ⬇ oracle-devops-ptbr.skill
-      </a>
-    </div>
-
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">🧪</div>
-        <span class="skill-version">v1.2.1</span>
-      </div>
-      <div class="skill-name">oracle-lab-ptbr</div>
-      <div class="skill-title">Oracle Lab</div>
-      <div class="skill-desc">Ambiente local para desenvolvedor: Vagrant + VirtualBox, container Free, APEX/ORDS locais e troubleshooting de conexão.</div>
-      <div class="skill-tags">
-        <span class="tag">lab</span><span class="tag">vagrant</span><span class="tag">container</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-lab-ptbr.skill">
-        ⬇ oracle-lab-ptbr.skill
-      </a>
-    </div>
-
-    <div class="skill-card">
-      <div class="skill-header">
-        <div class="skill-icon">🆕</div>
-        <span class="skill-version">v1.1.2</span>
-      </div>
-      <div class="skill-name">oracle-26ai-ptbr</div>
-      <div class="skill-title">Oracle 23ai/26ai</div>
-      <div class="skill-desc">Novidades de SQL/PL/SQL 23ai/26ai e migração 19c → 26ai, isoladas do restante da suíte (que é 19c).</div>
-      <div class="skill-tags">
-        <span class="tag">26ai</span><span class="tag">migração</span><span class="tag">sql</span>
-      </div>
-      <a class="skill-dl"
-         href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest/download/oracle-26ai-ptbr.skill">
-        ⬇ oracle-26ai-ptbr.skill
-      </a>
-    </div>
+    <article class="example">
+      <p class="example-skill">oracle-devops-ptbr</p>
+      <h3>Pipeline com aprovação em produção</h3>
+      <blockquote>"Monte um GitHub Actions que faça deploy em dev, hom e prod, com aprovação em prod."</blockquote>
+      <p class="label">A skill deve</p>
+      <ul>
+        <li>usar GitHub Environments <code>dev</code>/<code>hom</code>/<code>prod</code> com revisor obrigatório em prod;</li>
+        <li>validar os .sql e rodar o CodeScan antes de tocar no banco;</li>
+        <li>executar pelo SQLcl e falhar se o deploy deixar objeto inválido (<code>ALL_ERRORS</code>);</li>
+        <li>nunca pedir confirmação interativa em CI (<code>--confirmar-prod</code>).</li>
+      </ul>
+    </article>
 
   </div>
-</div>
+</section>
 
-<div class="section" id="install">
-  <div class="section-title">// como instalar</div>
+<!-- ── Instalação ──────────────────────────────────── -->
+<section class="section" id="instalar" aria-labelledby="titulo-instalar">
+  <h2 class="section-title" id="titulo-instalar">// como instalar</h2>
+
   <div class="install-box">
-    <h3>⬇ Instalação via Claude.ai</h3>
-    <div class="steps">
-      <div class="step">
-        <div class="step-n">1</div>
-        <div class="step-text">
-          <strong>Baixe</strong> os arquivos <code>.skill</code> da
-          <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest" target="_blank">
-            página de releases</a> — ou clique nos links de download acima.
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-n">2</div>
-        <div class="step-text">
-          No <strong>Claude.ai</strong> → <code>Settings</code> → <code>Skills</code> → arraste o arquivo ou clique em <strong>Upload Skill</strong>.
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-n">3</div>
-        <div class="step-text">
-          <strong>Repita</strong> para cada skill desejada. Instale todas as 10 para cobertura completa da stack Oracle.
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-n">4</div>
-        <div class="step-text">
-          <strong>Teste</strong> — diga ao Claude: <em>"Crie um package Oracle para processar pagamentos seguindo Trivadis"</em>
-        </div>
-      </div>
-    </div>
+    <h3>⬇ Instalação no Claude.ai</h3>
+    <ol class="steps">
+      <li><span><strong>Baixe</strong> os arquivos <code>.skill</code> da
+        <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases/latest" target="_blank" rel="noopener noreferrer">versão mais recente</a>
+        ou pelos links de cada card. Não há pacote único: é um arquivo por skill.</span></li>
+      <li><span>No <strong>Claude.ai</strong> → <code>Settings</code> → <code>Skills</code> → arraste o arquivo ou clique em <strong>Upload</strong>.</span></li>
+      <li><span><strong>Repita</strong> para cada skill. Recomendado: todas as 10; no mínimo, <code>oracle-core-ptbr</code> + as skills das tecnologias que você usa.</span></li>
+      <li><span><strong>Teste</strong> — peça ao Claude: <em>"Crie um package Oracle para processar pagamentos seguindo Trivadis"</em>.</span></li>
+    </ol>
   </div>
-</div>
+
+  <div class="install-box">
+    <h3>🔄 Atualização</h3>
+    <ul class="plain">
+      <li>Remova a versão antiga da skill em <code>Settings → Skills</code> e envie o <code>.skill</code> novo.</li>
+      <li>Atualize o conjunto todo: as skills citam umas às outras pelo nome e pela versão da suíte.</li>
+      <li>Mudanças incompatíveis estão no <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">CHANGELOG</a>. Na 4.2.0: APEX 26.2 passa a ser o padrão de geração de código.</li>
+    </ul>
+  </div>
+
+  <div class="install-box">
+    <h3>🧩 Dependências fora do Claude</h3>
+    <ul class="plain">
+      <li>As skills em si não instalam nada: são instruções, referências e templates.</li>
+      <li>Para <strong>rodar os scripts</strong> da <code>oracle-devops-ptbr</code>: SQLcl no <code>PATH</code> (ou <code>SQLCL_BIN</code>), Python 3 e <code>pip install -r requirements-devops.txt</code>.</li>
+      <li>CodeScan de APEXlang: SQLcl 26.3.0+. APEX 26.2: ORDS 26.3.0+ e banco 19c RU 19.18+ ou 26ai 23.26.0+.</li>
+    </ul>
+  </div>
+
+  <div class="install-box">
+    <h3>🔒 Verificar a integridade</h3>
+    <ul class="plain">
+      <li>Cada release publica o <code>checksums.sha256</code> junto dos pacotes. Baixe-o para a mesma pasta dos <code>.skill</code> e rode:</li>
+    </ul>
+    <pre><code>sha256sum --check checksums.sha256</code></pre>
+    <ul class="plain" style="margin-top:0.75rem">
+      <li>No macOS: <code>shasum -a 256 -c checksums.sha256</code>. Cada linha deve terminar em <code>OK</code>.</li>
+      <li>Os pacotes também ficam na pasta <a href="https://github.com/maxwbh/oracle-skills-ptbr/tree/main/dist" target="_blank" rel="noopener noreferrer"><code>dist/</code></a> do repositório; o CI confere que ela é igual a um build novo.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
 
 <footer>
   <div class="footer-inner">
-    <div>
+    <p>
       Desenvolvido por
-      <a href="https://github.com/maxwbh" target="_blank">Maxwell da Silva Oliveira</a>
+      <a href="https://github.com/maxwbh" target="_blank" rel="noopener noreferrer">Maxwell da Silva Oliveira</a>
       —
-      <a href="https://msbrasil.inf.br" target="_blank">M&S do Brasil LTDA</a>
-    </div>
-    <div class="footer-links">
-      <a href="https://github.com/maxwbh/oracle-skills-ptbr" target="_blank">GitHub</a>
-      <a href="https://github.com/maxwbh/oracle-skills-ptbr/releases" target="_blank">Releases</a>
-      <a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/LICENSE" target="_blank">MIT License</a>
-    </div>
+      <a href="https://msbrasil.inf.br" target="_blank" rel="noopener noreferrer">M&amp;S do Brasil LTDA</a>
+    </p>
+    <ul class="footer-links">
+      <li><a href="https://github.com/maxwbh/oracle-skills-ptbr" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      <li><a href="https://github.com/maxwbh/oracle-skills-ptbr/releases" target="_blank" rel="noopener noreferrer">Releases</a></li>
+      <li><a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a></li>
+      <li><a href="https://github.com/maxwbh/oracle-skills-ptbr/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+    </ul>
   </div>
 </footer>
 
+<script>
+(function () {
+  // Menu móvel
+  var botao = document.querySelector('.menu-toggle');
+  var menu = document.getElementById('menu-principal');
+  function fecharMenu() {
+    menu.classList.remove('open');
+    botao.setAttribute('aria-expanded', 'false');
+  }
+  botao.addEventListener('click', function () {
+    var aberto = menu.classList.toggle('open');
+    botao.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+  });
+  menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') fecharMenu();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && menu.classList.contains('open')) {
+      fecharMenu();
+      botao.focus();
+    }
+  });
+
+  // Busca e filtro de skills
+  var busca = document.getElementById('busca');
+  var chips = document.querySelectorAll('.chip');
+  var cards = document.querySelectorAll('#lista-skills .skill-card');
+  var status = document.getElementById('filtro-status');
+  var grupo = 'todas';
+
+  function normalizar(t) {
+    return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+  function aplicar() {
+    var termo = normalizar(busca.value.trim());
+    var visiveis = 0;
+    cards.forEach(function (card) {
+      var texto = normalizar(card.getAttribute('data-busca') + ' ' + card.textContent);
+      var ok = (grupo === 'todas' || card.getAttribute('data-grupo') === grupo) &&
+               (!termo || texto.indexOf(termo) !== -1);
+      card.hidden = !ok;
+      if (ok) visiveis++;
+    });
+    status.textContent = (termo || grupo !== 'todas')
+      ? visiveis + (visiveis === 1 ? ' skill encontrada' : ' skills encontradas')
+      : '';
+  }
+  busca.addEventListener('input', aplicar);
+  chips.forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      grupo = chip.getAttribute('data-grupo');
+      chips.forEach(function (c) { c.setAttribute('aria-pressed', c === chip ? 'true' : 'false'); });
+      aplicar();
+    });
+  });
+})();
+</script>
 </body>
 </html>

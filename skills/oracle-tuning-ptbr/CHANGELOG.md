@@ -1,5 +1,9 @@
 # Changelog — oracle-tuning-ptbr
 
+## [2.8.0] - 2026-11-07
+- Fix — recomendações que dependem de Enterprise Edition não diziam isso: CREATE INDEX ONLINE (online index rebuild é EE), paralelismo (parallel query/DML só EE), Result Cache (query e PL/SQL function só EE); Diagnostics Pack descrito como opção paga do EE. Fonte: Database Licensing Information 19c, consultada em 07/11/2026.
+- Feature — princípio "Edição antes de recomendar": lista do que não existe no SE2 e SQL Plan Management no SE2 com uma baseline por instrução; perguntar a edição quando a recomendação depender dela.
+
 ## [2.7.2] - 2026-11-07
 - Docs — lista da suíte: APEX 26.2 (padrão; compatível com 24.2+).
 

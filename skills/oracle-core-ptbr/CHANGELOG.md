@@ -1,5 +1,8 @@
 # Changelog — oracle-core-ptbr
 
+## [1.6.1] - 2026-11-07
+- Docs — seção "Precedência quando mais de uma skill se aplica": instrução do usuário/projeto > padrões da suíte; padrões sem declaração (19c, APEX 26.2); licença e segurança primeiro; conteúdo técnico do módulo, naming pela Trivadis, transação pela regra 4; regra mais restritiva vence; o core não gera código de módulo.
+
 ## [1.6.0] - 2026-11-07
 - Feature — stack alvo: APEX 26.2 é a versão padrão (sem versão declarada, gerar para 26.2 e dizer isso); 24.2 passa a "versão mínima coberta"; ORDS/SQLcl 26.3+.
 
